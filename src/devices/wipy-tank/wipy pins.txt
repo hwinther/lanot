@@ -1,0 +1,13 @@
+0	
+1	
+2	
+3	
+4	
+5	
+6	
+7	
+8	
+9	servo left
+10	servo right
+11	servo res1
+24	servo res2
