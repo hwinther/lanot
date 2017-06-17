@@ -10,6 +10,10 @@ class NodeTest(prometheus.Prometheus):
         self.register(blue_led=self.blue_led)
         self.red_led = prometheus.Led(machine.Pin(15, machine.Pin.OUT))
         self.register(red_led=self.red_led)
+        self.dht11 = prometheus.Dht11(machine.Pin(13, machine.Pin.OUT))
+        self.register(dht11=self.dht11)
+        self.hygrometer = prometheus.Adc(0)
+        self.register(hydrometer=self.hygrometer)
 
 if __name__ == '__main__':
     nt = NodeTest()

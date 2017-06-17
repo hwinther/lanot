@@ -1,4 +1,5 @@
 import machine
+import dht
 
 
 class RegisteredMethod:
@@ -36,7 +37,7 @@ class Registry:
         return decorator
 
 
-class Prometheus:
+class Prometheus(object):
     def __init__(self):
         self.commands = dict()
         if self.__class__.__name__ in Registry.r:
@@ -61,7 +62,7 @@ class Prometheus:
         port = 9195  # Arbitrary non-privileged port
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         s.bind((host, port))
-        print('listening on *:%d' % (port))
+        print('listening on *:%d' % port)
         looping = True
         while looping:
             data, addr = s.recvfrom(1024)
@@ -73,37 +74,16 @@ class Prometheus:
                 print('input:', cmd)
 
                 if cmd in data_commands:
-                    data_commands[cmd]()
+                    registered_method = data_commands[cmd]
+                    assert isinstance(registered_method, RegisteredMethod)
+                    return_value = registered_method.method_reference()
+                    if registered_method.return_type == 'str':
+                        print('returning %s to %s' % (return_value, repr(addr)))
+                        s.sendto(b'%s' % return_value, addr)
                 elif cmd == 'die':
                     print('die command received')
                     looping = False
                     break
-                # if cmd == 'w':
-                #     tank.fast_forward(1)
-                # elif cmd == 's':
-                #     tank.fast_backward(1)
-                # elif cmd == 'a':
-                #     tank.turn_left_fast(1)
-                # elif cmd == 'd':
-                #     tank.turn_right_fast(1)
-                # elif cmd == '0':  # all leds off
-                #     lights.write('0\n')
-                # elif cmd == '1':  # bright led on
-                #     lights.write('2\n')
-                # elif cmd == '2':  # right led
-                #     lights.write('3\n')
-                # elif cmd == '3':  # left led
-                #     lights.write('3\n')
-                # elif cmd == '4':  # right and left led
-                #     lights.write('4\n')
-                # elif cmd == '5':  # all leds on
-                #     lights.write('5\n')
-                # elif cmd == '9':
-                #     reading = tank.sensor_reading()
-                #     if reading is None:
-                #         s.sendto(b'No reading', addr)
-                #     else:
-                #         s.sendto(b'Reading: left=%dcm right=%dcm', addr)
                 else:
                     print('invalid cmd', cmd)
         s.close()
@@ -130,6 +110,65 @@ class Led(Prometheus):
         return self.pin.value()
 
 
+class Dht11(Prometheus):
+    def __init__(self, pin):
+        """
+        :type pin: machine.Pin
+        """
+        Prometheus.__init__(self)
+        self.pin = pin
+        self.dht = dht.DHT11(self.pin)
+
+    @Registry.register('Dht11', 'm')
+    def measure(self):
+        self.dht.measure()
+
+    @Registry.register('Dht11', 't', 'OUT')
+    def temperature(self):
+        return self.dht.temperature()
+
+    @Registry.register('Dht11', 'h', 'OUT')
+    def humidity(self):
+        return self.dht.humidity()
+
+
+class Dht22(Prometheus):
+    def __init__(self, pin):
+        """
+        :type pin: machine.Pin
+        """
+        Prometheus.__init__(self)
+        self.pin = pin
+        self.dht = dht.DHT22(self.pin)
+
+    @Registry.register('Dht22', 'm')
+    def measure(self):
+        self.dht.measure()
+
+    @Registry.register('Dht22', 't', 'OUT')
+    def temperature(self):
+        self.dht.temperature()
+
+    @Registry.register('Dht22', 'h', 'OUT')
+    def humidity(self):
+        return self.dht.humidity()
+
+
+class Adc(Prometheus):
+    def __init__(self, pin):
+        """
+        TODO: Warning - pin in analog mode requires max 1.8v, use volt divider to ensure this
+        :type pin: int
+        """
+        Prometheus.__init__(self)
+        self.pin = pin
+        self.adc = machine.ADC(pin)
+
+    @Registry.register('Adc', 'r', 'OUT')
+    def read(self):
+        return self.adc.read()
+
+
 class InputOutputProxy(Prometheus):
     def __init__(self, send, recv):
         # Could pass on send, recv method refs an template inherit self to be able to issubclassof check these
@@ -143,7 +182,7 @@ class RemoteTemplate(Prometheus):
         Prometheus.__init__(self)
 
     def send(self, data):
-        print('send: ' +repr(data))
+        print('send: %s' % repr(data))
 
     def recv(self, buffersize=None):
         print('recv buffersize=%s' % buffersize)
@@ -184,7 +223,7 @@ def map_data_commands(commands, data_commands, remap=True, remap_counter=None, c
                 command_key = chr(remap_counter.next())
             if command_key in data_commands.keys():
                 print('Warning: overwriting reference for data_value %s' % command_key)
-            data_commands[command_key] = value.method_reference
+            data_commands[command_key] = value  # value.method_reference
             print('Added reference for %s.%s (%s) data_value %s (%d)' % (context, value.method_name, value.method_reference, command_key, ord(command_key)))
         elif isinstance(value, dict):
             # print('its a dict, going derper: %s' % value)

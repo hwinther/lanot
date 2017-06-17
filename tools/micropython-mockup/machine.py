@@ -103,6 +103,14 @@ class RTC:
         pass
 
 
+class ADC:
+    def __init__(self, pin):
+        self.pin = pin
+
+    def read(self):
+        return 0
+
+
 # make time.sleep_ms valid :D
 def sleep_ms(ms):
     time.sleep(ms / 1000.0)

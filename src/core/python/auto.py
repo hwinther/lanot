@@ -5,6 +5,7 @@ import inspect
 import machine
 import prometheus
 import socket
+import datetime
 
 
 class SerialTemplate(prometheus.RemoteTemplate):
@@ -24,10 +25,12 @@ class SerialTemplate(prometheus.RemoteTemplate):
 
     # cut
 
+    # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE')
     def METHOD_NAME(self):
         self.send(b'VALUE')
 
+    # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self):
         self.send(b'VALUE')
@@ -36,27 +39,28 @@ class SerialTemplate(prometheus.RemoteTemplate):
 
 
 class TcpTemplate(prometheus.RemoteTemplate):
-    def __init__(self, host):
+    def __init__(self, remote_host, remote_port=9195, local_port=9195):
         prometheus.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.bind(('', 9195))
-        self.remote_addr = (host, 9195)
+        self.socket.bind(('', local_port))
+        self.remote_addr = (remote_host, remote_port)
         self.socket.connect(self.remote_addr)
         # POST_INIT
 
     def send(self, data):
         self.socket.sendall(data)
 
-    def recv(self, buffersize=None):
-        # TODO: implement this
+    def recv(self, buffersize=10):
         return self.socket.recv(buffersize)
 
     # cut
 
+    # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE')
     def METHOD_NAME(self):
         self.send(b'VALUE')
 
+    # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self):
         self.send(b'VALUE')
@@ -65,26 +69,31 @@ class TcpTemplate(prometheus.RemoteTemplate):
 
 
 class UdpTemplate(prometheus.RemoteTemplate):
-    def __init__(self, host):
+    def __init__(self, remote_host, remote_port=9195, local_port=9195):
         prometheus.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.bind(('', 9195))
-        self.remote_addr = (host, 9195)
+        self.socket.bind(('', local_port))
+        self.remote_addr = (remote_host, remote_port)
         # POST_INIT
 
     def send(self, data):
         self.socket.sendto(data, self.remote_addr)
 
-    def recv(self, buffersize=None):
-        # TODO: implement this
-        return None
+    def recv(self, buffersize=10):
+        # TODO: addr is not checked, this could be sent by anyone and renders multiple connections moot
+        self.socket.setblocking(False)
+        data, addr = self.socket.recvfrom(buffersize)
+        self.socket.setblocking(True)
+        return data
 
     # cut
 
+    # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE')
     def METHOD_NAME(self):
         self.send(b'VALUE')
 
+    # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self):
         self.send(b'VALUE')
@@ -212,7 +221,7 @@ class CodeFile:
         return 'CodeFile: %s' % self.filename
 
 
-def parse_folder(path='..%sPicAxe' % os.path.sep):
+def parse_folder(path):
     code_files = list()
     for filename in os.listdir(path):
         if not os.path.splitext(filename)[1] in CodeFile.supported_extensions:
@@ -226,16 +235,22 @@ def parse_folder(path='..%sPicAxe' % os.path.sep):
 
 
 def folder_test():
-    # print(inspect.getsourcelines(SerialTemplate))
-    folder = parse_folder()
-    print('files: %d' % len(folder))
+    path = os.path.join('..', '..', 'devices')
+    all_code = list()
+    for folder in os.listdir(path):
+        folder_path = os.path.join(path, folder)
+        folder_code = parse_folder(folder_path)
+        print('files detected under %s: %d' % (folder_path, len(folder_code)))
+        all_code.extend(folder_code)
 
-    template = folder[0].generate_template('SerialTemplate')
-    output_folder = '.'
-    outfile = '%s%s%s.py' % (output_folder, os.path.sep, folder[0].class_name)
+    item = all_code[0]
+    template = item.generate_template('SerialTemplate')
+    output_folder = os.path.join('..', '..', '..', 'build', 'clients')
+    outfile = os.path.join(output_folder, item.class_name + '.py')
     # print(template)
     print('writing to %s' % outfile)
-    open(outfile, 'w').write('import prometheus\nimport machine\n\n\n' + template)
+    open(outfile, 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +
+                             'import prometheus\nimport machine\n\n\n' + template)
     # '\n\n' + ''.join(inspect.getsourcelines(prometheus.Prometheus)[0])
     # ''.join(inspect.getsourcelines(prometheus.Registry)[0]) + '\n\n'
     # SerialTemplate.NAME()
@@ -248,11 +263,14 @@ def generate_class_name(name):
     return class_name
 
 
-def map_template_commands(commands, template_commands, template_class_commands, template_class, generated_class_name, remap=True, remap_counter=None, context='self'):
+def map_template_commands(commands, template_commands, template_class_commands, template_class, generated_class_name, remap=True, remap_counter=None,
+                          context='self'):
     """
     :type commands: dict
     :type template_commands: dict
     :type template_class_commands: dict
+    :type template_class: Type
+    :type generated_class_name: str
     :type remap: bool
     :type remap_counter: prometheus.RemapCounter
     :type context: str
@@ -288,7 +306,8 @@ def map_template_commands(commands, template_commands, template_class_commands, 
                 if not context_index in template_class_commands.keys():
                     template_class_commands[context_index] = dict()
                 template_class_commands[context_index][command_key] = code_value.method_template(template_class, context_class_name)
-            print('Added reference for %s.%s (%s) data_value %s (%d)' % (context, value.method_name, value.method_reference, command_key, ord(command_key)))
+            print('Added reference for %s.%s (%s) data_value %s (%d)' % (context, value.method_name, value.method_reference,
+                                                                         command_key, ord(command_key)))
         elif isinstance(value, dict):
             # print('its a dict, going derper: %s' % value)
             map_template_commands(value, template_commands, template_class_commands, template_class, generated_class_name, remap, remap_counter, context=key)
@@ -363,14 +382,27 @@ def generate_python_template(source_class, template_class, generated_class_name,
     # open(filename, 'w').write('import prometheus\nimport socket\nimport machine\n\n\n' + template)
 
 
-# folder_test()
-from nodetest import NodeTest
+folder_test()
+
+# TODO: make the following code dynamic?
 imports = 'import prometheus\nimport socket\nimport machine\n\n\n'
-open('nodeclient.py', 'w').write(imports +
-                                 generate_python_template(source_class=NodeTest, template_class=TcpTemplate, generated_class_name='NodeTestTcp') + '\n' +
-                                 generate_python_template(source_class=NodeTest, template_class=UdpTemplate, generated_class_name='NodeTestUdp', subclasses=False)
-                                 )
+
+from nodetest import NodeTest
+
+open(os.path.join('..', '..', '..', 'build', 'clients', 'nodeclient.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + imports +
+                                                                                     generate_python_template(source_class=NodeTest, template_class=TcpTemplate,
+                                                                                                              generated_class_name='NodeTestTcp') + '\n' +
+                                                                                     generate_python_template(source_class=NodeTest, template_class=UdpTemplate,
+                                                                                                              generated_class_name='NodeTestUdp',
+                                                                                                              subclasses=False)
+                                                                                     )
 
 from main import Tank
-open('tankclient.py', 'w').write(imports + generate_python_template(source_class=Tank, template_class=TcpTemplate, generated_class_name='TankTestTcp') + '\n' +
-                                              generate_python_template(source_class=Tank, template_class=UdpTemplate, generated_class_name='TankTestUdp', subclasses=False))
+
+open(os.path.join('..', '..', '..', 'build', 'clients', 'tankclient.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + imports +
+                                                                                     generate_python_template(source_class=Tank, template_class=TcpTemplate,
+                                                                                                              generated_class_name='TankTestTcp') + '\n' +
+                                                                                     generate_python_template(source_class=Tank, template_class=UdpTemplate,
+                                                                                                              generated_class_name='TankTestUdp',
+                                                                                                              subclasses=False)
+                                                                                     )
