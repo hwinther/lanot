@@ -407,13 +407,38 @@ open(os.path.join('..', '..', '..', 'build', 'clients', 'nodeclient.py'), 'w').w
                                                                                                               generated_class_name='NodeTestUdp',
                                                                                                               subclasses=False)
                                                                                      )
-"""
+
 from proxytest import ProxyTest
 
-open(os.path.join('..', '..', '..', 'build', 'clients', 'proxyclient.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + imports +
-                                                                                     generate_python_template(source_class=ProxyTest, template_class=TcpTemplate,
-                                                                                                              generated_class_name='ProxyTestTcp') + '\n' +
-                                                                                     generate_python_template(source_class=ProxyTest, template_class=UdpTemplate,
-                                                                                                              generated_class_name='ProxyTestUdp',
-                                                                                                              subclasses=False)
-                                                                                     )
+open(os.path.join('..', '..', '..', 'build', 'clients', 'proxyclient.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d '
+                                                                                                                                               '%H:%M:%S') +
+                                                                                      imports +
+                                                                                      generate_python_template(source_class=ProxyTest,
+                                                                                                               template_class=TcpTemplate,
+                                                                                                               generated_class_name='ProxyTestTcp') + '\n' +
+                                                                                      generate_python_template(source_class=ProxyTest,
+                                                                                                               template_class=UdpTemplate,
+                                                                                                               generated_class_name='ProxyTestUdp',
+                                                                                                               subclasses=False)
+                                                                                      )
+"""
+
+from chaintest import A, B, C
+"""
+open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientA.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d '
+                                                                                                                                               '%H:%M:%S') +
+                                                                                      imports +
+                                                                                      generate_python_template(source_class=A,
+                                                                                                               template_class=UdpTemplate,
+                                                                                                               generated_class_name='AUdp',
+                                                                                                               subclasses=True)
+                                                                                      )
+"""
+open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientB.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d '
+                                                                                                                                               '%H:%M:%S') +
+                                                                                      imports +
+                                                                                      generate_python_template(source_class=B,
+                                                                                                               template_class=UdpTemplate,
+                                                                                                               generated_class_name='BUdp',
+                                                                                                               subclasses=True)
+                                                                                      )
