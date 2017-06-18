@@ -226,5 +226,5 @@ def map_data_commands(commands, data_commands, remap=True, remap_counter=None, c
             data_commands[command_key] = value  # value.method_reference
             print('Added reference for %s.%s (%s) data_value %s (%d)' % (context, value.method_name, value.method_reference, command_key, ord(command_key)))
         elif isinstance(value, dict):
-            # print('its a dict, going derper: %s' % value)
+            print('its a dict, going derper [2]: %s' % value)
             map_data_commands(value, data_commands, remap, remap_counter, context=key)

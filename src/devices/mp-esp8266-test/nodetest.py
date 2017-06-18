@@ -13,8 +13,8 @@ class NodeTest(prometheus.Prometheus):
         self.dht11 = prometheus.Dht11(machine.Pin(13, machine.Pin.OUT))
         self.register(dht11=self.dht11)
         self.hygrometer = prometheus.Adc(0)
-        self.register(hydrometer=self.hygrometer)
+        self.register(hygrometer=self.hygrometer)
 
 if __name__ == '__main__':
-    nt = NodeTest()
-    nt.start_socket_server()
+    nodetest = NodeTest()
+    nodetest.start_socket_server()

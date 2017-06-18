@@ -309,7 +309,7 @@ def map_template_commands(commands, template_commands, template_class_commands, 
             print('Added reference for %s.%s (%s) data_value %s (%d)' % (context, value.method_name, value.method_reference,
                                                                          command_key, ord(command_key)))
         elif isinstance(value, dict):
-            # print('its a dict, going derper: %s' % value)
+            print('its a dict, going derper: %s' % value)
             map_template_commands(value, template_commands, template_class_commands, template_class, generated_class_name, remap, remap_counter, context=key)
 
 
@@ -332,6 +332,7 @@ def generate_template(template_class_name, generated_class_name, method_template
                 for init_variable in init_variables:
                     variable_name, class_name = init_variable
                     post_init.append('        self.%s = %s(self.send, self.recv)' % (variable_name, class_name))
+                    post_init.append('        self.register(%s=self.%s)' % (variable_name, variable_name))
                 template.append(line.replace('# POST_INIT', '\n' + '\n'.join(post_init)))
             continue  # ignore these comments so it doesnt get spammy
         else:
@@ -382,10 +383,20 @@ def generate_python_template(source_class, template_class, generated_class_name,
     # open(filename, 'w').write('import prometheus\nimport socket\nimport machine\n\n\n' + template)
 
 
-folder_test()
+# folder_test()
 
 # TODO: make the following code dynamic?
 imports = 'import prometheus\nimport socket\nimport machine\n\n\n'
+"""
+from main import Tank
+
+open(os.path.join('..', '..', '..', 'build', 'clients', 'tankclient.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + imports +
+                                                                                     generate_python_template(source_class=Tank, template_class=TcpTemplate,
+                                                                                                              generated_class_name='TankTestTcp') + '\n' +
+                                                                                     generate_python_template(source_class=Tank, template_class=UdpTemplate,
+                                                                                                              generated_class_name='TankTestUdp',
+                                                                                                              subclasses=False)
+                                                                                     )
 
 from nodetest import NodeTest
 
@@ -396,13 +407,13 @@ open(os.path.join('..', '..', '..', 'build', 'clients', 'nodeclient.py'), 'w').w
                                                                                                               generated_class_name='NodeTestUdp',
                                                                                                               subclasses=False)
                                                                                      )
+"""
+from proxytest import ProxyTest
 
-from main import Tank
-
-open(os.path.join('..', '..', '..', 'build', 'clients', 'tankclient.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + imports +
-                                                                                     generate_python_template(source_class=Tank, template_class=TcpTemplate,
-                                                                                                              generated_class_name='TankTestTcp') + '\n' +
-                                                                                     generate_python_template(source_class=Tank, template_class=UdpTemplate,
-                                                                                                              generated_class_name='TankTestUdp',
+open(os.path.join('..', '..', '..', 'build', 'clients', 'proxyclient.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + imports +
+                                                                                     generate_python_template(source_class=ProxyTest, template_class=TcpTemplate,
+                                                                                                              generated_class_name='ProxyTestTcp') + '\n' +
+                                                                                     generate_python_template(source_class=ProxyTest, template_class=UdpTemplate,
+                                                                                                              generated_class_name='ProxyTestUdp',
                                                                                                               subclasses=False)
                                                                                      )
