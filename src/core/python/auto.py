@@ -7,6 +7,8 @@ import prometheus
 import socket
 import datetime
 
+# TODO: move these template classes to another python file? perhaps one for each via python modules
+
 
 class SerialTemplate(prometheus.RemoteTemplate):
     def __init__(self, channel, baudrate):
@@ -221,6 +223,70 @@ class CodeFile:
         return 'CodeFile: %s' % self.filename
 
 
+class PrometheusTemplate(object):
+    def __init__(self, instance, name, parent):
+        self.instance = instance
+        self.name = name
+        self.children = list()
+        self.parent = parent
+
+    def generate(self, template_class, generated_class_name, remap_counter=None, remap=True):
+        # generate method templates and arrange command values
+        template_commands = dict()
+
+        if remap_counter is None:
+            remap_counter = prometheus.RemapCounter(65)
+
+        command_keys = list(self.instance.commands.keys())
+        command_keys.sort()
+
+        for key in command_keys:
+            value = self.instance.commands[key]
+            if isinstance(value, prometheus.RegisteredMethod):
+                if not remap:
+                    command_key = value.data_value
+                else:
+                    # re-map the bytes
+                    command_key = chr(remap_counter.next())
+                if command_key in template_commands.keys():
+                    print('Warning: overwriting reference for data_value %s' % command_key)
+
+                context_key = value.method_name
+                code_value = CodeValue(name=context_key, value=command_key, out=value.return_type)
+                template_commands[command_key] = code_value.method_template(template_class, generated_class_name)
+
+        method_templates = list()
+        for key in template_commands:
+            method_templates.append(template_commands[key])
+
+        # TODO: something for variables?
+
+        # generate class template with methods
+        template_class_name = template_class.__name__
+        lines, count = inspect.getsourcelines(template_class)
+        template = list()
+        for line in lines:
+            # print('line',line,line.find('NAME'))
+            if line.find('cut') != -1:
+                break
+            elif line.find(template_class_name) != -1:
+                template.append(line.replace(template_class_name, generated_class_name))
+            # elif len(line.strip()) != 0 and line.strip()[0] == '#':
+            #     if init_variables is not None and line.find('# POST_INIT') != -1:
+            #         # lets add the post init stuff then
+            #         post_init = list()
+            #         for init_variable in init_variables:
+            #             variable_name, class_name = init_variable
+            #             post_init.append('        self.%s = %s(self.send, self.recv)' % (variable_name, class_name))
+            #             post_init.append('        self.register(%s=self.%s)' % (variable_name, variable_name))
+            #         template.append(line.replace('# POST_INIT', '\n' + '\n'.join(post_init)))
+            #     continue  # ignore these comments so it doesnt get spammy
+            else:
+                template.append(line)
+        return ''.join(template) + '\n' + '\n'.join(method_templates) + '\n\n'
+        # return template
+
+
 def parse_folder(path):
     code_files = list()
     for filename in os.listdir(path):
@@ -263,10 +329,10 @@ def generate_class_name(name):
     return class_name
 
 
-def map_template_commands(commands, template_commands, template_class_commands, template_class, generated_class_name, remap=True, remap_counter=None,
+def map_template_commands(instance, template_commands, template_class_commands, template_class, generated_class_name, remap=True, remap_counter=None,
                           context='self'):
     """
-    :type commands: dict
+    :type instance: prometheus.Prometheus
     :type template_commands: dict
     :type template_class_commands: dict
     :type template_class: Type
@@ -278,11 +344,11 @@ def map_template_commands(commands, template_commands, template_class_commands, 
     if remap_counter is None:
         remap_counter = prometheus.RemapCounter(65)
 
-    command_keys = list(commands.keys())
+    command_keys = list(instance.commands.keys())
     command_keys.sort()
 
     for key in command_keys:
-        value = commands[key]
+        value = instance.commands[key]
         if isinstance(value, prometheus.RegisteredMethod):
             if not remap:
                 command_key = value.data_value
@@ -299,6 +365,7 @@ def map_template_commands(commands, template_commands, template_class_commands, 
                 code_value = CodeValue(name=context_key, value=command_key, out=value.return_type)
                 template_commands[command_key] = code_value.method_template(template_class, generated_class_name)
             else:
+                # TODO: this is likely not used now, remove?
                 context_key = value.method_name
                 context_class_name = generate_class_name(context)
                 code_value = CodeValue(name=context_key, value=command_key, out=value.return_type)
@@ -308,9 +375,27 @@ def map_template_commands(commands, template_commands, template_class_commands, 
                 template_class_commands[context_index][command_key] = code_value.method_template(template_class, context_class_name)
             print('Added reference for %s.%s (%s) data_value %s (%d)' % (context, value.method_name, value.method_reference,
                                                                          command_key, ord(command_key)))
-        elif isinstance(value, dict):
-            print('its a dict, going derper: %s' % value)
-            map_template_commands(value, template_commands, template_class_commands, template_class, generated_class_name, remap, remap_counter, context=key)
+        # elif isinstance(value, dict):
+        #     print('its a dict, going derper (X): %s' % value)
+        #     map_template_commands(value, template_commands, template_class_commands, template_class, generated_class_name, remap, remap_counter, context=key)
+
+    attribute_keys = list(instance.attributes.keys())
+    attribute_keys.sort()
+    for key in attribute_keys:
+        value = instance.attributes[key]
+        print(key, value)
+        if not issubclass(type(value), prometheus.Prometheus):
+            raise Exception('Registered object does not inherit from Prometheus')
+        for command_key in value.commands:
+            command_value = value.commands[command_key]
+            context_key = command_value.method_name
+            context_class_name = generate_class_name(key)
+            # TODO: value= unique byte from the sequencer
+            code_value = CodeValue(name=context_key, value=command_key, out=command_value.return_type)
+            context_index = (key, context_class_name)
+            if not context_index in template_class_commands.keys():
+                template_class_commands[context_index] = dict()
+            template_class_commands[context_index][command_key] = code_value.method_template(template_class, context_class_name)
 
 
 def generate_template(template_class_name, generated_class_name, method_templates, template_class=None, init_variables=None):
@@ -340,47 +425,92 @@ def generate_template(template_class_name, generated_class_name, method_template
     return ''.join(template) + '\n' + '\n'.join(method_templates) + '\n\n'
 
 
+def generate_template_classes(template_classes, instance, name, parent=None):
+    """
+    :type template_classes: list
+    :type instance: Prometheus
+    :type name: str
+    :type template_class Type
+    :type generated_class_name str
+    :type parent PrometheusTemplate
+    """
+
+    prometheus_template = PrometheusTemplate(instance, name, parent)
+    template_classes.append(prometheus_template)
+
+    if parent:
+        # list of directly underlying entities
+        parent.children.append(prometheus_template)
+
+    # should only contain inheritors of prometheus
+    for key in instance.attributes:
+        generate_template_classes(template_classes, instance.attributes[key], key)
+
+
 def generate_python_template(source_class, template_class, generated_class_name, subclasses=True):
     # :type source_class: prometheus.Prometheus
     # :type template_class: prometheus.RemoteTemplate
-    # TODO: get this dynamically somehow
-    # from nodetest import NodeTest as source_class
+    # :type generated_class_name: str
+    # :type subclasses: bool
 
     instance = source_class()
-    print(instance.commands)
-    template_commands = dict()
-    template_class_commands = dict()
-    template_class_name = template_class.__name__  # 'UdpTemplate'
-    template_class = getattr(sys.modules[__name__], template_class_name)
-    # generated_class_name = 'NodeClient'
-    # filename = 'nodeclient.py'
-    map_template_commands(instance.commands, template_commands, template_class_commands, template_class, generated_class_name)
+    # print(instance.commands)
+    # template_commands = dict()
+    # template_class_commands = dict()
+    template_class_name = template_class.__name__
+    # template_class = getattr(sys.modules[__name__], template_class_name)
 
-    lst = list()
-    for key in template_commands:
-        # print(template_commands[key])
-        lst.append(template_commands[key])
+    template_classes = list()
+    # this will only work for a Prometheus inheritor, but it should be kept separate from it in order to separate code templating/build from dist
+    generate_template_classes(template_classes, instance, 'self')
 
-    class_list = list()
-    if subclasses:
-        for key in template_class_commands:
-            # template_class = ''.join(inspect.getsourcelines(prometheus.InputOutputProxy)[0]) + '\n'
-            # print(key, template_class_commands[key])
-            variable_name, class_name = key
-            lst2 = list()
-            for method_key in template_class_commands[key]:
-                lst2.append(template_class_commands[key][method_key])
-            template_class = generate_template('InputOutputProxy', class_name, lst2, prometheus.InputOutputProxy)
-            template_class = template_class.replace('(Prometheus):', '(prometheus.Prometheus):')
-            template_class = template_class.replace('Prometheus.__init__(self)', 'prometheus.Prometheus.__init__(self)')
-            # print(template_class)
-            class_list.append(template_class)
+    remap_counter = prometheus.RemapCounter(65)
+    supportclass_templates = list()
 
-    template = ''.join(class_list) + generate_template(template_class_name, generated_class_name, lst, init_variables=list(template_class_commands.keys()))
-    # print(template)
-    template = template.replace('\n\n\n\n\n', '\n\n')
-    return template
-    # open(filename, 'w').write('import prometheus\nimport socket\nimport machine\n\n\n' + template)
+    for prometheus_template in template_classes:
+        if not isinstance(prometheus_template, PrometheusTemplate):
+            raise Exception('Object is not of type PrometheusTemplate')
+
+        print(prometheus_template.name, prometheus_template.instance)
+        if prometheus_template.name == 'self':
+            mainclass_template = prometheus_template.generate(template_class, generated_class_name, remap_counter=remap_counter)
+        else:
+            # supportclass_template = generate_template('InputOutputProxy', class_name, lst2, prometheus.InputOutputProxy)
+            supportclass_template = prometheus_template.generate(prometheus.InputOutputProxy, generate_class_name(prometheus_template.name),
+                                                                 remap_counter=remap_counter)
+            supportclass_template = supportclass_template.replace('(Prometheus):', '(prometheus.Prometheus):')
+            supportclass_template = supportclass_template.replace('Prometheus.__init__(self)', 'prometheus.Prometheus.__init__(self)')
+            supportclass_template = supportclass_template.replace('@Registry.register', '@prometheus.Registry.register')
+            supportclass_templates.append(supportclass_template)
+
+    full_template = '\n\n'.join(supportclass_templates) + '\n\n' + mainclass_template
+    return full_template
+
+    # map_template_commands(instance, template_commands, template_class_commands, template_class, generated_class_name)
+    #
+    # lst = list()
+    # for key in template_commands:
+    #     # print(template_commands[key])
+    #     lst.append(template_commands[key])
+    #
+    # class_list = list()
+    # if subclasses:
+    #     for key in template_class_commands:
+    #         # template_class = ''.join(inspect.getsourcelines(prometheus.InputOutputProxy)[0]) + '\n'
+    #         # print(key, template_class_commands[key])
+    #         variable_name, class_name = key
+    #         lst2 = list()
+    #         for method_key in template_class_commands[key]:
+    #             lst2.append(template_class_commands[key][method_key])
+    #         template_class = generate_template('InputOutputProxy', class_name, lst2, prometheus.InputOutputProxy)
+    #         template_class = template_class.replace('(Prometheus):', '(prometheus.Prometheus):')
+    #         template_class = template_class.replace('Prometheus.__init__(self)', 'prometheus.Prometheus.__init__(self)')
+    #         # print(template_class)
+    #         class_list.append(template_class)
+    #
+    # template = ''.join(class_list) + generate_template(template_class_name, generated_class_name, lst, init_variables=list(template_class_commands.keys()))
+    # template = template.replace('\n\n\n\n\n', '\n\n')
+    # return template
 
 
 # folder_test()
@@ -424,7 +554,7 @@ open(os.path.join('..', '..', '..', 'build', 'clients', 'proxyclient.py'), 'w').
 """
 
 from chaintest import A, B, C
-"""
+
 open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientA.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d '
                                                                                                                                                '%H:%M:%S') +
                                                                                       imports +
@@ -433,12 +563,21 @@ open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientA.py'), 'w')
                                                                                                                generated_class_name='AUdp',
                                                                                                                subclasses=True)
                                                                                       )
-"""
+
 open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientB.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d '
                                                                                                                                                '%H:%M:%S') +
                                                                                       imports +
                                                                                       generate_python_template(source_class=B,
                                                                                                                template_class=UdpTemplate,
                                                                                                                generated_class_name='BUdp',
+                                                                                                               subclasses=True)
+                                                                                      )
+
+open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientC.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d '
+                                                                                                                                               '%H:%M:%S') +
+                                                                                      imports +
+                                                                                      generate_python_template(source_class=C,
+                                                                                                               template_class=UdpTemplate,
+                                                                                                               generated_class_name='CUdp',
                                                                                                                subclasses=True)
                                                                                       )

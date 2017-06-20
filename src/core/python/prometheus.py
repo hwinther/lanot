@@ -40,6 +40,7 @@ class Registry:
 class Prometheus(object):
     def __init__(self):
         self.commands = dict()
+        self.attributes = dict()
         if self.__class__.__name__ in Registry.r:
             for key in Registry.r[self.__class__.__name__]:
                 value = Registry.r[self.__class__.__name__][key]
@@ -51,7 +52,7 @@ class Prometheus(object):
 
     def register(self, **kwargs):
         for key in kwargs:
-            self.commands[key] = kwargs[key].commands
+            self.attributes[key] = kwargs[key]
 
     def start_socket_server(self, remap=True):
         data_commands = dict()
@@ -175,6 +176,21 @@ class InputOutputProxy(Prometheus):
         Prometheus.__init__(self)
         self.send = send
         self.recv = recv
+        # POST_INIT
+
+    # cut
+
+    # noinspection PyPep8Naming
+    @Registry.register('CLASS_NAME', 'VALUE')
+    def METHOD_NAME(self):
+        self.send(b'VALUE')
+
+    # noinspection PyPep8Naming
+    @Registry.register('CLASS_NAME', 'VALUE', 'OUT')
+    def METHOD_NAME_OUT(self):
+        self.send(b'VALUE')
+        # TODO: pause maybe
+        return self.recv(4)
 
 
 class RemoteTemplate(Prometheus):
