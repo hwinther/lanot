@@ -7,9 +7,9 @@ class A(prometheus.Prometheus):
         prometheus.Prometheus.__init__(self)
 
         self.a_led = prometheus.Led(machine.Pin(15, machine.Pin.OUT))
-        self.register(a_led=self.a_led)
+        self.register(prefix='al', a_led=self.a_led)
 
-    @prometheus.Registry.register('A', 'A')
+    @prometheus.Registry.register('A', 'T')
     def toggle(self):
         print('A.toggle')
 
@@ -19,12 +19,12 @@ class B(prometheus.Prometheus):
         prometheus.Prometheus.__init__(self)
 
         self.b_led = prometheus.Led(machine.Pin(16, machine.Pin.OUT))
-        self.register(b_led=self.b_led)
+        self.register(prefix='bl', b_led=self.b_led)
 
         self.a_object = A()
-        self.register(a_object = self.a_object)
+        self.register(prefix='a', a_object=self.a_object)
 
-    @prometheus.Registry.register('B', 'B')
+    @prometheus.Registry.register('B', 'T')
     def toggle(self):
         print('B.toggle')
 
@@ -34,12 +34,12 @@ class C(prometheus.Prometheus):
         prometheus.Prometheus.__init__(self)
 
         self.c_led = prometheus.Led(machine.Pin(17, machine.Pin.OUT))
-        self.register(c_led=self.c_led)
+        self.register(prefix='cl', c_led=self.c_led)
 
         self.b_object = B()
-        self.register(b_object = self.b_object)
+        self.register(prefix='b', b_object=self.b_object)
 
-    @prometheus.Registry.register('C', 'C')
+    @prometheus.Registry.register('C', 'T')
     def toggle(self):
         print('C.toggle')
 

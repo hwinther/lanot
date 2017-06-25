@@ -2,13 +2,14 @@ import machine
 import dht
 
 
-class RegisteredMethod:
-    def __init__(self, class_name, method_name, method_reference, data_value, return_type):
+class RegisteredMethod(object):
+    def __init__(self, class_name, method_name, method_reference, data_value, return_type, instance=None):
         self.class_name = class_name
         self.method_name = method_name
         self.method_reference = method_reference
         self.data_value = data_value
         self.return_type = return_type
+        self.instance = instance
 
     def __repr__(self):
         return u"RegisteredMethod(class_name='%s' method_name='%s' method_reference=%s data_value='%s' return_type=%s)" % (self.class_name, self.method_name, self.method_reference, self.data_value, self.return_type)
@@ -38,7 +39,13 @@ class Registry:
 
 
 class Prometheus(object):
-    def __init__(self):
+    def __init__(self, parent=None, name=None):
+        """
+        :param parent: Prometheus
+        :param name: str
+        """
+        self.parent = parent
+        self.name = name
         self.commands = dict()
         self.attributes = dict()
         if self.__class__.__name__ in Registry.r:
@@ -48,26 +55,98 @@ class Prometheus(object):
                 # print('method ref: %s %s %d' %(method_reference, self, len(self.commands)))
                 self.commands[key] = RegisteredMethod(class_name=value.class_name, method_name=value.method_name,
                                                       method_reference=method_reference, data_value=value.data_value,
-                                                      return_type=value.return_type)
+                                                      return_type=value.return_type, instance=self)
+
+    def path(self, paths=None):
+        if paths is None:
+            paths = list()
+        if self.name is None:
+            paths.append('root')
+        else:
+            paths.append(self.name)
+        if self.parent is not None:
+            self.parent.path(paths)
+        return paths
+
+    def logical_path(self):
+        path = self.path()
+        path.reverse()
+        return '.'.join(path)
 
     def register(self, **kwargs):
         for key in kwargs:
-            self.attributes[key] = kwargs[key]
+            value = kwargs[key]  # type: Prometheus
+            self.attributes[key] = value
+            value.parent = self
+            value.name = key
 
-    def start_socket_server(self, remap=True):
-        data_commands = dict()
-        map_data_commands(self.commands, data_commands, remap)
+    def recursive_attributes(self):
+        instances = list()
+        for key in self.attributes.keys():
+            value = self.attributes[key]  # :type Prometheus
+            instances.append(value)
+            instances.extend(value.recursive_attributes())
+        return instances
 
+    def recursive_remap(self, remap=True):
+        remap_counter = None
+        if remap:
+            remap_counter = RemapCounter(65)
+        commands = self.data_commands()
+        # TODO: not adding self to attributes list atm
+        instances = self.recursive_attributes()  # type: list(Prometheus)
+        blah = dict()
+        for instance in instances:
+            blah[instance.logical_path()] = instance
+
+        keys = blah.keys()
+        keys.sort()
+        prefix = None
+
+        for key in keys:
+            instance = blah[key]
+            if remap:
+                prefix = chr(remap_counter.next())
+            attribute_commands = instance.data_commands(data_value_prefix=prefix)
+            # print key, attribute_commands
+            for akey in attribute_commands.keys():
+                commands[akey] = attribute_commands[akey]
+        return commands
+
+    def data_commands(self, remap_counter=None, data_value_prefix=None):
+        commands = dict()
+
+        command_keys = list(self.commands.keys())
+        command_keys.sort()
+        for key in command_keys:
+            value = self.commands[key]
+            if isinstance(value, RegisteredMethod):
+                if remap_counter:
+                    command_key = chr(remap_counter.next()) + value.data_value
+                elif data_value_prefix:
+                    command_key = data_value_prefix + value.data_value
+                else:
+                    command_key = value.data_value
+                if command_key in commands.keys():
+                    print('Warning: overwriting reference for data_value %s' % command_key)
+                commands[command_key] = value
+                logical_path = ''
+                if value.instance:
+                    logical_path = value.instance.logical_path()
+                print('%s\t-> %s\t%s\t%s' % (command_key, value.method_name, logical_path, value.method_reference))
+
+        return commands
+
+    def start_socket_server(self, bind_host='', bind_port=9195):
+        data_commands = self.recursive_remap()
         import socket
-        host = ''  # Symbolic name meaning all available interfaces
-        port = 9195  # Arbitrary non-privileged port
         s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.bind((host, port))
-        print('listening on *:%d' % port)
+        s.bind((bind_host, bind_port))
+        print('listening on %s:%d' % (bind_host, bind_port))
         looping = True
         while looping:
             data, addr = s.recvfrom(1024)
-            print('recv', addr)
+            print('recv %s from %s' % (repr(data), repr(addr)))
             for cmd in data.decode('utf-8').split('\n'):
                 if cmd == '':
                     continue
@@ -76,7 +155,7 @@ class Prometheus(object):
 
                 if cmd in data_commands:
                     registered_method = data_commands[cmd]
-                    assert isinstance(registered_method, RegisteredMethod)
+                    # assert isinstance(registered_method, RegisteredMethod)
                     return_value = registered_method.method_reference()
                     if registered_method.return_type == 'str':
                         print('returning %s to %s' % (return_value, repr(addr)))
@@ -212,35 +291,38 @@ class RemapCounter:
 
     def next(self):
         self.counter += 1
-        return self.counter -1
+        return self.counter - 1
 
 
-def map_data_commands(commands, data_commands, remap=True, remap_counter=None, context='self'):
+def map_data_commands(commands, data_commands, remap_counter=None, context='self', instance=None):
     """
     :type commands: dict
     :type data_commands: dict
-    :type remap: bool
     :type remap_counter: RemapCounter
     :type context: str
+    :type instance: Prometheus
     """
-    if remap_counter is None:
-        remap_counter = RemapCounter(65)
-
     command_keys = list(commands.keys())
     command_keys.sort()
 
     for key in command_keys:
         value = commands[key]
         if isinstance(value, RegisteredMethod):
-            if not remap:
-                command_key = value.data_value
+            if context != 'self' and remap_counter:
+                command_key = chr(remap_counter.next()) + value.data_value
             else:
-                # re-map the bytes
-                command_key = chr(remap_counter.next())
+                command_key = value.data_value
             if command_key in data_commands.keys():
                 print('Warning: overwriting reference for data_value %s' % command_key)
             data_commands[command_key] = value  # value.method_reference
-            print('Added reference for %s.%s (%s) data_value %s (%d)' % (context, value.method_name, value.method_reference, command_key, ord(command_key)))
-        elif isinstance(value, dict):
-            print('its a dict, going derper [2]: %s' % value)
-            map_data_commands(value, data_commands, remap, remap_counter, context=key)
+            print('Added reference for %s.%s (%s) data_value %s' % (context, value.method_name, value.method_reference, command_key))
+        # elif isinstance(value, dict):
+        #     print('its a dict, going derper [2]: %s' % value)
+        #     map_data_commands(value, data_commands, remap, remap_counter, context=key)
+
+    if instance:
+        attribute_keys = list(instance.attributes.keys())
+        attribute_keys.sort()
+        for key in attribute_keys:
+            value = instance.attributes[key]  # type: Prometheus
+            map_data_commands(value.commands, data_commands, remap_counter, context=key, instance=value)
