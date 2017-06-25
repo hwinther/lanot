@@ -38,6 +38,16 @@ class Registry:
         return decorator
 
 
+class PrometheusAttribute(object):
+    def __init__(self, instance, prefix):
+        """
+        :param instance: Prometheus
+        :param prefix: str
+        """
+        self.instance = instance
+        self.prefix = prefix
+
+
 class Prometheus(object):
     def __init__(self, parent=None, name=None):
         """
@@ -73,19 +83,19 @@ class Prometheus(object):
         path.reverse()
         return '.'.join(path)
 
-    def register(self, **kwargs):
+    def register(self, prefix=None, **kwargs):
         for key in kwargs:
             value = kwargs[key]  # type: Prometheus
-            self.attributes[key] = value
             value.parent = self
             value.name = key
+            self.attributes[key] = PrometheusAttribute(value, prefix)
 
     def recursive_attributes(self):
         instances = list()
         for key in self.attributes.keys():
-            value = self.attributes[key]  # :type Prometheus
+            value = self.attributes[key]  # :type PrometheusAttribute
             instances.append(value)
-            instances.extend(value.recursive_attributes())
+            instances.extend(value.instance.recursive_attributes())
         return instances
 
     def recursive_remap(self, remap=True):
@@ -94,20 +104,22 @@ class Prometheus(object):
             remap_counter = RemapCounter(65)
         commands = self.data_commands()
         # TODO: not adding self to attributes list atm
-        instances = self.recursive_attributes()  # type: list(Prometheus)
+        prometheus_attributes = self.recursive_attributes()  # type: list(PrometheusAttribute)
         blah = dict()
-        for instance in instances:
-            blah[instance.logical_path()] = instance
+        for prometheus_attribute in prometheus_attributes:
+            print prometheus_attribute.instance, prometheus_attribute.prefix
+            blah[prometheus_attribute.instance.logical_path()] = prometheus_attribute
 
         keys = blah.keys()
         keys.sort()
         prefix = None
 
         for key in keys:
-            instance = blah[key]
+            prometheus_attribute = blah[key]
             if remap:
                 prefix = chr(remap_counter.next())
-            attribute_commands = instance.data_commands(data_value_prefix=prefix)
+            attribute_commands = prometheus_attribute.instance.data_commands(data_value_prefix=prometheus_attribute.prefix)
+            # data_value_prefix=prefix
             # print key, attribute_commands
             for akey in attribute_commands.keys():
                 commands[akey] = attribute_commands[akey]

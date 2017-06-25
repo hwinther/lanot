@@ -108,7 +108,11 @@ class CodeValue:
         # type: (str, str, str) -> None
         self.name = name
         if value[0] == 'b' and len(value) > 1:
-            value = chr(int(value[1:]))
+            try:
+                value = chr(int(value[1:]))
+            except:
+                pass
+                # print('Failed to parse %s to bytes' % repr(value[1:]))
         self.value = value
         self.out = out
 
@@ -225,16 +229,18 @@ class CodeFile:
 
 
 class PrometheusTemplate(object):
-    def __init__(self, instance, name, parent):
+    def __init__(self, instance, name, parent, prefix=None):
         """
         :param instance: prometheus.Prometheus
         :param name: str
         :param parent: PrometheusTemplate
+        :param prefix: str
         """
         self.instance = instance  # type: prometheus.Prometheus
         self.name = name  # type: str
         self.children = list()  # type: list<prometheus.Prometheus>
         self.parent = parent  # type: PrometheusTemplate
+        self.prefix = prefix
 
     def generate(self, template_class, parent_class_name, generated_class_name, remap_counter=None, data_value_prefix=None):
         """
@@ -257,7 +263,9 @@ class PrometheusTemplate(object):
             value = self.instance.commands[key]
             if isinstance(value, prometheus.RegisteredMethod):
                 command_key = value.data_value
-                if remap_counter:
+                if self.prefix:
+                    command_key = self.prefix + command_key
+                elif remap_counter:
                     command_key = chr(remap_counter.next()) + command_key
                 elif data_value_prefix:
                     command_key = data_value_prefix + command_key
@@ -449,15 +457,16 @@ def generate_template(template_class_name, generated_class_name, method_template
     return ''.join(template) + '\n' + '\n'.join(method_templates) + '\n\n'
 
 
-def generate_template_classes(template_classes, instance, name, parent=None):
+def generate_template_classes(template_classes, instance, name, parent=None, prefix=None):
     """
     :type template_classes: list
     :type instance: Prometheus
     :type name: str
-    :type parent PrometheusTemplate
+    :type parent: PrometheusTemplate
+    :type prefix: str
     """
 
-    prometheus_template = PrometheusTemplate(instance, name, parent)
+    prometheus_template = PrometheusTemplate(instance, name, parent, prefix)
     template_classes.append(prometheus_template)
 
     if parent:
@@ -465,8 +474,9 @@ def generate_template_classes(template_classes, instance, name, parent=None):
         parent.children.append(prometheus_template)
 
     # should only contain inheritors of prometheus
-    for key in instance.attributes:
-        generate_template_classes(template_classes, instance.attributes[key], key, prometheus_template)
+    for key in instance.attributes.keys():
+        prometheus_attribute = instance.attributes[key]  # type: prometheus.PrometheusAttribute
+        generate_template_classes(template_classes, prometheus_attribute.instance, key, prometheus_template, prefix=prometheus_attribute.prefix)
 
 
 def generate_python_template(source_class, template_class, generated_class_name, subclasses=True):
@@ -489,19 +499,16 @@ def generate_python_template(source_class, template_class, generated_class_name,
     supportclass_templates = list()
     mainclass_template = ''
 
-    for x in template_classes:
-        print x.name
-
     for prometheus_template in template_classes:
         if not isinstance(prometheus_template, PrometheusTemplate):
             raise Exception('Object is not of type PrometheusTemplate')
 
-        print(prometheus_template.name, prometheus_template.instance)
+        # print(prometheus_template.name, prometheus_template.instance)
         if prometheus_template.name == 'self':
             mainclass_template = prometheus_template.generate(template_class, generated_class_name, generated_class_name)
         else:
             data_value_prefix = chr(remap_counter.next())
-            print('prefix=%s for %s' % (data_value_prefix, prometheus_template.name))
+            # print('prefix=%s for %s' % (data_value_prefix, prometheus_template.name))
             supportclass_template = prometheus_template.generate(prometheus.InputOutputProxy, generated_class_name,
                                                                  generate_class_name(prometheus_template.name),
                                                                  data_value_prefix=data_value_prefix)
@@ -514,11 +521,11 @@ def generate_python_template(source_class, template_class, generated_class_name,
     return full_template
 
 
-# folder_test()
+folder_test()
 
 # TODO: make the following code dynamic?
 imports = 'import prometheus\nimport socket\nimport machine\n\n\n'
-"""
+
 from main import Tank
 
 open(os.path.join('..', '..', '..', 'build', 'clients', 'tankclient.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') + imports +
@@ -553,9 +560,9 @@ open(os.path.join('..', '..', '..', 'build', 'clients', 'proxyclient.py'), 'w').
                                                                                                                subclasses=False)
                                                                                       )
 
-"""
+
 from chaintest import A, B, C
-"""
+
 open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientA.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d '
                                                                                                                                                '%H:%M:%S') +
                                                                                       imports +
@@ -564,7 +571,7 @@ open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientA.py'), 'w')
                                                                                                                generated_class_name='AUdp',
                                                                                                                subclasses=True)
                                                                                       )
-"""
+
 open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientB.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d '
                                                                                                                                                '%H:%M:%S') +
                                                                                       imports +
@@ -573,7 +580,7 @@ open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientB.py'), 'w')
                                                                                                                generated_class_name='BUdp',
                                                                                                                subclasses=True)
                                                                                       )
-"""
+
 open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientC.py'), 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d '
                                                                                                                                                '%H:%M:%S') +
                                                                                       imports +
@@ -582,4 +589,4 @@ open(os.path.join('..', '..', '..', 'build', 'clients', 'chainclientC.py'), 'w')
                                                                                                                generated_class_name='CUdp',
                                                                                                                subclasses=True)
                                                                                       )
-"""
+
