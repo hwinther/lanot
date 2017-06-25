@@ -11,10 +11,10 @@ webrepl.start()
 gc.collect()
 
 wlan = network.WLAN(network.STA_IF)
-# ap_if = network.WLAN(network.AP_IF)
 # turn off ap
-# if ap_if.active():
-# 	ap_if.active(False)
+ap_if = network.WLAN(network.AP_IF)
+if ap_if.active():
+    ap_if.active(False)
 
 if not wlan.active():
     wlan.active(True)

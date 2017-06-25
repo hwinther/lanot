@@ -1,5 +1,4 @@
 import machine
-import dht
 
 
 class RegisteredMethod(object):
@@ -98,26 +97,28 @@ class Prometheus(object):
             instances.extend(value.instance.recursive_attributes())
         return instances
 
-    def recursive_remap(self, remap=True):
-        remap_counter = None
-        if remap:
-            remap_counter = RemapCounter(65)
+    def recursive_remap(self):  # remap=True
+        # remap_counter = None
+        # if remap:
+        #     remap_counter = RemapCounter(65)
         commands = self.data_commands()
-        # TODO: not adding self to attributes list atm
+
+        # TODO: clean up the whole map thing? it doesnt help now
         prometheus_attributes = self.recursive_attributes()  # type: list(PrometheusAttribute)
-        blah = dict()
+        # blah = dict()
+        # for prometheus_attribute in prometheus_attributes:
+        #     # print('%s %s' % (repr(prometheus_attribute.instance), repr(prometheus_attribute.prefix)))
+        #     blah[prometheus_attribute.instance.logical_path()] = prometheus_attribute
+
+        # keys = blah.keys()
+        # keys.sort()
+        # prefix = None
+
+        # for key in keys:
+        #     prometheus_attribute = blah[key]
         for prometheus_attribute in prometheus_attributes:
-            print prometheus_attribute.instance, prometheus_attribute.prefix
-            blah[prometheus_attribute.instance.logical_path()] = prometheus_attribute
-
-        keys = blah.keys()
-        keys.sort()
-        prefix = None
-
-        for key in keys:
-            prometheus_attribute = blah[key]
-            if remap:
-                prefix = chr(remap_counter.next())
+            # if remap:
+            #     prefix = chr(remap_counter.next())
             attribute_commands = prometheus_attribute.instance.data_commands(data_value_prefix=prometheus_attribute.prefix)
             # data_value_prefix=prefix
             # print key, attribute_commands
@@ -125,7 +126,7 @@ class Prometheus(object):
                 commands[akey] = attribute_commands[akey]
         return commands
 
-    def data_commands(self, remap_counter=None, data_value_prefix=None):
+    def data_commands(self, data_value_prefix=None):  # remap_counter=None,
         commands = dict()
 
         command_keys = list(self.commands.keys())
@@ -133,9 +134,9 @@ class Prometheus(object):
         for key in command_keys:
             value = self.commands[key]
             if isinstance(value, RegisteredMethod):
-                if remap_counter:
-                    command_key = chr(remap_counter.next()) + value.data_value
-                elif data_value_prefix:
+                # if remap_counter:
+                #     command_key = chr(remap_counter.next()) + value.data_value
+                if data_value_prefix:
                     command_key = data_value_prefix + value.data_value
                 else:
                     command_key = value.data_value
@@ -200,50 +201,6 @@ class Led(Prometheus):
     @Registry.register('Led', 'S', 'OUT')
     def state(self):
         return self.pin.value()
-
-
-class Dht11(Prometheus):
-    def __init__(self, pin):
-        """
-        :type pin: machine.Pin
-        """
-        Prometheus.__init__(self)
-        self.pin = pin
-        self.dht = dht.DHT11(self.pin)
-
-    @Registry.register('Dht11', 'm')
-    def measure(self):
-        self.dht.measure()
-
-    @Registry.register('Dht11', 't', 'OUT')
-    def temperature(self):
-        return self.dht.temperature()
-
-    @Registry.register('Dht11', 'h', 'OUT')
-    def humidity(self):
-        return self.dht.humidity()
-
-
-class Dht22(Prometheus):
-    def __init__(self, pin):
-        """
-        :type pin: machine.Pin
-        """
-        Prometheus.__init__(self)
-        self.pin = pin
-        self.dht = dht.DHT22(self.pin)
-
-    @Registry.register('Dht22', 'm')
-    def measure(self):
-        self.dht.measure()
-
-    @Registry.register('Dht22', 't', 'OUT')
-    def temperature(self):
-        self.dht.temperature()
-
-    @Registry.register('Dht22', 'h', 'OUT')
-    def humidity(self):
-        return self.dht.humidity()
 
 
 class Adc(Prometheus):

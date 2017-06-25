@@ -54,32 +54,32 @@ serial0recv:
 	#endif DEBUG
 
 	select case b0
-	case 48 '0 ''''out|all_off=b48''''
+	case 48 '0 ''''out|all_off=0d48''''
 		low LedSpot1
 		low LedLeft1
 		low LedRight1
 		serout Serial0OutputPin, Serial0OutputSpeed, ("A0",10)
-	case 49 '1 ''''out|main_on=b49''''
+	case 49 '1 ''''out|main_on=0d49''''
 		high LedSpot1
 		serout Serial0OutputPin, Serial0OutputSpeed, ("H1",10)
-	case 50 '2 ''''out|left_on=b50''''
+	case 50 '2 ''''out|left_on=0d50''''
 		high LedLeft1
 		serout Serial0OutputPin, Serial0OutputSpeed, ("L1",10)
-	case 51 '3 ''''out|right_on=b51''''
+	case 51 '3 ''''out|right_on=0d51''''
 		high LedRight1
 		serout Serial0OutputPin, Serial0OutputSpeed, ("R1",10)
-	case 52 '4 ''''out|front_on=b52''''
+	case 52 '4 ''''out|front_on=0d52''''
 		high LedLeft1
 		high LedRight1
 		serout Serial0OutputPin, Serial0OutputSpeed, ("LR1",10)
-	case 53 '5 ''''out|all_on=b53''''
+	case 53 '5 ''''out|all_on=0d53''''
 		high LedSpot1
 		high LedLeft1
 		high LedRight1
 		serout Serial0OutputPin, Serial0OutputSpeed, ("A1",10)
-	case 63 '? ''''out|capability=b63''''
+	case 63 '? ''''out|capability=0d63''''
 		serout Serial0OutputPin, Serial0OutputSpeed, (CAPABILITY,10)
-	case 86 'V ''''out|version=b86''''
+	case 86 'V ''''out|version=0d86''''
 		serout Serial0OutputPin, Serial0OutputSpeed, (NAME, " V",#VERSION,10)
 	case 254 'no decorator
 		serout Serial0OutputPin, Serial0OutputSpeed, ("TRY0-5",10)
