@@ -1,6 +1,49 @@
 import machine
 
 
+class Buffer(object):
+    """
+    Copied from RadioNetwork.Handlers.PacketParser
+    :type Packets: list(str)
+    :type packetBuffer: str
+    :type splitChars: str
+    :type endChars: str
+    """
+    def __init__(self, split_chars, end_chars):
+        """
+        :rtype: Buffer
+        """
+        self.Packets = list()
+        self.packetBuffer = ''
+        self.splitChars = split_chars
+        self.endChars = end_chars
+
+    def parse(self, packetdata):
+        # type: (str) -> None
+        # TODO: add cleanup routine, clear buffer after x seconds
+        if packetdata == '':
+            return
+
+        self.packetBuffer += packetdata
+        rest = ''
+        for segment in self.packetBuffer.split(self.splitChars):
+            if segment == '':
+                # the segment empty or only POLYNOMIAL, ignore it
+                pass
+            elif segment.find(self.endChars) != -1:
+                s = segment.split(self.endChars)[0]  # discard everything after
+                self.Packets.append(s)
+            else:
+                rest += self.splitChars + segment
+        self.packetBuffer = rest
+
+    def pop(self):
+        # rtype: str
+        if len(self.Packets) != 0:
+            return self.Packets.pop(0)
+        return None
+
+
 class RegisteredMethod(object):
     def __init__(self, class_name, method_name, method_reference, data_value, return_type, instance=None):
         self.class_name = class_name

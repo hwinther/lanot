@@ -43,9 +43,9 @@ class Tank(prometheus.Prometheus):
         self.register(lightControl=self.lightControl)
         self.sensors = machine.UART(0, baudrate=2400, pins=('GP1', 'GP2'))
         self.led_blue = prometheus.Led(machine.Pin('GP16', mode=machine.Pin.OUT))
-        self.register(led_blue=self.led_blue)
+        self.register(prefix='b', led_blue=self.led_blue)
         self.led_red = prometheus.Led(machine.Pin('GP11', mode=machine.Pin.OUT))
-        self.register(led_red=self.led_red)
+        self.register(prefix='r', led_red=self.led_red)
 
     @prometheus.Registry.register('Tank', 'W')
     def fast_forward(self, sec=1):

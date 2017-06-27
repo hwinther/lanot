@@ -6,6 +6,8 @@ import machine
 import prometheus
 import socket
 import datetime
+import time
+from prometheus import Buffer
 
 # TODO: move these template classes to another python file? perhaps one for each via python modules
 
@@ -14,16 +16,18 @@ class SerialTemplate(prometheus.RemoteTemplate):
     def __init__(self, channel, baudrate):
         prometheus.RemoteTemplate.__init__(self)
         self.uart = machine.UART(channel, baudrate=baudrate)
+        self.buffer = Buffer(split_chars=b'\n', end_chars=b'\n')
         # POST_INIT
 
     def send(self, data):
-        self.uart.write(data + b'\n')
+        self.uart.write(data + self.buffer.endChars)
 
     def recv(self, buffersize=None):
         if buffersize:
-            return self.uart.read(buffersize)
+            self.buffer.parse(self.uart.read(buffersize))
         else:
-            return self.uart.read()
+            self.buffer.parse(self.uart.read())
+        return self.buffer.pop()
 
     # cut
 
@@ -36,8 +40,60 @@ class SerialTemplate(prometheus.RemoteTemplate):
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self):
         self.send(b'VALUE')
-        # TODO: pause maybe
-        return self.recv(4)
+        self.recv(4)
+        # TODO: replace this with something better?
+        time.sleep(0.5)
+        return self.buffer.pop()
+
+
+class UdpTemplate(prometheus.RemoteTemplate):
+    def __init__(self, remote_host, remote_port=9195, local_port=9195):
+        prometheus.RemoteTemplate.__init__(self)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.socket.bind(('', local_port))
+        self.socket.settimeout(0)
+        self.remote_addr = (remote_host, remote_port)
+        self.buffers = dict()
+        # POST_INIT
+
+    def send(self, data):
+        self.socket.sendto(data + b'\n', self.remote_addr)
+
+    def try_recv(self, buffersize):
+        try:
+            return self.socket.recvfrom(buffersize)  # data, addr
+        except OSError:
+            return None, None
+
+    def recv(self, buffersize=10):
+        data, addr = self.try_recv(buffersize)
+        if data is None:
+            return None
+        if addr not in self.buffers:
+            self.buffers[addr] = Buffer(split_chars=b'\n', end_chars=b'\n')
+        self.buffers[addr].parse(data)
+        return self.buffers[addr].pop()
+
+    def recv_timeout(self, buffersize, timeout):
+        timestamp = time.time()
+        while (time.time() - timestamp) > 0.5:
+            data = self.recv(buffersize)
+            if data is not None:
+                return data
+        return None
+
+    # cut
+
+    # noinspection PyPep8Naming
+    @prometheus.Registry.register('CLASS_NAME', 'VALUE')
+    def METHOD_NAME(self):
+        self.send(b'VALUE')
+
+    # noinspection PyPep8Naming
+    @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
+    def METHOD_NAME_OUT(self):
+        self.send(b'VALUE')
+        return self.recv_timeout(4, 0.5)
 
 
 class TcpTemplate(prometheus.RemoteTemplate):
@@ -54,39 +110,6 @@ class TcpTemplate(prometheus.RemoteTemplate):
 
     def recv(self, buffersize=10):
         return self.socket.recv(buffersize)
-
-    # cut
-
-    # noinspection PyPep8Naming
-    @prometheus.Registry.register('CLASS_NAME', 'VALUE')
-    def METHOD_NAME(self):
-        self.send(b'VALUE')
-
-    # noinspection PyPep8Naming
-    @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
-    def METHOD_NAME_OUT(self):
-        self.send(b'VALUE')
-        # TODO: pause maybe
-        return self.recv(4)
-
-
-class UdpTemplate(prometheus.RemoteTemplate):
-    def __init__(self, remote_host, remote_port=9195, local_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.bind(('', local_port))
-        self.remote_addr = (remote_host, remote_port)
-        # POST_INIT
-
-    def send(self, data):
-        self.socket.sendto(data, self.remote_addr)
-
-    def recv(self, buffersize=10):
-        # TODO: addr is not checked, this could be sent by anyone and renders multiple connections moot
-        self.socket.setblocking(False)
-        data, addr = self.socket.recvfrom(buffersize)
-        self.socket.setblocking(True)
-        return data
 
     # cut
 
@@ -238,16 +261,16 @@ class PrometheusTemplate(object):
         self.parent = parent  # type: PrometheusTemplate
         self.prefix = prefix
 
-    def generate(self, template_class, parent_class_name, generated_class_name, remap_counter=None, data_value_prefix=None):
+    def generate(self, template_class, parent_class_name, generated_class_name, data_value_prefix=None):
         """
         :param template_class: Type<prometheus.InputOutputProxy>
         :param parent_class_name: str
         :param generated_class_name: str
-        :param remap_counter: prometheus.RemapCounter
         :param data_value_prefix: str
         :return: str
         """
         # generate method templates and arrange command values
+        # rem param remap_counter: prometheus.RemapCounter
         if self.parent is not None:
             generated_class_name = parent_class_name + generated_class_name
         template_commands = dict()
@@ -261,8 +284,8 @@ class PrometheusTemplate(object):
                 command_key = value.data_value
                 if self.prefix:
                     command_key = self.prefix + command_key
-                elif remap_counter:
-                    command_key = chr(remap_counter.next()) + command_key
+                # elif remap_counter:
+                #     command_key = chr(remap_counter.next()) + command_key
                 elif data_value_prefix:
                     command_key = data_value_prefix + command_key
                 if command_key in template_commands.keys():
@@ -328,7 +351,7 @@ def parse_folder(path):
     return code_files
 
 
-def folder_test():
+def folder_import():
     path = os.path.join('..', '..', 'devices')
     all_code = list()
     for folder in os.listdir(path):
@@ -395,7 +418,7 @@ def generate_python_template(source_class, template_class, generated_class_name,
     # this will only work for a Prometheus inheritor, but it should be kept separate from it in order to separate code templating/build from dist
     generate_template_classes(template_classes, instance, 'self')
 
-    remap_counter = prometheus.RemapCounter(65)
+    # remap_counter = prometheus.RemapCounter(65)
     supportclass_templates = list()
     mainclass_template = ''
 
@@ -407,11 +430,11 @@ def generate_python_template(source_class, template_class, generated_class_name,
         if prometheus_template.name == 'self':
             mainclass_template = prometheus_template.generate(template_class, generated_class_name, generated_class_name)
         else:
-            data_value_prefix = chr(remap_counter.next())
+            # data_value_prefix = chr(remap_counter.next())
             # print('prefix=%s for %s' % (data_value_prefix, prometheus_template.name))
             supportclass_template = prometheus_template.generate(prometheus.InputOutputProxy, generated_class_name,
                                                                  generate_class_name(prometheus_template.name),
-                                                                 data_value_prefix=data_value_prefix)
+                                                                 data_value_prefix=None)
             supportclass_template = supportclass_template.replace('(Prometheus):', '(prometheus.Prometheus):')
             supportclass_template = supportclass_template.replace('Prometheus.__init__(self)', 'prometheus.Prometheus.__init__(self)')
             supportclass_template = supportclass_template.replace('@Registry.register', '@prometheus.Registry.register')
@@ -446,7 +469,7 @@ def build_client(instance, output_filename, client_template_instances):
         '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+
         imports + '\n'.join(code))
 
-# folder_test()
+folder_import()
 
 from tank import Tank
 build_client(Tank, 'tankclient.py', [TcpTemplate, UdpTemplate])

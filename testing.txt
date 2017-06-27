@@ -1,0 +1,28 @@
+a = A()
+x = a.recursive_attributes()[0]
+x.path()
+
+
+c = C()
+m = c.recursive_remap()
+
+
+CLIENT:
+
+c = CUdp('localhost', remote_port=9101, local_port=9102)
+c.toggle()
+c.b_object.toggle()
+c.b_object.a_object.toggle()
+
+b = BUdp('localhost', remote_port=9101, local_port=9102)
+b.toggle()
+b.a_object.toggle()
+
+
+SERVER:
+
+c = C()
+c.start_socket_server('', 9101)
+
+b = B()
+b.start_socket_server('', 9101)
