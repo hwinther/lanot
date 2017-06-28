@@ -46,5 +46,6 @@ class C(prometheus.Prometheus):
 
 if __name__ == '__main__':
     a = A()
+    # audp = prometheus.UdpSocketServer(a)
     b = B()
     c = C()

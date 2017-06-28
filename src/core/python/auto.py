@@ -7,7 +7,7 @@ import prometheus
 import socket
 import datetime
 import time
-from prometheus import Buffer
+
 
 # TODO: move these template classes to another python file? perhaps one for each via python modules
 
@@ -16,11 +16,11 @@ class SerialTemplate(prometheus.RemoteTemplate):
     def __init__(self, channel, baudrate):
         prometheus.RemoteTemplate.__init__(self)
         self.uart = machine.UART(channel, baudrate=baudrate)
-        self.buffer = Buffer(split_chars=b'\n', end_chars=b'\n')
+        self.buffer = prometheus.Buffer(split_chars=b'\n', end_chars=b'\r')
         # POST_INIT
 
     def send(self, data):
-        self.uart.write(data + self.buffer.endChars)
+        self.uart.write(data + self.buffer.endChars + self.buffer.splitChars)
 
     def recv(self, buffersize=None):
         if buffersize:
@@ -28,6 +28,10 @@ class SerialTemplate(prometheus.RemoteTemplate):
         else:
             self.buffer.parse(self.uart.read())
         return self.buffer.pop()
+
+    def recv_timeout(self, buffersize, timeout):
+        # TODO: actually implement this
+        raise Exception('Not implemented due to lazyness')
 
     # cut
 
@@ -40,44 +44,56 @@ class SerialTemplate(prometheus.RemoteTemplate):
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self):
         self.send(b'VALUE')
-        self.recv(4)
+        self.recv(10)
         # TODO: replace this with something better?
         time.sleep(0.5)
         return self.buffer.pop()
 
 
 class UdpTemplate(prometheus.RemoteTemplate):
-    def __init__(self, remote_host, remote_port=9195, local_port=9195):
+    def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
         prometheus.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.socket.bind(('', local_port))
+        self.socket.bind((bind_host, bind_port))
+        print('listening on %s:%d' % (bind_host, bind_port))
         self.socket.settimeout(0)
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
+        self.splitChars = b'\n'
+        self.endChars = b'\r'
         # POST_INIT
 
     def send(self, data):
-        self.socket.sendto(data + b'\n', self.remote_addr)
+        self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
 
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except OSError:
+        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
             return None, None
 
-    def recv(self, buffersize=10):
+    def recv_once(self, buffersize=10):
         data, addr = self.try_recv(buffersize)
         if data is None:
             return None
         if addr not in self.buffers:
-            self.buffers[addr] = Buffer(split_chars=b'\n', end_chars=b'\n')
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
         return self.buffers[addr].pop()
 
+    def recv(self, buffersize=10):
+        return self.recv_timeout(buffersize, 0.5)
+
     def recv_timeout(self, buffersize, timeout):
+        """
+        :param buffersize: int
+        :param timeout: float
+        :return: str
+        """
         timestamp = time.time()
-        while (time.time() - timestamp) > 0.5:
-            data = self.recv(buffersize)
+        while (time.time() - timestamp) < timeout:
+            # print('try recv: %s' % time.time())
+            data = self.recv_once(buffersize)
             if data is not None:
                 return data
         return None
@@ -93,7 +109,7 @@ class UdpTemplate(prometheus.RemoteTemplate):
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self):
         self.send(b'VALUE')
-        return self.recv_timeout(4, 0.5)
+        return self.recv_timeout(10, 0.5)
 
 
 class TcpTemplate(prometheus.RemoteTemplate):
@@ -367,7 +383,8 @@ def folder_import():
     # print(template)
     print('writing to %s' % outfile)
     open(outfile, 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +
-                             'import prometheus\nimport machine\n\n\n' + template)
+                             'import prometheus\nimport socket\nimport machine\nimport time\nimport gc\n\ngc.collect()\n\n\n'
+                             + template)
     # '\n\n' + ''.join(inspect.getsourcelines(prometheus.Prometheus)[0])
     # ''.join(inspect.getsourcelines(prometheus.Registry)[0]) + '\n\n'
     # SerialTemplate.NAME()
@@ -452,7 +469,7 @@ def build_client(instance, output_filename, client_template_instances):
     :return: None
     """
     # TODO: dynamically determine imports necesary for this specific module?
-    imports = 'import prometheus\nimport socket\nimport machine\n\n\n'
+    imports = 'import prometheus\nimport socket\nimport machine\nimport time\nimport gc\n\ngc.collect()\n\n\n'
     code = list()
     subclasses = True  # only for the first instance
     classes = list()
@@ -467,7 +484,7 @@ def build_client(instance, output_filename, client_template_instances):
     print('Writing to %s, classes: %s' % (output_path, ', '.join(classes)))
     open(output_path, 'w').write(
         '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+
-        imports + '\n'.join(code))
+        imports + '\n\n'.join(code))
 
 folder_import()
 

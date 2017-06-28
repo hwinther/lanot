@@ -1,4 +1,9 @@
 import machine
+import socket
+import gc
+
+
+gc.collect()
 
 
 class Buffer(object):
@@ -26,12 +31,15 @@ class Buffer(object):
 
         self.packetBuffer += packetdata
         rest = ''
+        # print('for segment in split on %s len=%d' % (self.splitChars, len(self.packetBuffer.split(self.splitChars))))
         for segment in self.packetBuffer.split(self.splitChars):
+            # print('segment[%s].find %s = %s' % (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
             if segment == '':
                 # the segment empty or only POLYNOMIAL, ignore it
                 pass
             elif segment.find(self.endChars) != -1:
                 s = segment.split(self.endChars)[0]  # discard everything after
+                # print('appending packet')
                 self.Packets.append(s)
             else:
                 rest += self.splitChars + segment
@@ -193,37 +201,6 @@ class Prometheus(object):
 
         return commands
 
-    def start_socket_server(self, bind_host='', bind_port=9195):
-        data_commands = self.recursive_remap()
-        import socket
-        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        s.bind((bind_host, bind_port))
-        print('listening on %s:%d' % (bind_host, bind_port))
-        looping = True
-        while looping:
-            data, addr = s.recvfrom(1024)
-            print('recv %s from %s' % (repr(data), repr(addr)))
-            for cmd in data.decode('utf-8').split('\n'):
-                if cmd == '':
-                    continue
-
-                print('input:', cmd)
-
-                if cmd in data_commands:
-                    registered_method = data_commands[cmd]
-                    # assert isinstance(registered_method, RegisteredMethod)
-                    return_value = registered_method.method_reference()
-                    if registered_method.return_type == 'str':
-                        print('returning %s to %s' % (return_value, repr(addr)))
-                        s.sendto(b'%s' % return_value, addr)
-                elif cmd == 'die':
-                    print('die command received')
-                    looping = False
-                    break
-                else:
-                    print('invalid cmd', cmd)
-        s.close()
-
 
 class Led(Prometheus):
     def __init__(self, pin):
@@ -280,8 +257,8 @@ class InputOutputProxy(Prometheus):
     @Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self):
         self.send(b'VALUE')
-        # TODO: pause maybe
-        return self.recv(4)
+        # TODO: determine output size declaratively in source?
+        return self.recv(10)
 
 
 class RemoteTemplate(Prometheus):
@@ -306,35 +283,75 @@ class RemapCounter:
         return self.counter - 1
 
 
-def map_data_commands(commands, data_commands, remap_counter=None, context='self', instance=None):
-    """
-    :type commands: dict
-    :type data_commands: dict
-    :type remap_counter: RemapCounter
-    :type context: str
-    :type instance: Prometheus
-    """
-    command_keys = list(commands.keys())
-    command_keys.sort()
+class Server(object):
+    # :type data_commands: dict
+    def __init__(self, instance):
+        """
+        :type instance: Prometheus
+        :param instance: Instance of Prometheus
+        """
+        self.instance = instance
+        self.data_commands = self.instance.recursive_remap()
+        self.loopActive = False
 
-    for key in command_keys:
-        value = commands[key]
-        if isinstance(value, RegisteredMethod):
-            if context != 'self' and remap_counter:
-                command_key = chr(remap_counter.next()) + value.data_value
-            else:
-                command_key = value.data_value
-            if command_key in data_commands.keys():
-                print('Warning: overwriting reference for data_value %s' % command_key)
-            data_commands[command_key] = value  # value.method_reference
-            print('Added reference for %s.%s (%s) data_value %s' % (context, value.method_name, value.method_reference, command_key))
-        # elif isinstance(value, dict):
-        #     print('its a dict, going derper [2]: %s' % value)
-        #     map_data_commands(value, data_commands, remap, remap_counter, context=key)
+    def handle_data(self, command, source=None):
+        if command == '':
+            return
 
-    if instance:
-        attribute_keys = list(instance.attributes.keys())
-        attribute_keys.sort()
-        for key in attribute_keys:
-            value = instance.attributes[key]  # type: Prometheus
-            map_data_commands(value.commands, data_commands, remap_counter, context=key, instance=value)
+        print('input:', command)
+
+        if command in self.data_commands:
+            registered_method = self.data_commands[command]  # type: RegisteredMethod
+            return_value = registered_method.method_reference()
+            if registered_method.return_type == 'str':
+                self.reply(return_value, source)
+        elif command == 'die':
+            print('die command received')
+            self.loopActive = False
+            return
+        else:
+            print('invalid cmd', command)
+
+    def reply(self, return_value, source=None):
+        pass
+
+
+class UdpSocketServer(Server):
+    def __init__(self, instance):
+        Server.__init__(self, instance)
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        self.splitChars = b'\n'
+        self.endChars = b'\r'
+
+    def start(self, bind_host='', bind_port=9195):
+        self.socket.bind((bind_host, bind_port))
+        print('listening on %s:%d' % (bind_host, bind_port))
+
+        buffers = dict()  # :type list(Buffer)
+
+        self.loopActive = True
+        while self.loopActive:
+            data, addr = self.socket.recvfrom(1024)
+            print('recv %s from %s' % (repr(data), repr(addr)))
+
+            # for command in data.decode('utf-8').split('\n'):
+            if addr not in buffers.keys():
+                print('creating new buffer context')
+                buffers[addr] = Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+
+            buffers[addr].parse(data)
+
+            while True:
+                command = buffers[addr].pop()
+                if command is None:
+                    # print('Breaking command loop')
+                    break
+                # print('Calling handle data')
+                self.handle_data(command, addr)
+
+        self.socket.close()
+
+    def reply(self, return_value, source=None):
+        Server.reply(self, return_value)
+        print('returning %s to %s' % (return_value, repr(source)))
+        self.socket.sendto(b'%s%s%s' % (return_value, self.endChars, self.splitChars), source)

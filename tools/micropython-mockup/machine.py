@@ -40,22 +40,24 @@ class Pin:
         self.pin = pin
         self.mode = mode
         self.alt = alt
+        self.state_value = False
 
     def init(self, pin, mode, alt=None):
         self.pin = pin
         self.mode = mode
         self.alt = alt
 
-    def value(self, value=None):
-        if not value:
-            print('Pin %s returning default true' % self.pin)
-            return True
+    def value(self, value_parameter=None):
+        if value_parameter is None:
+            print('Pin %s returning value %s' % (self.pin, self.state_value))
+            return self.state_value
 
-        print('Pin %s value set to %s' %(self.pin, value))
+        print('Pin %s value set to %s' %(self.pin, value_parameter))
+        self.state_value = value_parameter
         return None
 
     def toggle(self):
-        pass
+        self.state_value = not self.state_value
 
 
 class Timer:
