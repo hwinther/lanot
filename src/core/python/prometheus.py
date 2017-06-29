@@ -60,6 +60,8 @@ class RegisteredMethod(object):
         self.data_value = data_value
         self.return_type = return_type
         self.instance = instance
+        self.logical_path = None
+        self.command_key = None
 
     def __repr__(self):
         return u"RegisteredMethod(class_name='%s' method_name='%s' method_reference=%s data_value='%s' return_type=%s)" % (self.class_name, self.method_name, self.method_reference, self.data_value, self.return_type)
@@ -193,11 +195,13 @@ class Prometheus(object):
                     command_key = value.data_value
                 if command_key in commands.keys():
                     print('Warning: overwriting reference for data_value %s' % command_key)
+                value.command_key = command_key
                 commands[command_key] = value
-                logical_path = ''
+                value.logical_path = ''
                 if value.instance:
                     logical_path = value.instance.logical_path()
-                print('%s\t-> %s\t%s\t%s' % (command_key, value.method_name, logical_path, value.method_reference))
+                    value.logical_path = logical_path
+                print('%s\t-> %s\t%s\t%s' % (command_key, value.method_name, value.logical_path, value.method_reference))
 
         return commands
 

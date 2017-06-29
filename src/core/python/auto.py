@@ -521,6 +521,8 @@ folder_import()
 
 from tank import Tank
 build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
+from tankproxy import TankProxy
+build_client(TankProxy, 'tankproxyclient.py', [UdpTemplate, TcpTemplate])
 from nodetest import NodeTest
 build_client(NodeTest, 'nodeclient.py', [UdpTemplate, TcpTemplate])
 from proxytest import ProxyTest
