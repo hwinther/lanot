@@ -113,19 +113,51 @@ class UdpTemplate(prometheus.RemoteTemplate):
 
 
 class TcpTemplate(prometheus.RemoteTemplate):
-    def __init__(self, remote_host, remote_port=9195, local_port=9195):
+    def __init__(self, remote_host, remote_port=9195, bind_host=None, bind_port=9195):
         prometheus.RemoteTemplate.__init__(self)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.socket.bind(('', local_port))
+        self.socket = None  # type: socket.socket
+        self.bind_host = bind_host
+        self.bind_port = bind_port
         self.remote_addr = (remote_host, remote_port)
-        self.socket.connect(self.remote_addr)
+        self.buffers = dict()
+        self.splitChars = b'\n'
+        self.endChars = b'\r'
         # POST_INIT
 
+    def create_socket(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if self.bind_host is not None:
+            print('bound to %s:%d' % (self.bind_host, self.bind_port))
+            self.socket.bind((self.bind_host, self.bind_port))
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.settimeout(5)
+        print('Connecting to %s' % repr(self.remote_addr))
+        self.socket.connect(self.remote_addr)
+
+    def send_once(self, data):
+        self.socket.send(data + self.endChars + self.splitChars)
+
     def send(self, data):
-        self.socket.sendall(data)
+        try:
+            self.send_once(data)
+        except:
+            self.create_socket()
+            self.send_once(data)
+
+    def try_recv(self, buffersize):
+        try:
+            return self.socket.recvfrom(buffersize)  # data, addr
+        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+            return None, None
 
     def recv(self, buffersize=10):
-        return self.socket.recv(buffersize)
+        data, addr = self.try_recv(buffersize)
+        if data is None:
+            return None
+        if addr not in self.buffers:
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+        self.buffers[addr].parse(data)
+        return self.buffers[addr].pop()
 
     # cut
 
@@ -138,11 +170,10 @@ class TcpTemplate(prometheus.RemoteTemplate):
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self):
         self.send(b'VALUE')
-        # TODO: pause maybe
-        return self.recv(4)
+        return self.recv(10)
 
 
-class CodeValue:
+class CodeValue(object):
     def __init__(self, name, value, out=False):
         # type: (str, str, bool) -> None
         self.name = name
@@ -176,7 +207,7 @@ class CodeValue:
         return 'CodeValue name=%s value=%s' % (self.name, self.value)
 
 
-class CodeBlock:
+class CodeBlock(object):
     def __init__(self, name, value):
         self.name = name.replace('\r', '')
         self.value = value
@@ -185,7 +216,7 @@ class CodeBlock:
         return 'CodeBlock name=%s value=%s' % (self.name, repr(self.value))
 
 
-class CodeFile:
+class CodeFile(object):
     FILE_UNKNOWN = -1
     FILE_BASIC = 0
     FILE_CPP = 1
@@ -461,9 +492,9 @@ def generate_python_template(source_class, template_class, generated_class_name,
     return full_template
 
 
-def build_client(instance, output_filename, client_template_instances):
+def build_client(cls, output_filename, client_template_instances):
     """
-    :param instance: Type[prometheus.Prometheus]
+    :param cls: type[prometheus.Prometheus]
     :param output_filename: str
     :param client_template_instances: list(Type[prometheus.Prometheus])
     :return: None
@@ -474,11 +505,11 @@ def build_client(instance, output_filename, client_template_instances):
     subclasses = True  # only for the first instance
     classes = list()
     for client_template_instance in client_template_instances:
-        generated_class_name = instance.__name__ + client_template_instance.__name__.replace('Template', '') + 'Client'
+        generated_class_name = cls.__name__ + client_template_instance.__name__.replace('Template', '') + 'Client'
         # print('Generating class: %s' % generated_class_name)
         classes.append(generated_class_name)
-        code.append(generate_python_template(source_class=instance, template_class=client_template_instance,
-                    generated_class_name=generated_class_name, subclasses=subclasses))
+        code.append(generate_python_template(source_class=cls, template_class=client_template_instance,
+                                             generated_class_name=generated_class_name, subclasses=subclasses))
         subclasses = False
     output_path = os.path.join('..', '..', '..', 'build', 'clients', output_filename)
     print('Writing to %s, classes: %s' % (output_path, ', '.join(classes)))
@@ -489,12 +520,12 @@ def build_client(instance, output_filename, client_template_instances):
 folder_import()
 
 from tank import Tank
-build_client(Tank, 'tankclient.py', [TcpTemplate, UdpTemplate])
+build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
 from nodetest import NodeTest
-build_client(NodeTest, 'nodeclient.py', [UdpTemplate])
+build_client(NodeTest, 'nodeclient.py', [UdpTemplate, TcpTemplate])
 from proxytest import ProxyTest
-build_client(ProxyTest, 'proxyclient.py', [UdpTemplate])
+build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
 from chaintest import A, B, C
-build_client(A, 'chainclientA.py', [UdpTemplate])
-build_client(B, 'chainclientB.py', [UdpTemplate])
-build_client(C, 'chainclientC.py', [UdpTemplate])
+build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
+build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
+build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])

@@ -1,5 +1,6 @@
 import prometheus
 import prometheus_esp8266
+import prometheus_servers
 import machine
 
 
@@ -18,4 +19,5 @@ class NodeTest(prometheus.Prometheus):
 
 if __name__ == '__main__':
     nodetest = NodeTest()
-    nodetest.start_socket_server()
+    s = prometheus_servers.UdpSocketServer(nodetest)
+    s.start()

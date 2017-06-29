@@ -33,13 +33,13 @@ class Buffer(object):
         rest = ''
         # print('for segment in split on %s len=%d' % (self.splitChars, len(self.packetBuffer.split(self.splitChars))))
         for segment in self.packetBuffer.split(self.splitChars):
-            # print('segment[%s].find %s = %s' % (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
+            print('segment[%s].find %s = %s' % (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
             if segment == '':
                 # the segment empty or only POLYNOMIAL, ignore it
                 pass
             elif segment.find(self.endChars) != -1:
                 s = segment.split(self.endChars)[0]  # discard everything after
-                # print('appending packet')
+                print('appending packet')
                 self.Packets.append(s)
             else:
                 rest += self.splitChars + segment
@@ -65,7 +65,7 @@ class RegisteredMethod(object):
         return u"RegisteredMethod(class_name='%s' method_name='%s' method_reference=%s data_value='%s' return_type=%s)" % (self.class_name, self.method_name, self.method_reference, self.data_value, self.return_type)
 
 
-class Registry:
+class Registry(object):
     r = dict()
 
     @classmethod
@@ -273,7 +273,7 @@ class RemoteTemplate(Prometheus):
         return None
 
 
-class RemapCounter:
+class RemapCounter(object):
     def __init__(self, value):
         # :type value: int
         self.counter = value
@@ -281,77 +281,3 @@ class RemapCounter:
     def next(self):
         self.counter += 1
         return self.counter - 1
-
-
-class Server(object):
-    # :type data_commands: dict
-    def __init__(self, instance):
-        """
-        :type instance: Prometheus
-        :param instance: Instance of Prometheus
-        """
-        self.instance = instance
-        self.data_commands = self.instance.recursive_remap()
-        self.loopActive = False
-
-    def handle_data(self, command, source=None):
-        if command == '':
-            return
-
-        print('input:', command)
-
-        if command in self.data_commands:
-            registered_method = self.data_commands[command]  # type: RegisteredMethod
-            return_value = registered_method.method_reference()
-            if registered_method.return_type == 'str':
-                self.reply(return_value, source)
-        elif command == 'die':
-            print('die command received')
-            self.loopActive = False
-            return
-        else:
-            print('invalid cmd', command)
-
-    def reply(self, return_value, source=None):
-        pass
-
-
-class UdpSocketServer(Server):
-    def __init__(self, instance):
-        Server.__init__(self, instance)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.splitChars = b'\n'
-        self.endChars = b'\r'
-
-    def start(self, bind_host='', bind_port=9195):
-        self.socket.bind((bind_host, bind_port))
-        print('listening on %s:%d' % (bind_host, bind_port))
-
-        buffers = dict()  # :type list(Buffer)
-
-        self.loopActive = True
-        while self.loopActive:
-            data, addr = self.socket.recvfrom(1024)
-            print('recv %s from %s' % (repr(data), repr(addr)))
-
-            # for command in data.decode('utf-8').split('\n'):
-            if addr not in buffers.keys():
-                print('creating new buffer context')
-                buffers[addr] = Buffer(split_chars=self.splitChars, end_chars=self.endChars)
-
-            buffers[addr].parse(data)
-
-            while True:
-                command = buffers[addr].pop()
-                if command is None:
-                    # print('Breaking command loop')
-                    break
-                # print('Calling handle data')
-                self.handle_data(command, addr)
-
-        self.socket.close()
-
-    def reply(self, return_value, source=None):
-        Server.reply(self, return_value)
-        print('returning %s to %s' % (return_value, repr(source)))
-        self.socket.sendto(b'%s%s%s' % (return_value, self.endChars, self.splitChars), source)
