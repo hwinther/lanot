@@ -185,7 +185,7 @@ class JsonRestServer(Server):
         urls = dict()
         for key in self.data_commands.keys():
             value = self.data_commands[key]
-            url = '/' + '/'.join(value.logical_path.split('.')) + '/' + value.method_name
+            url = b'/' + '/'.join(value.logical_path.split('.')) + b'/' + value.method_name
             print('url: %s' % url)
             urls[url] = value
 
@@ -210,12 +210,12 @@ class JsonRestServer(Server):
                 except:
                     data = None
                 found = False
-                if data is not None and data.find('\r\n') != -1:
-                    for line in data.split('\r\n'):
-                        if line == '':
+                if data is not None and data.find(b'\r\n') != -1:
+                    for line in data.split(b'\r\n'):
+                        if len(line) == 0:
                             continue
-                        if line.find('GET /') != -1:
-                            get = line.split(' ')[1]
+                        if line.find(b'GET /') != -1:
+                            get = line.split(b' ')[1]
                             print('get: %s' % get)
                             if get in urls.keys():
                                 print('found matching command_key')
@@ -227,7 +227,7 @@ class JsonRestServer(Server):
                                 found = True
                 if not found:
                     print('Returning 404')
-                    sock.send('HTTP/1.1 404 Not found\r\n')
+                    sock.send(b'HTTP/1.1 404 Not found\r\n')
                 try:
                     sock.close()
                 except:
