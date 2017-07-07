@@ -185,7 +185,7 @@ class JsonRestServer(Server):
         urls = dict()
         for key in self.data_commands.keys():
             value = self.data_commands[key]
-            url = b'/' + '/'.join(value.logical_path.split('.')) + b'/' + value.method_name
+            url = b'/' + '/'.join(value.logical_path.split('.')).replace('/root/', '/api/') + b'/' + value.method_name
             print('url: %s' % url)
             urls[url] = value
 
@@ -225,6 +225,8 @@ class JsonRestServer(Server):
                                     # give default empty response
                                     self.reply(None, sock)
                                 found = True
+                            elif get == b'/api':
+                                self.reply(urls.keys(), sock)
                 if not found:
                     print('Returning 404')
                     sock.send(b'HTTP/1.1 404 Not found\r\n')
