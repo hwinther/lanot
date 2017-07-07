@@ -385,6 +385,16 @@ class PrometheusTemplate(object):
         return ''.join(template) + '\n'.join(method_templates)
 
 
+class RemapCounter(object):
+    def __init__(self, value):
+        # :type value: int
+        self.counter = value
+
+    def next(self):
+        self.counter += 1
+        return self.counter - 1
+
+
 def parse_folder(path):
     code_files = list()
     for filename in os.listdir(path):
@@ -516,6 +526,7 @@ def build_client(cls, output_filename, client_template_instances):
     open(output_path, 'w').write(
         '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+
         imports + '\n\n'.join(code))
+
 
 folder_import()
 

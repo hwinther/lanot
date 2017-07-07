@@ -11,6 +11,8 @@
       <sourceFolder url="file://$MODULE_DIR$/tools/webrepl-master" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/proxy-test" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/chain-test" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/micropython" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/micropython-esp32" />
     </content>
     <orderEntry type="jdk" jdkName="Python 2.7.13 (C:\Python27\python.exe)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

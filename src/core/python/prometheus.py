@@ -275,13 +275,3 @@ class RemoteTemplate(Prometheus):
     def recv(self, buffersize=None):
         print('recv buffersize=%s' % buffersize)
         return None
-
-
-class RemapCounter(object):
-    def __init__(self, value):
-        # :type value: int
-        self.counter = value
-
-    def next(self):
-        self.counter += 1
-        return self.counter - 1
