@@ -185,7 +185,8 @@ class JsonRestServer(Server):
         urls = dict()
         for key in self.data_commands.keys():
             value = self.data_commands[key]
-            url = b'/' + '/'.join(value.logical_path.split('.')).replace('/root/', '/api/') + b'/' + value.method_name
+            url = '/'.join(value.logical_path.split('.')).replace('root/', 'api/').encode('ascii')
+            url = b'/' + url + b'/' + value.method_name.encode('ascii')
             print('url: %s' % url)
             urls[url] = value
 
@@ -226,7 +227,19 @@ class JsonRestServer(Server):
                                     self.reply(None, sock)
                                 found = True
                             elif get == b'/api':
-                                self.reply(urls.keys(), sock)
+                                l = list()
+                                for key in urls.keys():
+                                    l.append(key.decode('utf-8'))
+                                self.reply(l, sock)
+                            elif get == b'/api?class':
+                                d = dict()
+                                for key in urls.keys():
+                                    value = urls[key]  # type: RegisteredMethod
+                                    logical_key = value.logical_path.replace('root.', '')
+                                    if logical_key not in d.keys():
+                                        d[logical_key] = {'methods': list(), 'class': value.class_name, 'path': value.logical_path}
+                                    d[logical_key]['methods'].append({'name': value.method_name, 'uri': key.decode('utf-8')})
+                                self.reply(d, sock)
                 if not found:
                     print('Returning 404')
                     sock.send(b'HTTP/1.1 404 Not found\r\n')
@@ -239,6 +252,10 @@ class JsonRestServer(Server):
 
     def reply(self, return_value, source=None):
         Server.reply(self, return_value)
-        msg = json.dumps({'value': return_value})
+        if type(return_value) is dict or type(return_value) is list:
+            msg = json.dumps(return_value)
+        else:
+            msg = json.dumps({'value': return_value})
         print('returning %s to %s' % (msg, repr(source)))
-        source.send(b'HTTP/1.1 200 OK\r\nContent-Type: application/vnd.api+json\r\nContent-Length: %d\r\n\r\n%s' % (len(msg), msg))
+        response = 'HTTP/1.1 200 OK\r\nContent-Type: application/vnd.api+json\r\nContent-Length: %d\r\n\r\n%s' % (len(msg), msg)
+        source.send(response.encode('ascii'))

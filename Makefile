@@ -5,3 +5,4 @@ all:
 	$(CC) src/core/python/prometheus_servers.py
 	$(CC) src/core/python/prometheus_esp8266.py
 	mv src/core/python/*.mpy build/core/python/
+	cd tools && ./micropython-make.sh

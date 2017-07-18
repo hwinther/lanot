@@ -1,0 +1,13 @@
+gc.mem_free()
+gc.collect()
+gc.mem_free()
+from prometheus_servers import UdpSocketServer
+jt = UdpSocketServer(tank)
+gc.collect()
+gc.mem_free()
+jt.start()
+
+
+
+ds = ds18x20.DS18X20(onewire.OneWire(machine.Pin(12)))
+ds.scan()
