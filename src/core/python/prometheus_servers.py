@@ -20,6 +20,22 @@ class Server(object):
         self.data_commands = self.instance.recursive_remap()
         self.loopActive = False
 
+    def start(self, **kwargs):
+        self.pre_loop(**kwargs)
+        self.loopActive = True
+        while self.loopActive:
+            self.loop_tick(**kwargs)
+        self.post_loop(**kwargs)
+
+    def pre_loop(self, **kwargs):
+        pass
+
+    def post_loop(self, **kwargs):
+        pass
+
+    def loop_tick(self, **kwargs):
+        pass
+
     def handle_data(self, command, source=None):
         if command == '':
             return
@@ -48,8 +64,9 @@ class UdpSocketServer(Server):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.splitChars = '\n'
         self.endChars = '\r'
+        self.buffers = dict()  # :type list(Buffer)
 
-    def start(self, bind_host='', bind_port=9195):
+    def pre_loop(self, bind_host, bind_port, **kwargs):
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         except:
@@ -58,35 +75,35 @@ class UdpSocketServer(Server):
         self.socket.settimeout(0)
         print('listening on %s:%d' % (bind_host, bind_port))
 
-        buffers = dict()  # :type list(Buffer)
+    def start(self, bind_host='', bind_port=9195):
+        Server.start(self, bind_host=bind_host, bind_port=bind_port)
 
-        self.loopActive = True
-        while self.loopActive:
-            data, addr = None, None
-            try:
-                data, addr = self.socket.recvfrom(1024)
-            except:
-                pass
+    def loop_tick(self, **kwargs):
+        data, addr = None, None
+        try:
+            data, addr = self.socket.recvfrom(1024)
+        except:
+            pass
 
-            if data is None:
-                continue
+        if data is None:
+            return
 
-            print('recv %s from %s' % (repr(data), repr(addr)))
+        print('recv %s from %s' % (repr(data), repr(addr)))
 
-            if addr not in buffers.keys():
-                print('creating new buffer context')
-                buffers[addr] = Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+        if addr not in self.buffers.keys():
+            print('creating new buffer context')
+            self.buffers[addr] = Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+            self.buffers[addr].parse(data.decode('utf-8'))
 
-            buffers[addr].parse(data.decode('utf-8'))
+        while True:
+            command = self.buffers[addr].pop()
+            if command is None:
+                print('Breaking command loop')
+                break
+            print('Calling handle data')
+            self.handle_data(command, addr)
 
-            while True:
-                command = buffers[addr].pop()
-                if command is None:
-                    print('Breaking command loop')
-                    break
-                print('Calling handle data')
-                self.handle_data(command, addr)
-
+    def post_loop(self, **kwargs):
         self.socket.close()
 
     def reply(self, return_value, source=None):
