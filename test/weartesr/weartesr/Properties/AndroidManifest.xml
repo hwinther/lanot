@@ -1,0 +1,8 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android" android:versionCode="1" android:versionName="1.0" package="weartesr.weartesr" android:installLocation="auto">
+	<uses-sdk />
+	<uses-feature android:name="android.hardware.type.watch" />
+	<uses-permission android:name="android.permission.INTERNET" />
+	<uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
+	<application android:label="LanotTestClient" android:theme="@android:style/Theme.DeviceDefault" android:icon="@drawable/Icon"></application>
+</manifest>
