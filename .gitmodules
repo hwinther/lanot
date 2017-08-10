@@ -1,0 +1,12 @@
+[submodule "tools/webrepl"]
+	path = tools/webrepl
+	url = https://github.com/micropython/webrepl.git
+[submodule "tools/micropython"]
+	path = tools/micropython
+	url = https://github.com/micropython/micropython.git
+[submodule "tools/micropython-esp32"]
+	path = tools/micropython-esp32
+	url = https://github.com/micropython/micropython-esp32.git
+[submodule "tools/micropython-lib"]
+	path = tools/micropython-lib
+	url = https://github.com/micropython/micropython-lib.git
