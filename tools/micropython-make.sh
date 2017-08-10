@@ -1,3 +1,7 @@
+export PATH=/home/crono/esp-open-sdk/xtensa-lx106-elf/bin:/home/crono/xtensa-esp32-elf/bin:$PATH
+export IDF_PATH=/home/crono/esp-idf
+export ESPIDF=/home/crono/esp-idf
+
 cd micropython
 printf "${BLUE}*****************************${NC}\n"
 printf "${BLUE}* Making mpy cross compiler *${NC}\n"

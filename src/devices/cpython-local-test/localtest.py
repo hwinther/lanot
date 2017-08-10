@@ -17,7 +17,22 @@ class LocalTest(prometheus.Prometheus):
         self.hygrometer = prometheus.Adc(0)
         self.register(prefix='h', hygrometer=self.hygrometer)
 
+    @prometheus.Registry.register('LocalTest', 'V', 'OUT')
+    def version(self):
+        return prometheus.__version__
+
 if __name__ == '__main__':
-    lt = LocalTest()
-    s = prometheus_servers.JsonRestServer(lt)
-    s.start()
+    localtest = LocalTest()
+
+    # udpserver = prometheus_servers.UdpSocketServer(localtest)
+    # udpserver.start()
+
+    multiserver = prometheus_servers.MultiServer()
+
+    udpserver = prometheus_servers.UdpSocketServer(localtest)
+    multiserver.add(udpserver, bind_host='', bind_port=9195)
+
+    jsonrestserver = prometheus_servers.JsonRestServer(localtest)
+    multiserver.add(jsonrestserver, bind_host='', bind_port=8080)
+
+    multiserver.start()

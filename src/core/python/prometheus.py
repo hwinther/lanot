@@ -1,6 +1,9 @@
 import machine
-import socket
 import gc
+
+
+__version__ = '0.1'
+__author__ = 'Hans Christian Winther-Sorensen'
 
 
 gc.collect()
@@ -33,13 +36,13 @@ class Buffer(object):
         rest = ''
         # print('for segment in split on %s len=%d' % (self.splitChars, len(self.packetBuffer.split(self.splitChars))))
         for segment in self.packetBuffer.split(self.splitChars):
-            print('segment[%s].find %s = %s' % (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
+            # print('segment[%s].find %s = %s' % (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
             if segment == '':
                 # the segment empty or only POLYNOMIAL, ignore it
                 pass
             elif segment.find(self.endChars) != -1:
                 s = segment.split(self.endChars)[0]  # discard everything after
-                print('appending packet')
+                # print('appending packet')
                 self.Packets.append(s)
             else:
                 rest += self.splitChars + segment
@@ -110,6 +113,9 @@ class Prometheus(object):
         self.name = name
         self.commands = dict()
         self.attributes = dict()
+        self.cached_remap = dict()
+        self.cached_urls = dict()
+
         if self.__class__.__name__ in Registry.r:
             for key in Registry.r[self.__class__.__name__]:
                 value = Registry.r[self.__class__.__name__][key]
@@ -150,36 +156,20 @@ class Prometheus(object):
             instances.extend(value.instance.recursive_attributes())
         return instances
 
-    def recursive_remap(self):  # remap=True
-        # remap_counter = None
-        # if remap:
-        #     remap_counter = RemapCounter(65)
-        commands = self.data_commands()
+    def recursive_remap(self, ignorecache=False):
+        if not ignorecache and len(self.cached_remap) != 0:
+            return self.cached_remap
 
-        # TODO: clean up the whole map thing? it doesnt help now
+        self.cached_remap = self.data_commands()
         prometheus_attributes = self.recursive_attributes()  # type: list(PrometheusAttribute)
-        # blah = dict()
-        # for prometheus_attribute in prometheus_attributes:
-        #     # print('%s %s' % (repr(prometheus_attribute.instance), repr(prometheus_attribute.prefix)))
-        #     blah[prometheus_attribute.instance.logical_path()] = prometheus_attribute
 
-        # keys = blah.keys()
-        # keys.sort()
-        # prefix = None
-
-        # for key in keys:
-        #     prometheus_attribute = blah[key]
         for prometheus_attribute in prometheus_attributes:
-            # if remap:
-            #     prefix = chr(remap_counter.next())
             attribute_commands = prometheus_attribute.instance.data_commands(data_value_prefix=prometheus_attribute.prefix)
-            # data_value_prefix=prefix
-            # print key, attribute_commands
             for akey in attribute_commands.keys():
-                commands[akey] = attribute_commands[akey]
-        return commands
+                self.cached_remap[akey] = attribute_commands[akey]
+        return self.cached_remap
 
-    def data_commands(self, data_value_prefix=None):  # remap_counter=None,
+    def data_commands(self, data_value_prefix=None):
         commands = dict()
 
         command_keys = list(self.commands.keys())
@@ -187,8 +177,6 @@ class Prometheus(object):
         for key in command_keys:
             value = self.commands[key]
             if isinstance(value, RegisteredMethod):
-                # if remap_counter:
-                #     command_key = chr(remap_counter.next()) + value.data_value
                 if data_value_prefix:
                     command_key = data_value_prefix + value.data_value
                 else:
@@ -204,6 +192,16 @@ class Prometheus(object):
                 print('%s\t-> %s\t%s\t%s' % (command_key, value.method_name, value.logical_path, value.method_reference))
 
         return commands
+
+    def update_urls(self, ignorecache=False):
+        if not ignorecache and len(self.cached_urls) != 0:
+            return
+
+        for key in self.cached_remap.keys():
+            value = self.cached_remap[key]
+            url = '/'.join(value.logical_path.split('.')).replace('root/', 'api/').encode('ascii')
+            url = b'/' + url + b'/' + value.method_name.encode('ascii')
+            self.cached_urls[url] = value
 
 
 class Led(Prometheus):

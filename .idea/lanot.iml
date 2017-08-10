@@ -15,8 +15,12 @@
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp8266-sensor01" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp8266-sensor02" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-test01" isTestSource="false" />
+      <excludeFolder url="file://$MODULE_DIR$/test/oled_temp" />
+      <excludeFolder url="file://$MODULE_DIR$/test/weartesr" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython-esp32" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/micropython-lib" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/webrepl" />
     </content>
     <orderEntry type="jdk" jdkName="Python 2.7.13 (C:\Python27\python.exe)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />

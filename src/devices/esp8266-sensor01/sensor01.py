@@ -16,3 +16,7 @@ class Sensor01(prometheus.Prometheus):
 
         self.lightsensor = prometheus.Adc(0)
         self.register(prefix='l', lightsensor=self.lightsensor)
+
+    @prometheus.Registry.register('Sensor01', 'V', 'OUT')
+    def version(self):
+        return prometheus.__version__
