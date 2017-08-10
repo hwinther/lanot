@@ -14,6 +14,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/devices/cpython-local-test" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp8266-sensor01" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp8266-sensor02" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-test01" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython-esp32" />
     </content>

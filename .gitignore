@@ -99,3 +99,11 @@ ENV/
 
 # mypy
 .mypy_cache/
+
+# Visual Studio settings and build objects
+*.suo
+*.user
+_ReSharper.*
+bin
+obj
+packages
