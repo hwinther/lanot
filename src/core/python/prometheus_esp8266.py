@@ -1,8 +1,11 @@
 import dht
 import prometheus
+import gc
 
+__version__ = '0.1a'
+__author__ = 'Hans Christian Winther-Sorensen'
 
-# TODO: i suspect this really should be a package under prometheus
+gc.collect()
 
 
 class Dht11(prometheus.Prometheus):
@@ -25,6 +28,11 @@ class Dht11(prometheus.Prometheus):
     @prometheus.Registry.register('Dht11', 'h', 'OUT')
     def humidity(self):
         return self.dht.humidity()
+
+    @prometheus.Registry.register('Dht11', 'v', 'OUT')
+    def value(self):
+        self.dht.measure()
+        return '%sc%s' % (self.dht.temperature(), self.dht.humidity())
 
 
 class Dht22(prometheus.Prometheus):

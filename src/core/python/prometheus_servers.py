@@ -1,11 +1,13 @@
 import socket
-import gc
+import sys
+import os
 import json
+import gc
 from prometheus import Buffer, RegisteredMethod
+from prometheus import __version__ as prometheus__version
 
-__version__ = '0.1'
+__version__ = '0.1a'
 __author__ = 'Hans Christian Winther-Sorensen'
-
 
 gc.collect()
 
@@ -36,26 +38,50 @@ class Server(object):
     def post_loop(self, **kwargs):
         pass
 
-    def reply(self, return_value, source=None):
+    def reply(self, return_value, source=None, **kwargs):
         pass
 
-    def handle_data(self, command, source=None):
+    def handle_data(self, command, source=None, **kwargs):
         if command == '':
             return
 
         print('input:', command)
 
-        if command in self.instance.cached_remap:
-            registered_method = self.instance.cached_remap[command]  # type: RegisteredMethod
-            return_value = registered_method.method_reference()
-            if registered_method.return_type == 'str':
-                self.reply(return_value, source)
-        elif command == 'die':
+        if command == 'die':
             print('die command received')
             self.loopActive = False
             return
+        elif command == 'uname':
+            self.reply(self.uname(), source, **kwargs)
+        elif command == 'version':
+            self.reply(self.version(), source, **kwargs)
+        elif command == 'sysinfo':
+            self.reply(self.sysinfo(), source, **kwargs)
+        elif command in self.instance.cached_remap:
+            registered_method = self.instance.cached_remap[command]  # type: RegisteredMethod
+            return_value = registered_method.method_reference()
+            if registered_method.return_type == 'str':
+                self.reply(return_value, source, **kwargs)
         else:
             print('invalid cmd', command)
+
+    def uname(self):
+        hostname = self.instance.__class__.__name__
+        if sys.platform in ['esp8266', 'esp32', 'WiPy']:
+            un = os.uname()
+            return '%s %s %s %s %s MicroPython' % (un[0], hostname, un[2], un[3], un[4])
+        else:
+            # assume win32 or unix
+            import platform
+            # return '%s %s %s %s CPython' % (hostname, str(sys.version).replace('\n', ''), platform.platform(), sys.platform)
+            un = platform.uname()
+            return '%s-%s %s@%s %s %s %s CPython' % (un[0], un[2], hostname, un[1], un[3], str(sys.version).split(' ')[0], un[4])
+
+    def version(self):
+        return '%s/%s' % (__version__, prometheus__version)
+
+    def sysinfo(self):
+        return 'n/a'
 
 
 class UdpSocketServer(Server):
@@ -249,33 +275,49 @@ class JsonRestServer(Server):
                     if len(line) == 0:
                         continue
                     if line.find(b'GET /') != -1:
-                        get = line.split(b' ')[1]
-                        print('get: %s' % get)
-                        if get in self.instance.cached_urls.keys():
+                        path = line.split(b' ')[1]
+                        query = dict()
+                        if path.find(b'?') != -1:
+                            path, querystr = path.split(b'?', 1)
+                            for q in querystr.split(b'&'):
+                                if q.find(b'=') != -1:
+                                    key, value = q.split(b'=', 1)
+                                    query[key] = value
+                                else:
+                                    query[q] = True
+                        print('get: %s (%s)' % (path, query))
+                        if path in self.instance.cached_urls.keys():
                             print('found matching command_key')
-                            value = self.instance.cached_urls[get]  # type: RegisteredMethod
-                            self.handle_data(value.command_key, sock)
+                            value = self.instance.cached_urls[path]  # type: RegisteredMethod
+                            self.handle_data(value.command_key, sock, query=query)
                             if value.return_type != 'str':
                                 # give default empty response
-                                self.reply(None, sock)
+                                self.reply(return_value=None, source=sock, query=query)
                             found = True
-                        elif get == b'/api':
-                            l = list()
-                            for key in self.instance.cached_urls.keys():
-                                l.append(key.decode('utf-8'))
-                            self.reply(l, sock)
-                        elif get == b'/api?class':
+                        elif path == b'/api' and b'class' in query.keys():
                             d = dict()
                             for key in self.instance.cached_urls.keys():
                                 value = self.instance.cached_urls[key]  # type: RegisteredMethod
                                 logical_key = value.logical_path.replace('root.', '')
                                 if logical_key not in d.keys():
-                                    d[logical_key] = {'methods': list(), 'class': value.class_name, 'path': value.logical_path}
-                                d[logical_key]['methods'].append({'name': value.method_name, 'uri': key.decode('utf-8')})
-                            self.reply(d, sock)
+                                    d[logical_key] = {'methods': dict(), 'class': value.class_name, 'path': value.logical_path}
+                                d[logical_key]['methods'][value.method_name] = key.decode('utf-8')
+                            self.reply(d, sock, query=query)
+                        elif path == b'/api':
+                            l = list()
+                            for key in self.instance.cached_urls.keys():
+                                l.append(key.decode('utf-8'))
+                            self.reply(l, sock, query=query)
+                        elif path == b'/uname':
+                            self.reply(self.uname(), sock, query=query)
+                        elif path == b'/version':
+                            self.reply(self.version(), sock, query=query)
+                        elif path == b'/sysinfo':
+                            self.reply(self.sysinfo(), sock, query=query)
             if not found:
                 print('Returning 404')
                 sock.send(b'HTTP/1.1 404 Not found\r\n')
+            # noinspection PyBroadException
             try:
                 sock.close()
             except:
@@ -286,15 +328,20 @@ class JsonRestServer(Server):
 
         self.socket.close()
 
-    def reply(self, return_value, source=None):
-        Server.reply(self, return_value)
+    def reply(self, return_value, source=None, query=None, **kwargs):
+        Server.reply(self, return_value, **kwargs)
 
         if type(return_value) is dict or type(return_value) is list:
             msg = json.dumps(return_value)
         else:
             msg = json.dumps({'value': return_value})
+
+        if query is not None and b'callback' in query.keys():
+            callback = query[b'callback'].decode('utf-8')
+            msg = '%s(%s)' % (callback, msg)
+
         print('returning %s to %s' % (msg, repr(source)))
-        response = 'HTTP/1.1 200 OK\r\nContent-Type: application/vnd.api+json\r\nContent-Length: %d\r\n\r\n%s' % (len(msg), msg)
+        response = 'HTTP/1.1 200 OK\r\nServer: ps-%s\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: application/vnd.api+json\r\nContent-Length: %d\r\n\r\n%s' % (__version__, len(msg), msg)
         source.send(response.encode('ascii'))
 
 
