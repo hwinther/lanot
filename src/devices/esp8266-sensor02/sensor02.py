@@ -19,3 +19,6 @@ class Sensor02(prometheus.Prometheus):
 
         self.led_red = prometheus.Led(machine.Pin(16, machine.Pin.OUT))
         self.register(prefix='r', led_red=self.led_red)
+
+        self.integrated_led = machine.Pin(2, machine.Pin.OUT)
+        self.register(prefix='i', integrated_led=self.integrated_led)

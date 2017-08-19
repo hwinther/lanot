@@ -17,6 +17,5 @@ class Sensor01(prometheus.Prometheus):
         self.lightsensor = prometheus.Adc(0)
         self.register(prefix='l', lightsensor=self.lightsensor)
 
-    @prometheus.Registry.register('Sensor01', 'V', 'OUT')
-    def version(self):
-        return prometheus.__version__
+        self.integrated_led = machine.Pin(2, machine.Pin.OUT)
+        self.register(prefix='i', integrated_led=self.integrated_led)
