@@ -18,9 +18,10 @@
         $.ajax({
             url: 'http://' + host + ':8080/api?class=true',
             dataType: 'jsonp',
-
+            indexValue: host,
             success: function (data) {
                 //console.log(data);
+                var host = this.indexValue;
                 var hostname = host.replace(/\./g, '');
                 //console.log(hostname);
                 var uir = $('#uiroot');
@@ -29,47 +30,60 @@
                     uir.html(uir.html() + '<div id="' + hostname + 'container" class="panel panel-default"></div>');
                 }
                 var container = $('#' + hostname + 'container');
-                container.html(container.html() +  '<div class="panel-heading">' + host + '</div>' + '<div id="' + hostname + 'panelbody" class="panel-body"><div id="' + hostname + 'infocontainer" class="infocontainer"></div></div>');
+                container.html(container.html() +  '<div class="panel-heading">' + host + '</div>' + '<div id="' + hostname + 'panelbody" class="panel-body"><div id="' + hostname + '_infocontainer" class="infocontainer"></div></div>');
                 var panelbody = $('#' + hostname + 'panelbody');
-                var infocontainer = $('#' + hostname + 'infocontainer');
 
                 $.ajax({
                     url: 'http://' + host + ':8080/uname',
                     dataType: 'jsonp',
+                    indexValue: hostname,
                     success: function (data) {
-                        console.log('Got uname: ' + data['value']);
+                        var infocontainer = $('#' + this.indexValue + '_infocontainer');
+                        //console.log('Got uname: ' + data['value']);
                         //window.info = infocontainer;
                         infocontainer.html(infocontainer.html() + '<span class="uname">' + data['value'] + '</span>');
                     }
                 });
-                /*$.ajax({
-                    url: 'http://' + host + ':8080/version',
-                    dataType: 'jsonp',
-                    success: function (data) {
-                        console.log('Got version: ' + data['value']);
-                        console.log(infocontainer);
-                        infocontainer.html(infocontainer.html() + '<span class="version">' + data['value'] + '</span>');
-                        console.log(infocontainer.html());
-                    }
-                });*/
 
                 jQuery.each(data, function(index, value) {
                     var name = index.split('_').join(' ');
+                    name = name.charAt(0).toUpperCase() + name.slice(1);
+                    var elemid = hostname + '_' + index;
                     if (this.class === 'Led')
                     {
-                        panelbody.html(panelbody.html() + '<div class="input-group"><button type="button" class="btn btn-primary btn-sm btnled" data-toggle="button" aria-pressed="false" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri-on="' + this.methods['on'] + '" data-uri-off="' + this.methods['off'] + '">\n' +
+                        panelbody.html(panelbody.html() +
+                            '<div class="input-group"><button type="button" class="btn btn-primary btn-sm btnled" data-toggle="button" aria-pressed="false" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri-on="' + this.methods['on'] + '" data-uri-off="' + this.methods['off'] + '" id="btn_' + elemid + '">\n' +
                             name + ' on\n' +
                             '</button></div>');
+                        var uri = 'http://' + host + ':8080' + this.methods['state'];
+                        //console.log('uri: ' + uri);
+                        $.ajax({
+                            url: uri,
+                            dataType: 'jsonp',
+                            indexValue: elemid,
+                            success: function (data) {
+                                //console.log('got value: ' + data['value']);
+                                var elem = $('#btn_' + this.indexValue);
+                                if (data['value']) {
+                                    console.log('switching led state for ' + this.indexValue);
+                                    elem.text(elem.data('name') + ' off');
+                                    elem.addClass('active');
+                                    elem.prop('aria-pressed', 'true');
+                                }
+                            }
+                        });
                     }
                     else if (this.class === 'Dht11')
                     {
-                        panelbody.html(panelbody.html() + '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndht11" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + this.methods['value'] + '">\n' +
+                        panelbody.html(panelbody.html() +
+                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndht11" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + this.methods['value'] + '" id="btn_' + elemid + '">\n' +
                             ' Read DHT: ' + name + '\n' +
                             '</button><input type="textbox" id="dht11_' + hostname + '_' + name + '" /></div>');
                     }
                     else if (this.class === 'Adc')
                     {
-                        panelbody.html(panelbody.html() + '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnadc" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + this.methods['read'] + '">\n' +
+                        panelbody.html(panelbody.html() +
+                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnadc" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + this.methods['read'] + '" id="btn_' + elemid + '">\n' +
                             ' Read ADC: ' + name + '\n' +
                             '</button><input type="textbox" id="adc_' + hostname + '_' + name + '" /></div>');
                     }
@@ -103,8 +117,7 @@
                    }
                 });
 
-                $('.btnadc').click(function()
-                {
+                $('.btnadc').click(function(){
                        //console.log('read');
                        var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
                        var name = $(this).data('name');
@@ -122,8 +135,7 @@
                        });
                 });
 
-                $('.btndht11').click(function()
-                {
+                $('.btndht11').click(function(){
                        console.log('read');
                        var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
                        var name = $(this).data('name');
@@ -146,9 +158,9 @@
 
     $(function() {
         update('localhost');
-        update('nodetest');
+        //update('nodetest');
         update('sensor01');
-        update('sensor02');
+        //update('sensor02');
         //update('192.168.1.195');
     });
     </script>

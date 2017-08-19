@@ -10,7 +10,7 @@ import gc
 from prometheus import Buffer, RegisteredMethod
 from prometheus import __version__ as prometheus__version
 
-__version__ = '0.1b'
+__version__ = '0.1.1'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -24,6 +24,7 @@ favicon = b'\x00\x00\x01\x00\x01\x00\x10\x10\x10\x00\x01\x00\x04\x00(\x01\x00\x0
           b'\x01\x00\x10\x00\x01\x00\x01\x11\x01\x01\x10\x00\x01\x00\x01\x01\x01\x10\x10\x00\x01\x00\x00\x10\x01\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00' +\
           b'\xff\xff\x00\x00\xff\xd5\x00\x00\xff\xda\x00\x00\xff\xda\x00\x00\xff\x9a\x00\x00\xce\xdd\x00\x00\xb6\xff\x00\x00\xb6\xff\x00\x00\xb6\xff\x00\x00' +\
           b'\xcc\x7f\x00\x00\xff\xff\x00\x00\x8a\xb7\x00\x00\xb8\xa7\x00\x00\xba\x97\x00\x00\xbd\xb7\x00\x00\xff\xff\x00\x00'
+debug = False
 
 
 class Server(object):
@@ -56,6 +57,8 @@ class Server(object):
         pass
 
     def handle_data(self, command, source=None, **kwargs):
+        if debug:
+            print('entering Server.handle_data')
         if command == '':
             return
 
@@ -66,20 +69,24 @@ class Server(object):
             self.loopActive = False
             return
         elif command == 'uname':
-            self.reply(self.uname(), source, **kwargs)
+            self.reply(self.uname(), source=source, **kwargs)
         elif command == 'version':
-            self.reply(self.version(), source, **kwargs)
+            self.reply(self.version(), source=source, **kwargs)
         elif command == 'sysinfo':
-            self.reply(self.sysinfo(), source, **kwargs)
+            self.reply(self.sysinfo(), source=source, **kwargs)
         elif command in self.instance.cached_remap:
             registered_method = self.instance.cached_remap[command]  # type: RegisteredMethod
             return_value = registered_method.method_reference()
             if registered_method.return_type == 'str':
-                self.reply(return_value, source, **kwargs)
+                self.reply(return_value, source=source, **kwargs)
         else:
             print('invalid cmd', command)
+        if debug:
+            print('exiting Server.handle_data')
 
     def uname(self):
+        if debug:
+            print('Server.uname')
         hostname = self.instance.__class__.__name__
         if sys.platform in ['esp8266', 'esp32', 'WiPy']:
             un = os.uname()
@@ -172,8 +179,8 @@ class UdpSocketServer(Server):
 
         self.socket.close()
 
-    def reply(self, return_value, source=None):
-        Server.reply(self, return_value)
+    def reply(self, return_value, source=None, **kwargs):
+        Server.reply(self, return_value, **kwargs)
 
         print('returning %s to %s' % (return_value, repr(source)))
         self.socket.sendto(b'%s%s%s' % (return_value, self.endChars, self.splitChars), source)
@@ -282,7 +289,7 @@ class JsonRestServer(Server):
         except:
             print('could not bind with reuse flag')  # TODO: look into this
         self.socket.bind((bind_host, bind_port))
-        self.socket.listen(1)
+        self.socket.listen(4)
         self.socket.settimeout(0)
         print('listening on %s:%d' % (bind_host, bind_port))
 
@@ -291,6 +298,8 @@ class JsonRestServer(Server):
             print('url: %s' % key)
 
     def loop_tick(self, **kwargs):
+        if debug:
+            print('entering JsonRestServer.loop_tick')
         Server.loop_tick(self, **kwargs)
 
         sock, addr, self.sslsock = None, None, None
@@ -333,7 +342,7 @@ class JsonRestServer(Server):
                         if path in self.instance.cached_urls.keys():
                             print('found matching command_key')
                             value = self.instance.cached_urls[path]  # type: RegisteredMethod
-                            self.handle_data(value.command_key, sock, query=query)
+                            self.handle_data(value.command_key, source=sock, query=query)
                             if value.return_type != 'str':
                                 # give default empty response
                                 self.reply(return_value=None, source=sock, query=query)
@@ -346,25 +355,25 @@ class JsonRestServer(Server):
                                 if logical_key not in d.keys():
                                     d[logical_key] = {'methods': dict(), 'class': value.class_name, 'path': value.logical_path}
                                 d[logical_key]['methods'][value.method_name] = key.decode('utf-8')
-                            self.reply(d, sock, query=query)
+                            self.reply(return_value=d, source=sock, query=query)
                             found = True
                         elif path == b'/api':
                             l = list()
                             for key in self.instance.cached_urls.keys():
                                 l.append(key.decode('utf-8'))
-                            self.reply(l, sock, query=query)
+                            self.reply(return_value=l, source=sock, query=query)
                             found = True
                         elif path == b'/uname':
-                            self.reply(self.uname(), sock, query=query)
+                            self.reply(return_value=self.uname(), source=sock, query=query)
                             found = True
                         elif path == b'/version':
-                            self.reply(self.version(), sock, query=query)
+                            self.reply(return_value=self.version(), source=sock, query=query)
                             found = True
                         elif path == b'/sysinfo':
-                            self.reply(self.sysinfo(), sock, query=query)
+                            self.reply(return_value=self.sysinfo(), source=sock, query=query)
                             found = True
                         elif path == b'/favicon.ico':
-                            self.reply(favicon, sock, contenttype='image/x-icon')
+                            self.reply(return_value=favicon, source=sock, contenttype='image/x-icon')
                             found = True
 
             if not found and data is not None:
@@ -375,6 +384,9 @@ class JsonRestServer(Server):
                 sock.close()
             except:
                 pass
+
+        if debug:
+            print('exiting JsonRestServer.loop_tick')
 
     def post_loop(self, **kwargs):
         Server.post_loop(self, **kwargs)
@@ -397,16 +409,21 @@ class JsonRestServer(Server):
                 callback = query[b'callback'].decode('utf-8')
                 msg = '%s(%s)' % (callback, msg)
 
-            print('returning %s to %s' % (msg, repr(source)))
+            # convert to bytes
+            msg = msg.encode('ascii')
+            if debug:
+                print('returning %s to %s' % (msg, repr(source)))
+            else:
+                print('returning %d bytes' % len(msg))
         else:
             # raw mode - could be image or other binary data
             msg = return_value
-            print('returning %d bytes to %s' % (len(msg), repr(source)))
+            print('returning %d bytes' % len(msg))
 
-        response = b'HTTP/1.1 200 OK\r\nServer: ps-%s\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n%s' % \
-                   (__version__, contenttype, len(msg), msg)
+        response = b'HTTP/1.1 200 OK\r\nServer: ps-%s\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n' % \
+                   (__version__.encode('ascii'), contenttype.encode('ascii'), len(msg))
+        response = response + msg
         # print(repr(response))
-        # response = response.encode('ascii')
 
         if self.usessl:
             self.sslsock.write(response)

@@ -14,7 +14,7 @@ class NodeTest(prometheus.Prometheus):
         self.red_led = prometheus.Led(machine.Pin(15, machine.Pin.OUT))
         self.register(prefix='r', red_led=self.red_led)
 
-        self.integrated_led = machine.Pin(2, machine.Pin.OUT)
+        self.integrated_led = prometheus.Led(machine.Pin(2, machine.Pin.OUT), inverted=True)
         self.register(prefix='i', integrated_led=self.integrated_led)
 
         self.dht11 = prometheus_esp8266.Dht11(machine.Pin(13, machine.Pin.OUT))
