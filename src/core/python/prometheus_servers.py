@@ -1,15 +1,29 @@
 import socket
 import sys
+if sys.platform in ['esp8266', 'esp32', 'WiPy']:
+    from ussl import wrap_socket as ssl_wrap_socket
+else:
+    from ssl import wrap_socket as ssl_wrap_socket
 import os
 import json
 import gc
 from prometheus import Buffer, RegisteredMethod
 from prometheus import __version__ as prometheus__version
 
-__version__ = '0.1a'
+__version__ = '0.1b'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
+
+favicon = b'\x00\x00\x01\x00\x01\x00\x10\x10\x10\x00\x01\x00\x04\x00(\x01\x00\x00\x16\x00\x00\x00(\x00\x00\x00\x10\x00\x00\x00 \x00\x00\x00\x01\x00\x04\x00' +\
+          b'\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\x84\x00\x00\x00\x00\x00\x00' +\
+          b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' +\
+          b'\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x10\x10\x10\x00\x00\x00\x00' +\
+          b'\x00\x10\x01\x01\x00\x00\x00\x00\x00\x10\x01\x01\x00\x00\x00\x00\x01\x10\x01\x01\x00\x11\x00\x01\x00\x10\x00\x10\x01\x00\x10\x01\x00\x00\x00\x00' +\
+          b'\x01\x00\x10\x01\x00\x00\x00\x00\x01\x00\x10\x01\x00\x00\x00\x00\x00\x11\x00\x11\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x01\x11\x01\x01' +\
+          b'\x01\x00\x10\x00\x01\x00\x01\x11\x01\x01\x10\x00\x01\x00\x01\x01\x01\x10\x10\x00\x01\x00\x00\x10\x01\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00' +\
+          b'\xff\xff\x00\x00\xff\xd5\x00\x00\xff\xda\x00\x00\xff\xda\x00\x00\xff\x9a\x00\x00\xce\xdd\x00\x00\xb6\xff\x00\x00\xb6\xff\x00\x00\xb6\xff\x00\x00' +\
+          b'\xcc\x7f\x00\x00\xff\xff\x00\x00\x8a\xb7\x00\x00\xb8\xa7\x00\x00\xba\x97\x00\x00\xbd\xb7\x00\x00\xff\xff\x00\x00'
 
 
 class Server(object):
@@ -81,7 +95,26 @@ class Server(object):
         return '%s/%s' % (__version__, prometheus__version)
 
     def sysinfo(self):
-        return 'n/a'
+        # struct statvfs {
+        #     unsigned long  f_bsize;    /* file system block size */
+        #     unsigned long  f_frsize;   /* fragment size */
+        #     fsblkcnt_t     f_blocks;   /* size of fs in f_frsize units */
+        #     fsblkcnt_t     f_bfree;    /* # free blocks */
+        #     fsblkcnt_t     f_bavail;   /* # free blocks for unprivileged users */
+        #     fsfilcnt_t     f_files;    /* # inodes */
+        #     fsfilcnt_t     f_ffree;    /* # free inodes */
+        #     fsfilcnt_t     f_favail;   /* # free inodes for unprivileged users */
+        #     unsigned long  f_fsid;     /* file system ID */
+        #     unsigned long  f_flag;     /* mount flags */
+        #     unsigned long  f_namemax;  /* maximum filename length */
+        # };
+        if sys.platform in ['esp8266', 'esp32', 'WiPy']:
+            stvfs = os.statvfs('/')
+            freespace = (stvfs[0] * stvfs[3]) / 1048576
+            gc.collect()
+            return '%.2fMB vfs free, %.2fKB mem free' % (freespace, gc.mem_free()/1024)
+        else:
+            return 'Not implemented for this platform'
 
 
 class UdpSocketServer(Server):
@@ -220,18 +253,23 @@ class TcpSocketServer(Server):
                 pass
         self.socket.close()
 
-    def reply(self, return_value, source=None):
-        Server.reply(self, return_value)
+    def reply(self, return_value, source=None, **kwargs):
+        Server.reply(self, return_value, **kwargs)
 
         print('returning %s to %s' % (return_value, repr(source)))
         source.send(b'%s%s%s' % (return_value, self.endChars, self.splitChars))
 
 
 class JsonRestServer(Server):
-    def __init__(self, instance):
+    def __init__(self, instance, usessl = False):
         Server.__init__(self, instance)
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.usessl = usessl
+        self.sslsock = None
+        if usessl:
+            import ussl
+            gc.collect()
 
     def start(self, bind_host='', bind_port=8080, **kwargs):
         Server.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
@@ -255,10 +293,12 @@ class JsonRestServer(Server):
     def loop_tick(self, **kwargs):
         Server.loop_tick(self, **kwargs)
 
-        sock, addr = None, None
+        sock, addr, self.sslsock = None, None, None
         try:
             # TODO: put this pair in a wrapper class
             sock, addr = self.socket.accept()
+            if self.usessl:
+                self.sslsock = ssl_wrap_socket(sock)
         except:
             pass  # timeout, i hope
 
@@ -266,9 +306,13 @@ class JsonRestServer(Server):
             print('Accepted connection from %s' % repr(addr))
             sock.settimeout(2)
             try:
-                data = sock.recv(1024)
+                if self.usessl:
+                    data = self.sslsock.read(1024)
+                else:
+                    data = sock.recv(1024)
             except:
                 data = None
+
             found = False
             if data is not None and data.find(b'\r\n') != -1:
                 for line in data.split(b'\r\n'):
@@ -303,18 +347,27 @@ class JsonRestServer(Server):
                                     d[logical_key] = {'methods': dict(), 'class': value.class_name, 'path': value.logical_path}
                                 d[logical_key]['methods'][value.method_name] = key.decode('utf-8')
                             self.reply(d, sock, query=query)
+                            found = True
                         elif path == b'/api':
                             l = list()
                             for key in self.instance.cached_urls.keys():
                                 l.append(key.decode('utf-8'))
                             self.reply(l, sock, query=query)
+                            found = True
                         elif path == b'/uname':
                             self.reply(self.uname(), sock, query=query)
+                            found = True
                         elif path == b'/version':
                             self.reply(self.version(), sock, query=query)
+                            found = True
                         elif path == b'/sysinfo':
                             self.reply(self.sysinfo(), sock, query=query)
-            if not found:
+                            found = True
+                        elif path == b'/favicon.ico':
+                            self.reply(favicon, sock, contenttype='image/x-icon')
+                            found = True
+
+            if not found and data is not None:
                 print('Returning 404')
                 sock.send(b'HTTP/1.1 404 Not found\r\n')
             # noinspection PyBroadException
@@ -328,21 +381,37 @@ class JsonRestServer(Server):
 
         self.socket.close()
 
-    def reply(self, return_value, source=None, query=None, **kwargs):
+    def reply(self, return_value, source=None, query=None, contenttype=None, **kwargs):
         Server.reply(self, return_value, **kwargs)
 
-        if type(return_value) is dict or type(return_value) is list:
-            msg = json.dumps(return_value)
+        # JSON contenttype is assumed/default
+        if contenttype is None:
+            contenttype = 'application/vnd.api+json'
+
+            if type(return_value) is dict or type(return_value) is list:
+                msg = json.dumps(return_value)
+            else:
+                msg = json.dumps({'value': return_value})
+
+            if query is not None and b'callback' in query.keys():
+                callback = query[b'callback'].decode('utf-8')
+                msg = '%s(%s)' % (callback, msg)
+
+            print('returning %s to %s' % (msg, repr(source)))
         else:
-            msg = json.dumps({'value': return_value})
+            # raw mode - could be image or other binary data
+            msg = return_value
+            print('returning %d bytes to %s' % (len(msg), repr(source)))
 
-        if query is not None and b'callback' in query.keys():
-            callback = query[b'callback'].decode('utf-8')
-            msg = '%s(%s)' % (callback, msg)
+        response = b'HTTP/1.1 200 OK\r\nServer: ps-%s\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n%s' % \
+                   (__version__, contenttype, len(msg), msg)
+        # print(repr(response))
+        # response = response.encode('ascii')
 
-        print('returning %s to %s' % (msg, repr(source)))
-        response = 'HTTP/1.1 200 OK\r\nServer: ps-%s\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: application/vnd.api+json\r\nContent-Length: %d\r\n\r\n%s' % (__version__, len(msg), msg)
-        source.send(response.encode('ascii'))
+        if self.usessl:
+            self.sslsock.write(response)
+        else:
+            source.send(response)
 
 
 class WrappedServer(object):

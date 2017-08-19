@@ -20,6 +20,8 @@
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython-esp32" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython-lib" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/ptftpd" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/tftpy-0.6.2" />
       <excludeFolder url="file://$MODULE_DIR$/tools/webrepl" />
     </content>
     <orderEntry type="jdk" jdkName="Python 2.7.13 (C:\Python27\python.exe)" jdkType="Python SDK" />
