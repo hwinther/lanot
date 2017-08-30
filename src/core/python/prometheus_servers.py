@@ -10,7 +10,7 @@ import gc
 from prometheus import Buffer, RegisteredMethod
 from prometheus import __version__ as prometheus__version
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -68,6 +68,17 @@ class Server(object):
             print('die command received')
             self.loopActive = False
             return
+        elif command == 'cap':
+            # capability
+            return_value = ''
+            for command in self.instance.cached_remap:
+                return_value = return_value + command
+
+            # print('before: %s' % str(gc.mem_free()))
+            gc.collect()
+            # print('after: %s' % str(gc.mem_free()))
+
+            self.reply(return_value, source=source, **kwargs)
         elif command == 'uname':
             self.reply(self.uname(), source=source, **kwargs)
         elif command == 'version':
@@ -355,6 +366,9 @@ class JsonRestServer(Server):
                                 if logical_key not in d.keys():
                                     d[logical_key] = {'methods': dict(), 'class': value.class_name, 'path': value.logical_path}
                                 d[logical_key]['methods'][value.method_name] = key.decode('utf-8')
+                            # print('before: %s' % str(gc.mem_free()))
+                            gc.collect()
+                            # print('after: %s' % str(gc.mem_free()))
                             self.reply(return_value=d, source=sock, query=query)
                             found = True
                         elif path == b'/api':

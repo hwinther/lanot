@@ -12,6 +12,10 @@
     <script src="js/bootstrap.min.js"></script>
 
     <script>
+        function endsWith(str, suffix) {
+            return str.indexOf(suffix, str.length - suffix.length) !== -1;
+        }
+
     function update(host)
     {
         // console.log('making query');
@@ -33,23 +37,40 @@
                 container.html(container.html() +  '<div class="panel-heading">' + host + '</div>' + '<div id="' + hostname + 'panelbody" class="panel-body"><div id="' + hostname + '_infocontainer" class="infocontainer"></div></div>');
                 var panelbody = $('#' + hostname + 'panelbody');
 
-                $.ajax({
+                /*$.ajax({
                     url: 'http://' + host + ':8080/uname',
                     dataType: 'jsonp',
                     indexValue: hostname,
                     success: function (data) {
                         var infocontainer = $('#' + this.indexValue + '_infocontainer');
-                        //console.log('Got uname: ' + data['value']);
-                        //window.info = infocontainer;
-                        infocontainer.html(infocontainer.html() + '<span class="uname">' + data['value'] + '</span>');
+                        infocontainer.html(infocontainer.html() + '<span class="uname">' + data['value'] + '</span><br />');
+                    }
+                });*/
+                $.ajax({
+                    url: 'http://' + host + ':8080/version',
+                    dataType: 'jsonp',
+                    indexValue: hostname,
+                    success: function (data) {
+                        var infocontainer = $('#' + this.indexValue + '_infocontainer');
+                        infocontainer.html(infocontainer.html() + '<span class="version">' + data['value'] + '</span><br />');
                     }
                 });
+                /*$.ajax({
+                    url: 'http://' + host + ':8080/sysinfo',
+                    dataType: 'jsonp',
+                    indexValue: hostname,
+                    success: function (data) {
+                        var infocontainer = $('#' + this.indexValue + '_infocontainer');
+                        infocontainer.html(infocontainer.html() + '<span class="sysinfo">' + data['value'] + '</span><br />');
+                    }
+                });*/
 
                 jQuery.each(data, function(index, value) {
                     var name = index.split('_').join(' ');
                     name = name.charAt(0).toUpperCase() + name.slice(1);
-                    var elemid = hostname + '_' + index;
-                    if (this.class === 'Led')
+                    var elemid = hostname + '_' + index.replace('.', '__');
+                    console.log('elemid: ' + elemid);
+                    if (endsWith(this.class, 'Led'))
                     {
                         panelbody.html(panelbody.html() +
                             '<div class="input-group"><button type="button" class="btn btn-primary btn-sm btnled" data-toggle="button" aria-pressed="false" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri-on="' + this.methods['on'] + '" data-uri-off="' + this.methods['off'] + '" id="btn_' + elemid + '">\n' +
@@ -73,19 +94,19 @@
                             }
                         });
                     }
-                    else if (this.class === 'Dht11')
+                    else if (endsWith(this.class, 'Dht11'))
                     {
                         panelbody.html(panelbody.html() +
                             '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndht11" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + this.methods['value'] + '" id="btn_' + elemid + '">\n' +
                             ' Read DHT: ' + name + '\n' +
-                            '</button><input type="textbox" id="dht11_' + hostname + '_' + name + '" /></div>');
+                            '</button><input type="textbox" id="dht11_' + elemid + '" /></div>');
                     }
-                    else if (this.class === 'Adc')
+                    else if (endsWith(this.class, 'Adc'))
                     {
                         panelbody.html(panelbody.html() +
                             '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnadc" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + this.methods['read'] + '" id="btn_' + elemid + '">\n' +
                             ' Read ADC: ' + name + '\n' +
-                            '</button><input type="textbox" id="adc_' + hostname + '_' + name + '" /></div>');
+                            '</button><input type="textbox" id="adc_' + elemid + '" /></div>');
                     }
                     else
                     {
@@ -128,7 +149,7 @@
                             dataType: 'jsonp',
                             success: function (data) {
                                 //console.log('got value: ' + data['value']);
-                                var elem = '#adc_' + hostname + '_' + name;
+                                var elem = '#adc_' + hostname + '_' + name.replace('.', '__').toLowerCase();
                                 //console.log('setting to ' + elem);
                                 $(elem).val(data['value']);
                             }
@@ -146,7 +167,7 @@
                             dataType: 'jsonp',
                             success: function (data) {
                                 //console.log('got value: ' + data['value']);
-                                var elem = '#dht11_' + hostname + '_' + name;
+                                var elem = '#dht11_' + hostname + '_' + name.replace('.', '__').toLowerCase();
                                 //console.log('setting to ' + elem);
                                 $(elem).val(data['value'].replace('c', 'C ') + '%');
                             }
@@ -159,7 +180,7 @@
     $(function() {
         update('localhost');
         //update('nodetest');
-        update('sensor01');
+        //update('sensor01');
         //update('sensor02');
         //update('192.168.1.195');
     });

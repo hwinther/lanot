@@ -5,7 +5,11 @@ import gc
 
 gc.collect()
 
-nt = sensor02.Sensor02()
-ns = prometheus_servers.JsonRestServer(nt)
+node = sensor02.Sensor02()
+udpserver = prometheus_servers.UdpSocketServer(node)
 gc.collect()
-ns.start()
+print(udpserver.uname())
+gc.collect()
+print(gc.mem_free())
+
+udpserver.start()

@@ -43,7 +43,7 @@ namespace weartesr
             {
                 AutoCompleteTextView apiUriTextView = new AutoCompleteTextView(this)
                 {
-                    Text = "http://192.168.1.188:8080/api"
+                    Text = "http://192.168.1.102:8080/api"
                 };
                 layout.AddView(apiUriTextView);
                 //TODO: add connect button?
@@ -54,61 +54,6 @@ namespace weartesr
                     await FetchApiLayout(apiUriTextView.Text, layout, exceptionBox);
                 };
                 layout.AddView(buttonConnect);
-
-                /*
-                var aLabel = new TextView(this) {Text = "Hello, World!!!"};
-
-                var aButton = new Button(this) {Text = "Say Hello!"};
-
-                aButton.Click += (sender, e) =>
-                {
-                    aLabel.Text = "Hello Android!";
-                };
-
-                layout.AddView(aLabel);
-                layout.AddView(aButton);
-                */
-
-                /*
-                var v = FindViewById<WatchViewStub>(Resource.Id.watch_view_stub);
-                v.LayoutInflated += delegate
-                {
-                // Get our button from the layout resource,
-                // and attach an event to it
-                Button button = FindViewById<Button>(Resource.Id.myButton);
-
-                    button.Click += delegate
-                    {
-                        var notification = new NotificationCompat.Builder(this)
-                            .SetContentTitle("Button tapped")
-                            .SetContentText("Button tapped " + count++ + " times!")
-                            .SetSmallIcon(Android.Resource.Drawable.StatNotifyVoicemail)
-                            .SetGroup("group_key_demo").Build();
-
-                        var manager = NotificationManagerCompat.From(this);
-                        manager.Notify(1, notification);
-                        button.Text = "Check Notification!";
-                    };
-
-                    ToggleButton toggleRed = FindViewById<ToggleButton>(Resource.Id.toggleButtonRed);
-                    InitLed(toggleRed, "red_led/");
-
-                    ToggleButton toggleBlue = FindViewById<ToggleButton>(Resource.Id.toggleButtonBlue);
-                    InitLed(toggleBlue, "blue_led/");
-
-                    Button buttonMeasure = FindViewById<Button>(Resource.Id.buttonMeasure);
-                    buttonMeasure.Click += async (sender, e) =>
-                    {
-                        await FetchApiTempAsync();
-                    };
-
-                    Button buttonAdc = FindViewById<Button>(Resource.Id.buttonAdc);
-                    buttonAdc.Click += async (sender, e) =>
-                    {
-                        await FetchApiAdcAsync();
-                    };
-                };
-                */
             }
             catch (Exception ex)
             {
@@ -118,28 +63,7 @@ namespace weartesr
             layout.AddView(exceptionBox);
             SetContentView(layout);
         }
-
-        /*
-        private async void InitLed(ToggleButton toggle, string uriPart, TextView exceptionBox)
-        {
-            AutoCompleteTextView baseUri = FindViewById<AutoCompleteTextView>(Resource.Id.autoCompleteTextViewWebserviceBaseUri);
-
-            toggle.Click += async (sender, e) =>
-            {
-                if (((ToggleButton)sender).Checked)
-                {
-                    JsonValue json1 = await FetchApiAsync(baseUri.Text + uriPart + "on", exceptionBox);
-                }
-                else
-                {
-                    JsonValue json1 = await FetchApiAsync(baseUri.Text + uriPart + "off", exceptionBox);
-                }
-            };
-
-            JsonValue json = await FetchApiAsync(baseUri.Text + uriPart + "state", exceptionBox);
-            toggle.Checked = json["value"].ToString().Equals("1");
-        }*/
-
+        
         // Gets weather data from the passed URL.
         private async Task<JsonValue> FetchApiAsync(string url, TextView exceptionBox)
         {
@@ -176,36 +100,6 @@ namespace weartesr
             }
         }
 
-        /*
-        private async Task<bool> FetchApiTempAsync(TextView exceptionBox)
-        {
-            AutoCompleteTextView baseUri = FindViewById<AutoCompleteTextView>(Resource.Id.autoCompleteTextViewWebserviceBaseUri);
-            TextView textViewTemperature = FindViewById<TextView>(Resource.Id.textViewTemperature);
-            TextView textViewHumidity = FindViewById<TextView>(Resource.Id.textViewHumidity);
-
-            JsonValue measure = await FetchApiAsync(baseUri.Text + "dht11/measure", exceptionBox);
-
-            JsonValue temperature = await FetchApiAsync(baseUri.Text + "dht11/temperature", exceptionBox);
-            textViewTemperature.Text = "Temperature: " + temperature["value"];
-
-            JsonValue humidity = await FetchApiAsync(baseUri.Text + "dht11/humidity", exceptionBox);
-            textViewHumidity.Text = "Humidity: " + humidity["value"];
-
-            return true;
-        }
-
-        private async Task<bool> FetchApiAdcAsync(TextView exceptionBox)
-        {
-            AutoCompleteTextView baseUri = FindViewById<AutoCompleteTextView>(Resource.Id.autoCompleteTextViewWebserviceBaseUri);
-            TextView textViewAdc = FindViewById<TextView>(Resource.Id.textViewAdc);
-
-            JsonValue adcValue = await FetchApiAsync(baseUri.Text + "hygrometer/read", exceptionBox);
-            textViewAdc.Text = "Value: " + adcValue["value"].ToString();
-
-            return true;
-        }
-        */
-
         private async Task<bool> FetchApiLayout(string baseUri, LinearLayout layout, TextView exceptionBox)
         {
             try
@@ -214,8 +108,8 @@ namespace weartesr
                 foreach (KeyValuePair<string, JsonValue> kvp in value)
                 {
                     string cls = kvp.Value["class"];
-                    string uri = baseUri + "/" + kvp.Key + "/";
-                    if (cls.Equals("Led"))
+                    string uri = baseUri + "/" + kvp.Key.Replace(".", "/") + "/";
+                    if (cls.EndsWith("Led"))
                     {
                         ToggleButton toggle = new ToggleButton(this)
                         {
@@ -238,7 +132,7 @@ namespace weartesr
                         toggle.Checked = json["value"].ToString().Equals("1");
                         layout.AddView(toggle);
                     }
-                    else if (cls.Equals("Dht11"))
+                    else if (cls.EndsWith("Dht11"))
                     {
                         Button buttonMeasure = new Button(this)
                         {
@@ -256,24 +150,32 @@ namespace weartesr
                         {
                             try
                             {
-                                JsonValue measure = await FetchApiAsync(uri + "measure", exceptionBox);
+                                JsonValue dhtValue = await FetchApiAsync(uri + "value", exceptionBox);
+                                string val = dhtValue["value"];
+                                string[] vals = val.Split(new[] { 'c' }, 2);
+                                if (vals.Length == 2)
+                                {
+                                    textViewTemperature.Text = "Temperature: " + vals[0] + "C";
+                                    textViewHumidity.Text = "Humidity: " + vals[1] + "%";
+                                }
                             }
                             catch (Exception ex)
                             {
                                 exceptionBox.Text = ex.ToString();
                             }
-
+                            /*
                             JsonValue temperature = await FetchApiAsync(uri + "temperature", exceptionBox);
                             textViewTemperature.Text = "Temperature: " + temperature["value"];
 
                             JsonValue humidity = await FetchApiAsync(uri + "humidity", exceptionBox);
                             textViewHumidity.Text = "Humidity: " + humidity["value"];
+                            */
                         };
                         layout.AddView(buttonMeasure);
                         layout.AddView(textViewTemperature);
                         layout.AddView(textViewHumidity);
                     }
-                    else if (cls.Equals("Adc"))
+                    else if (cls.EndsWith("Adc"))
                     {
                         Button buttonAdc = new Button(this)
                         {
@@ -293,6 +195,27 @@ namespace weartesr
                         layout.AddView(buttonAdc);
                         layout.AddView(textViewAdc);
                     }
+                    else if (cls.EndsWith("Door"))
+                    {
+                        foreach (JsonObject method in kvp.Value["methods"])
+                        {
+                            string name = method["name"].ToString().Replace("\"", "");
+                            string methodUri = baseUri + "/" + name;
+                            //.Replace("api", "root") //TODO: this is a bug
+
+                            Button button = new Button(this)
+                            {
+                                Text = "Open " + name
+                            };
+                            button.Click += async (sender, e) =>
+                            {
+                                JsonValue json1 = await FetchApiAsync(methodUri, exceptionBox);
+                            };
+
+                            layout.AddView(button);
+                        }
+                    }
+
                 }
             }
             catch (Exception ex)

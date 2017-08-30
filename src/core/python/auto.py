@@ -10,6 +10,7 @@ import time
 
 
 # TODO: move these template classes to another python file? perhaps one for each via python modules
+# TODO: none of the inheritors of prometheus.RemoteTemplate call super outside of init
 
 
 class SerialTemplate(prometheus.RemoteTemplate):
@@ -530,15 +531,22 @@ def build_client(cls, output_filename, client_template_instances):
 
 folder_import()
 
+"""
 from tank import Tank
 build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
 from tankproxy import TankProxy
 build_client(TankProxy, 'tankproxyclient.py', [UdpTemplate, TcpTemplate])
-from nodetest import NodeTest
-build_client(NodeTest, 'nodeclient.py', [UdpTemplate, TcpTemplate])
 from proxytest import ProxyTest
 build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
 from chaintest import A, B, C
 build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
 build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
 build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
+"""
+
+from sensor01 import Sensor01
+build_client(Sensor01, 'sensor01client.py', [UdpTemplate])
+from sensor02 import Sensor02
+build_client(Sensor02, 'sensor02client.py', [UdpTemplate])
+from nodetest import NodeTest
+build_client(NodeTest, 'nodetestclient.py', [UdpTemplate])

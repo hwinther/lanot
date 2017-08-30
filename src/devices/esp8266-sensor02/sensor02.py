@@ -17,8 +17,8 @@ class Sensor02(prometheus.Prometheus):
         self.lightsensor = prometheus.Adc(0)
         self.register(prefix='l', lightsensor=self.lightsensor)
 
-        self.led_red = prometheus.Led(machine.Pin(16, machine.Pin.OUT))
-        self.register(prefix='r', led_red=self.led_red)
+        self.red_led = prometheus.Led(machine.Pin(5, machine.Pin.OUT, machine.Pin.PULL_UP))
+        self.register(prefix='r', red_led=self.red_led)
 
         self.integrated_led = prometheus.Led(machine.Pin(2, machine.Pin.OUT), inverted=True)
         self.register(prefix='i', integrated_led=self.integrated_led)

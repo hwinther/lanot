@@ -2,7 +2,7 @@ import machine
 import gc
 
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -101,6 +101,9 @@ class PrometheusAttribute(object):
         self.instance = instance
         self.prefix = prefix
 
+    def __str__(self):
+        return 'PrometheusAttribute - Instance: %s Prefix: %s' % (self.instance, self.prefix)
+
 
 class Prometheus(object):
     def __init__(self, parent=None, name=None):
@@ -114,6 +117,7 @@ class Prometheus(object):
         self.attributes = dict()
         self.cached_remap = dict()
         self.cached_urls = dict()
+        self.prefix_cache = dict()
 
         if self.__class__.__name__ in Registry.r:
             for key in Registry.r[self.__class__.__name__]:
@@ -162,10 +166,24 @@ class Prometheus(object):
         self.cached_remap = self.data_commands()
         prometheus_attributes = self.recursive_attributes()  # type: list(PrometheusAttribute)
 
+        self.prefix_cache = dict()
         for prometheus_attribute in prometheus_attributes:
-            attribute_commands = prometheus_attribute.instance.data_commands(data_value_prefix=prometheus_attribute.prefix)
+            # print('prometheus_attribute=%s' % str(prometheus_attribute))
+            prefix = prometheus_attribute.prefix
+            # print('debug, prefix=%s' % repr(prefix))
+            if prometheus_attribute.prefix is not None:
+                self.prefix_cache[prometheus_attribute.instance.__class__.__name__] = prefix
+            else:
+                for key in self.prefix_cache.keys():
+                    if prometheus_attribute.instance.__class__.__name__.find(key) != -1:
+                        prefix = self.prefix_cache[key]
+                        # print('found cached prefix: %s' % prefix)
+                        break
+            attribute_commands = prometheus_attribute.instance.data_commands(data_value_prefix=prefix)
             for akey in attribute_commands.keys():
+                # print('debug, akey=%s' % akey)
                 self.cached_remap[akey] = attribute_commands[akey]
+
         return self.cached_remap
 
     def data_commands(self, data_value_prefix=None):
@@ -204,7 +222,7 @@ class Prometheus(object):
 
 
 class Led(Prometheus):
-    def __init__(self, pin, inverted=False, state=False):
+    def __init__(self, pin, inverted=False, state=None):
         """
         :type pin: machine.Pin
         :type inverted: bool
@@ -214,7 +232,7 @@ class Led(Prometheus):
         self.pin = pin
         self.inverted = inverted
         # set initial state if it differs from what we have
-        if self.pin.value() is not state:
+        if state is not None and self.pin.value() is not state:
             if self.inverted:
                 self.pin.value(not state)
             else:
@@ -290,3 +308,22 @@ class RemoteTemplate(Prometheus):
     def recv(self, buffersize=None):
         print('recv buffersize=%s' % buffersize)
         return None
+
+    def die(self):
+        self.send('die')
+
+    def cap(self):
+        self.send('cap')
+        print('cap: %s' % repr(self.recv(100)))
+
+    def uname(self):
+        self.send('uname')
+        print('uname: %s' % repr(self.recv(100)))
+
+    def version(self):
+        self.send('version')
+        print('version: %s' % repr(self.recv(100)))
+
+    def sysinfo(self):
+        self.send('sysinfo')
+        print('sysinfo: %s' % repr(self.recv(100)))
