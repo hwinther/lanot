@@ -24,7 +24,7 @@ class ProxyTest2(prometheus.Prometheus):
 
 
 if __name__ == '__main__':
-    proxytest2 = ProxyTest2()
+    # proxytest2 = ProxyTest2()
     # print('off')
     # proxytest2.sensor01.integrated_led.off()
     # proxytest2.sensor02.integrated_led.off()
@@ -34,5 +34,19 @@ if __name__ == '__main__':
     # proxytest2.sensor01.integrated_led.on()
     # proxytest2.sensor02.integrated_led.on()
     # proxytest2.nodetest.integrated_led.on()
-    jsonrestserver = prometheus_servers.JsonRestServer(proxytest2)
-    jsonrestserver.start()
+    # jsonrestserver = prometheus_servers.JsonRestServer(proxytest2, settimeout=0.1, usessl=True)
+    # jsonrestserver.start()
+
+    # time.struct_time(tm_year=2017, tm_mon=9, tm_mday=3, tm_hour=1, tm_min=22, tm_sec
+    # =54, tm_wday=6, tm_yday=246, tm_isdst=1)
+    lt = time.localtime()
+
+    yd = 2016 - lt[0] * 365 * 24 * 60 * 60
+    et = yd
+    md = lt[1] * 24 * 60 * 60
+    et = et + md
+    dd = lt[2] * 60 * 60
+    et = et + dd
+    hd = lt[3] * 60
+    et = et + hd
+    et = et + lt[4]

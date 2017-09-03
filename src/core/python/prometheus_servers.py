@@ -1,16 +1,18 @@
 import socket
 import sys
-if sys.platform in ['esp8266', 'esp32', 'WiPy']:
-    from ussl import wrap_socket as ssl_wrap_socket
-else:
-    from ssl import wrap_socket as ssl_wrap_socket
 import os
 import json
 import gc
+if sys.platform in ['esp8266', 'esp32', 'WiPy']:
+    from ussl import wrap_socket as ssl_wrap_socket
+    # from ussl import SSLEOFError as ssl_SSLEOFError
+else:
+    from ssl import wrap_socket as ssl_wrap_socket
+    from ssl import SSLEOFError as ssl_SSLEOFError
 from prometheus import Buffer, RegisteredMethod
 from prometheus import __version__ as prometheus__version
 
-__version__ = '0.1.2'
+__version__ = '0.1.3a'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -162,7 +164,7 @@ class UdpSocketServer(Server):
 
         data, addr = None, None
         try:
-            data, addr = self.socket.recvfrom(1024)
+            data, addr = self.socket.recvfrom(100)
         except:
             pass
 
@@ -173,15 +175,26 @@ class UdpSocketServer(Server):
 
         if addr not in self.buffers.keys():
             print('Creating new buffer context')
+            # TODO: clean up buffer contexts over time!
+            # TODO: this must be done in Tcp implementation also
+            if len(self.buffers) > 4:
+                print('cleaning up old buffers')
+                self.buffers = dict()
+                gc.collect()
             self.buffers[addr] = Buffer(split_chars=self.splitChars, end_chars=self.endChars)
 
-        self.buffers[addr].parse(data.decode('utf-8'))
+        if type(data) is str:
+            # convert to bytes?
+            data = data.decode('ascii')
+        self.buffers[addr].parse(data)
 
         while True:
             command = self.buffers[addr].pop()
             if command is None:
                 # print('Breaking command loop')
                 break
+            if type(command) is bytes:
+                command = command.decode('ascii')
             print('Calling handle data')
             self.handle_data(command, addr)
 
@@ -194,7 +207,8 @@ class UdpSocketServer(Server):
         Server.reply(self, return_value, **kwargs)
 
         print('returning %s to %s' % (return_value, repr(source)))
-        self.socket.sendto(b'%s%s%s' % (return_value, self.endChars, self.splitChars), source)
+        self.socket.sendto(b'%s%s%s' % (return_value.encode('ascii'), self.endChars.encode('ascii'),
+                                        self.splitChars.encode('ascii')), source)
 
 
 class TcpSocketServer(Server):
@@ -244,7 +258,7 @@ class TcpSocketServer(Server):
         for addr in self.buffers.keys():
             data = None
             try:
-                data = self.sockets[addr].recv(1024)
+                data = self.sockets[addr].recv(100)
             except:
                 pass
 
@@ -279,15 +293,17 @@ class TcpSocketServer(Server):
 
 
 class JsonRestServer(Server):
-    def __init__(self, instance, usessl = False):
+    def __init__(self, instance, usessl = False, settimeout=None):
         Server.__init__(self, instance)
 
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.usessl = usessl
         self.sslsock = None
-        if usessl:
-            import ussl
-            gc.collect()
+        self.settimeout = settimeout
+        print('settimeout=%s' % settimeout)
+        # if usessl:
+        #     import ussl
+        #     gc.collect()
 
     def start(self, bind_host='', bind_port=8080, **kwargs):
         Server.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
@@ -301,7 +317,11 @@ class JsonRestServer(Server):
             print('could not bind with reuse flag')  # TODO: look into this
         self.socket.bind((bind_host, bind_port))
         self.socket.listen(4)
-        self.socket.settimeout(0)
+        if self.settimeout is None:
+            self.socket.settimeout(0)
+        else:
+            print('settimeout override: %s' % self.settimeout)
+            self.socket.settimeout(self.settimeout)
         print('listening on %s:%d' % (bind_host, bind_port))
 
         self.instance.update_urls()
@@ -317,18 +337,31 @@ class JsonRestServer(Server):
         try:
             # TODO: put this pair in a wrapper class
             sock, addr = self.socket.accept()
-            if self.usessl:
-                self.sslsock = ssl_wrap_socket(sock)
         except:
             pass  # timeout, i hope
 
         if sock is not None:
             print('Accepted connection from %s' % repr(addr))
-            sock.settimeout(2)
+
+            if self.usessl:
+                print('ssl wrap')
+                ciphers = "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:AES128-GCM-SHA256:AES128-SHA256:HIGH:"
+                ciphers += "!aNULL:!eNULL:!EXPORT:!DSS:!DES:!RC4:!3DES:!MD5:!PSK"
+                keyfile = r'C:\Users\dg2\Downloads\bastion.oh.wsh.no.pem'
+                certfile = r'C:\Users\dg2\Downloads\bastion.oh.wsh.no-cert.pem'
+                cacerts = r'C:\Users\dg2\Downloads\cacert.pem'
+                try:
+                    self.sslsock = ssl_wrap_socket(sock, server_side=True, keyfile=keyfile, certfile=certfile, ca_certs=cacerts,
+                                                   ciphers=ciphers)
+                except ssl_SSLEOFError:
+                    print('SSLEOFError')
+                    return
+
             try:
                 if self.usessl:
                     data = self.sslsock.read(1024)
                 else:
+                    sock.settimeout(2)
                     data = sock.recv(1024)
             except:
                 data = None
@@ -386,6 +419,10 @@ class JsonRestServer(Server):
                         elif path == b'/sysinfo':
                             self.reply(return_value=self.sysinfo(), source=sock, query=query)
                             found = True
+                        elif path == b'/die':
+                            self.reply(return_value='ok', source=sock, query=query)
+                            self.loopActive = False
+                            found = True
                         elif path == b'/favicon.ico':
                             self.reply(return_value=favicon, source=sock, contenttype='image/x-icon')
                             found = True
@@ -395,7 +432,11 @@ class JsonRestServer(Server):
                 sock.send(b'HTTP/1.1 404 Not found\r\n')
             # noinspection PyBroadException
             try:
-                sock.close()
+                if self.usessl:
+                    self.sslsock.close()
+                    sock.close()  # TODO: required?
+                else:
+                    sock.close()
             except:
                 pass
 
@@ -473,3 +514,14 @@ class MultiServer(object):
 
         for wrappedserver in self.wrappedservers:
             wrappedserver.server.post_loop(**wrappedserver.kwargs)
+
+
+# TODO: RSA socket
+# client & server must support request for public key (respond with public key)
+# client & server should keep received public key replies locally
+# client & server have to generate a local key in init if none exist
+# request over protocol should be:
+# <command encrypted with remote ends public key> -> encrypted again with local private key for ident verification
+# (server) decrypts with remote public key, and then decrypts with local private key
+# do something after first decrypt to see that it failed at that step (static padding)
+# concider adding time.time() to the command format (at end, split away after recv?), so it cant be replayed

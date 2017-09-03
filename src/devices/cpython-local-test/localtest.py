@@ -1,6 +1,7 @@
 import prometheus
 import prometheus_esp8266
 import prometheus_servers
+import prometheus_crypto
 import machine
 
 
@@ -27,12 +28,15 @@ if __name__ == '__main__':
     # udpserver = prometheus_servers.UdpSocketServer(localtest)
     # udpserver.start()
 
-    multiserver = prometheus_servers.MultiServer()
+    # multiserver = prometheus_servers.MultiServer()
+    #
+    # udpserver = prometheus_servers.UdpSocketServer(localtest)
+    # multiserver.add(udpserver, bind_host='', bind_port=9195)
+    #
+    # jsonrestserver = prometheus_servers.JsonRestServer(localtest)
+    # multiserver.add(jsonrestserver, bind_host='', bind_port=8080)
+    #
+    # multiserver.start()
 
-    udpserver = prometheus_servers.UdpSocketServer(localtest)
-    multiserver.add(udpserver, bind_host='', bind_port=9195)
-
-    jsonrestserver = prometheus_servers.JsonRestServer(localtest)
-    multiserver.add(jsonrestserver, bind_host='', bind_port=8080)
-
-    multiserver.start()
+    rsaserver = prometheus_crypto.RsaUdpSocketServer(localtest)
+    rsaserver.start()

@@ -2,7 +2,7 @@ import machine
 import gc
 
 
-__version__ = '0.1.2'
+__version__ = '0.1.3a'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -21,22 +21,32 @@ class Buffer(object):
         :rtype: Buffer
         """
         self.Packets = list()
-        self.packetBuffer = ''
+        self.packetBuffer = b''
+        if type(split_chars) is str:
+            split_chars = split_chars.encode('ascii')
         self.splitChars = split_chars
+        if type(end_chars) is str:
+            end_chars = end_chars.encode('ascii')
         self.endChars = end_chars
 
     def parse(self, packetdata):
         # type: (str) -> None
         # TODO: add cleanup routine, clear buffer after x seconds
-        if packetdata == '':
+        # TODO: do something about large packetdata sizes?
+        # TODO: e.g. only take 100 char buffers at a time, prune at 100 chars when adding rest to rest buffer
+        # TODO: maybe use utf-8 instead of ascii? and it should be a constant so it cant differ in any one location
+        if type(packetdata) is str:
+            packetdata = packetdata.encode('ascii')
+
+        if packetdata == b'':
             return
 
         self.packetBuffer += packetdata
-        rest = ''
+        rest = b''
         # print('for segment in split on %s len=%d' % (self.splitChars, len(self.packetBuffer.split(self.splitChars))))
         for segment in self.packetBuffer.split(self.splitChars):
             # print('segment[%s].find %s = %s' % (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
-            if segment == '':
+            if segment == b'':
                 # the segment empty or only POLYNOMIAL, ignore it
                 pass
             elif segment.find(self.endChars) != -1:
@@ -45,6 +55,10 @@ class Buffer(object):
                 self.Packets.append(s)
             else:
                 rest += self.splitChars + segment
+
+        if len(rest) > 100:
+            print('pruning packetBuffer rest')
+            rest = rest[0:20]
         self.packetBuffer = rest
 
     def pop(self):

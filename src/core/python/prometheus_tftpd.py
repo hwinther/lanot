@@ -1,6 +1,8 @@
 import socket
 import gc
 
+__version__ = '0.1.1'
+__author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
 
