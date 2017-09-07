@@ -1,12 +1,10 @@
 import time
-import sys
 import machine  # this happens in boot and isnt required here, but for the IDE (and as a failsafe)
 import os
-import micropython
 import untplib
 import gc
 from tank import Tank
-
+from prometheus_servers import UdpSocketServer
 
 gc.collect()
 
@@ -77,3 +75,7 @@ def start_event_timer():
 
 # start_event_timer()
 # tank.start_socket_server()
+gc.collect()
+s =  UdpSocketServer(tank)
+gc.collect()
+s.start()

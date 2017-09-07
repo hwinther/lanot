@@ -7,7 +7,7 @@ import socket
 import datetime
 import time
 import prometheus
-from prometheus_crypto import get_or_create_local_keys, encrypt, decrypt
+import prometheus_crypto
 
 # TODO: move these template classes to another python file? perhaps one for each via python modules
 # TODO: none of the inheritors of prometheus.RemoteTemplate call super outside of init
@@ -175,7 +175,7 @@ class TcpTemplate(prometheus.RemoteTemplate):
 
 
 class RsaUdpTemplate(prometheus.RemoteTemplate):
-    def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
+    def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195, clientencrypt=False):
         prometheus.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
@@ -187,34 +187,72 @@ class RsaUdpTemplate(prometheus.RemoteTemplate):
         self.endChars = b'\r'
         self.negotiated = False
         self.remote_key = (0, 0)
+        self.clientencrypt = clientencrypt
+        self.private_key = None
+        self.public_key = None
         # POST_INIT
 
-    def negotiate(self):
-        # TODO: check if key exists in registry first
-        # request key from remote end
-        self.send_raw(b'pubkey')
-        data = self.recv_timeout(100, 0.5)
-        print('pubkey recv: %s' % repr(data))
-        pubkey = data.split(b'\t')
-        pubkey[0] = int(pubkey[0])
-        pubkey[1] = int(pubkey[1])
-        self.remote_key = (pubkey[0], pubkey[1])
+    def negotiate(self, revalidate=False):
+        d = prometheus_crypto.get_local_key_registry()
+        if self.remote_addr[0] in d.keys() and revalidate is False:
+            # got key already
+            print('found cached pubkey for %s' % self.remote_addr[0])
+            self.remote_key = d[self.remote_addr[0]]
+            self.negotiated = True
+        else:
+            # request key from remote end
+            print('requesting pubkey')
+            self.send_raw(b'pubkey')
+            data = self.recv_timeout(250, 1)
+            print('pubkey recv: %s' % repr(data))
+
+            self.remote_key = data.split(b'\t')
+            self.remote_key = (int(self.remote_key[0]), int(self.remote_key[1]))
+            update = True
+            if self.remote_addr[0] in d.keys():
+                # verify that its the same one we got before
+                if d[self.remote_addr[0]][0] != self.remote_key[0] or d[self.remote_addr[0]][1] != self.remote_key[1]:
+                    print('! alert - public key does not match')
+                    print('%s and %s' % (d[self.remote_addr[0]][0], self.remote_key[0]))
+                    print('%s and %s' % (d[self.remote_addr[0]][1], self.remote_key[1]))
+                else:
+                    print('valid pubkey for %s' % self.remote_addr[0])
+                    update = False
+            if update:
+                d[self.remote_addr[0]] = self.remote_key
+                prometheus_crypto.set_local_key_registry(d)
+
+        if self.clientencrypt:
+            if self.private_key is None:
+                print('generating new keys')
+                self.public_key, self.private_key = prometheus_crypto.get_or_create_local_keys()
+
+            # send version command to get pubkey request in return?
+            print('sending version')
+            self.send_raw(b'version')
+            reply = self.recv()
+            print('repr(reply)=%s' % repr(reply))
+
+            msg = b'%d\t\t\t%d' % (self.public_key[0], self.public_key[1])
+            print('returning public key')
+            self.send_raw(msg)
+
         self.negotiated = True
 
     def send_raw(self, data):
         self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
 
     def send_crypted(self, data):
-        encrypted = encrypt(self.remote_key, data.decode('ascii'))
-        # yields list[str]
-        data = b''
-        for x in encrypted:
-            data += b'%d\t' % x
+        print('send_crypted: cleartext is %d bytes' % len(data))
+        if self.clientencrypt:
+            data = prometheus_crypto.encrypt_packet(data, self.remote_key, self.private_key)
+        else:
+            data = prometheus_crypto.encrypt_packet(data, self.remote_key)
         self.send_raw(data)
 
     def send(self, data):
         if self.negotiated is False:
-            self.negotiate()
+            self.negotiate(revalidate=False)
         self.send_crypted(data)
 
     def try_recv(self, buffersize):
@@ -223,7 +261,7 @@ class RsaUdpTemplate(prometheus.RemoteTemplate):
         except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
             return None, None
 
-    def recv_once(self, buffersize=10):
+    def recv_once(self, buffersize=250):
         data, addr = self.try_recv(buffersize)  # type: bytes, int
         if data is None:
             return None
@@ -232,8 +270,14 @@ class RsaUdpTemplate(prometheus.RemoteTemplate):
         self.buffers[addr].parse(data)
         return self.buffers[addr].pop()
 
-    def recv(self, buffersize=10):
-        return self.recv_timeout(buffersize, 0.5)
+    def recv(self, buffersize=250):
+        data = self.recv_timeout(buffersize, 0.5)
+        if self.negotiated:
+            if self.clientencrypt:
+                data = prometheus_crypto.decrypt_packet(data, self.remote_key, self.private_key)
+            else:
+                data = prometheus_crypto.decrypt_packet(data, self.remote_key)
+        return data
 
     def recv_timeout(self, buffersize, timeout):
         """
@@ -514,7 +558,9 @@ def folder_import():
     # print(template)
     print('writing to %s' % outfile)
     open(outfile, 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +
-                             'import prometheus\nimport socket\nimport machine\nimport time\nimport gc\n\ngc.collect()\n\n\n'
+                             'import prometheus\nimport socket\nimport machine\nimport time\nimport gc\n' +
+                             'import prometheus_crypto\n' +
+                             '\ngc.collect()\n\n\n'
                              + template)
     # '\n\n' + ''.join(inspect.getsourcelines(prometheus.Prometheus)[0])
     # ''.join(inspect.getsourcelines(prometheus.Registry)[0]) + '\n\n'
@@ -600,7 +646,9 @@ def build_client(cls, output_filename, client_template_instances):
     :return: None
     """
     # TODO: dynamically determine imports necesary for this specific module?
-    imports = 'import prometheus\nimport socket\nimport machine\nimport time\nimport gc\n\ngc.collect()\n\n\n'
+    imports = 'import prometheus\nimport socket\nimport machine\nimport time\nimport gc\n' +\
+              'import prometheus_crypto\n' +\
+              '\ngc.collect()\n\n\n'
     code = list()
     subclasses = True  # only for the first instance
     classes = list()
@@ -620,27 +668,26 @@ def build_client(cls, output_filename, client_template_instances):
 
 # folder_import()
 
-"""
-from tank import Tank
-build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
-from tankproxy import TankProxy
-build_client(TankProxy, 'tankproxyclient.py', [UdpTemplate, TcpTemplate])
-from proxytest import ProxyTest
-build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
-from chaintest import A, B, C
-build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
-build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
-build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
-"""
+# from tank import Tank
+# build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
+# from tankproxy import TankProxy
+# build_client(TankProxy, 'tankproxyclient.py', [UdpTemplate, TcpTemplate])
+# from proxytest import ProxyTest
+# build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
+# from chaintest import A, B, C
+# build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
+# build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
+# build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
 
-# from sensor01 import Sensor01
-# build_client(Sensor01, 'sensor01client.py', [UdpTemplate])
-# from sensor02 import Sensor02
-# build_client(Sensor02, 'sensor02client.py', [UdpTemplate])
-# from nodetest import NodeTest
-# build_client(NodeTest, 'nodetestclient.py', [UdpTemplate])
 
-u = RsaUdpTemplate('localhost', bind_port=9191)
-u.send(b'version')
-v = u.recv_timeout(20, 0.5)
-print(v)
+from sensor01 import Sensor01
+build_client(Sensor01, 'sensor01client.py', [UdpTemplate, RsaUdpTemplate])
+from sensor02 import Sensor02
+build_client(Sensor02, 'sensor02client.py', [UdpTemplate, RsaUdpTemplate])
+from nodetest import NodeTest
+build_client(NodeTest, 'nodetestclient.py', [UdpTemplate, RsaUdpTemplate])
+
+# u = RsaUdpTemplate('192.168.1.102', bind_port=9191, clientencrypt=False)
+# u.send(b'version')
+# v = u.recv(250)
+# print('version: %s' % v)

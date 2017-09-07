@@ -1,0 +1,3 @@
+p = machine.Pin(36, machine.Pin.IN)
+a = machine.ADC(p)
+a.read()

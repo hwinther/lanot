@@ -1,12 +1,13 @@
 import nodetest
 import prometheus_servers
+import prometheus_crypto
 import gc
 
 
 gc.collect()
 
 node = nodetest.NodeTest()
-udpserver = prometheus_servers.UdpSocketServer(node)
+udpserver = prometheus_crypto.RsaUdpSocketServer(node)
 gc.collect()
 print(udpserver.uname())
 gc.collect()

@@ -3,16 +3,16 @@ import sys
 import os
 import json
 import gc
+from prometheus import Buffer, RegisteredMethod
+from prometheus import __version__ as prometheus__version
 if sys.platform in ['esp8266', 'esp32', 'WiPy']:
     from ussl import wrap_socket as ssl_wrap_socket
     # from ussl import SSLEOFError as ssl_SSLEOFError
 else:
     from ssl import wrap_socket as ssl_wrap_socket
     from ssl import SSLEOFError as ssl_SSLEOFError
-from prometheus import Buffer, RegisteredMethod
-from prometheus import __version__ as prometheus__version
 
-__version__ = '0.1.3a'
+__version__ = '0.1.3b'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -164,9 +164,11 @@ class UdpSocketServer(Server):
 
         data, addr = None, None
         try:
-            data, addr = self.socket.recvfrom(100)
-        except:
-            pass
+            # TODO: buffer could be higher, but then the buffer class needs to prune its rest buffer over time
+            data, addr = self.socket.recvfrom(500)
+        except OSError as e:
+            if e.args[0] not in [110, 10035]:
+                raise
 
         if data is None:
             return
@@ -206,8 +208,14 @@ class UdpSocketServer(Server):
     def reply(self, return_value, source=None, **kwargs):
         Server.reply(self, return_value, **kwargs)
 
+        if type(return_value) is str:
+            return_value = return_value.encode('ascii')
+        elif type(return_value) is bytes:
+            pass
+        else:
+            return_value = b'%s' % return_value
         print('returning %s to %s' % (return_value, repr(source)))
-        self.socket.sendto(b'%s%s%s' % (return_value.encode('ascii'), self.endChars.encode('ascii'),
+        self.socket.sendto(b'%s%s%s' % (return_value, self.endChars.encode('ascii'),
                                         self.splitChars.encode('ascii')), source)
 
 
@@ -300,10 +308,6 @@ class JsonRestServer(Server):
         self.usessl = usessl
         self.sslsock = None
         self.settimeout = settimeout
-        print('settimeout=%s' % settimeout)
-        # if usessl:
-        #     import ussl
-        #     gc.collect()
 
     def start(self, bind_host='', bind_port=8080, **kwargs):
         Server.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
@@ -514,14 +518,3 @@ class MultiServer(object):
 
         for wrappedserver in self.wrappedservers:
             wrappedserver.server.post_loop(**wrappedserver.kwargs)
-
-
-# TODO: RSA socket
-# client & server must support request for public key (respond with public key)
-# client & server should keep received public key replies locally
-# client & server have to generate a local key in init if none exist
-# request over protocol should be:
-# <command encrypted with remote ends public key> -> encrypted again with local private key for ident verification
-# (server) decrypts with remote public key, and then decrypts with local private key
-# do something after first decrypt to see that it failed at that step (static padding)
-# concider adding time.time() to the command format (at end, split away after recv?), so it cant be replayed

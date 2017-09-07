@@ -2,7 +2,7 @@ import machine
 import gc
 
 
-__version__ = '0.1.3a'
+__version__ = '0.1.3b'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -269,9 +269,9 @@ class Led(Prometheus):
     @Registry.register('Led', 'S', 'OUT')
     def state(self):
         if self.inverted:
-            return not self.pin.value()
+            return self.pin.value() is not True
         else:
-            return self.pin.value()
+            return self.pin.value() is True
 
 
 class Adc(Prometheus):

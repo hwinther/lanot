@@ -39,13 +39,17 @@ class Tank(prometheus.Prometheus):
 
         self.ls = servo.Servo(10, FREQUENCY, ROTATIONAL_RANGE_100, PULSE_MIN, PULSE_MAX)
         self.rs = servo.Servo(9, FREQUENCY, ROTATIONAL_RANGE_100, PULSE_MIN, PULSE_MAX)
+
         self.lightControl = LightControl.LightControl(1, baudrate=4800)
         self.register(lightControl=self.lightControl)
+
         self.sensors = machine.UART(0, baudrate=2400, pins=('GP1', 'GP2'))
-        self.led_blue = prometheus.Led(machine.Pin('GP16', mode=machine.Pin.OUT))
-        self.register(prefix='b', led_blue=self.led_blue)
-        self.led_red = prometheus.Led(machine.Pin('GP11', mode=machine.Pin.OUT))
-        self.register(prefix='r', led_red=self.led_red)
+
+        self.blue_led = prometheus.Led(machine.Pin('GP16', mode=machine.Pin.OUT))
+        self.register(prefix='b', blue_led=self.blue_led)
+
+        self.red_led = prometheus.Led(machine.Pin('GP11', mode=machine.Pin.OUT))
+        self.register(prefix='r', red_led=self.red_led)
 
     @prometheus.Registry.register('Tank', 'W')
     def fast_forward(self, sec=1):
