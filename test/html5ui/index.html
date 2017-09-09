@@ -37,15 +37,7 @@
                 container.html(container.html() +  '<div class="panel-heading">' + host + '</div>' + '<div id="' + hostname + 'panelbody" class="panel-body"><div id="' + hostname + '_infocontainer" class="infocontainer"></div></div>');
                 var panelbody = $('#' + hostname + 'panelbody');
 
-                /*$.ajax({
-                    url: 'http://' + host + ':8080/uname',
-                    dataType: 'jsonp',
-                    indexValue: hostname,
-                    success: function (data) {
-                        var infocontainer = $('#' + this.indexValue + '_infocontainer');
-                        infocontainer.html(infocontainer.html() + '<span class="uname">' + data['value'] + '</span><br />');
-                    }
-                });*/
+                // get and show version
                 $.ajax({
                     url: 'http://' + host + ':8080/version',
                     dataType: 'jsonp',
@@ -55,28 +47,27 @@
                         infocontainer.html(infocontainer.html() + '<span class="version">' + data['value'] + '</span><br />');
                     }
                 });
-                /*$.ajax({
-                    url: 'http://' + host + ':8080/sysinfo',
-                    dataType: 'jsonp',
-                    indexValue: hostname,
-                    success: function (data) {
-                        var infocontainer = $('#' + this.indexValue + '_infocontainer');
-                        infocontainer.html(infocontainer.html() + '<span class="sysinfo">' + data['value'] + '</span><br />');
-                    }
-                });*/
 
-                jQuery.each(data, function(index, value) {
+                //window.testdata = data;
+                var sorted_keys = Object.keys(data).sort();
+                //window.keys = sorted_keys;
+                //jQuery.each(data, function(index, value) {
+                jQuery.each(sorted_keys, function(idx, index) {
+                    //console.log(idx);
+                    //console.log(index);
+                    var obj = data[index];
+                    //console.log('obj='+obj);
                     var name = index.split('_').join(' ');
                     name = name.charAt(0).toUpperCase() + name.slice(1);
                     var elemid = hostname + '_' + index.replace('.', '__');
                     // console.log('elemid: ' + elemid);
-                    if (endsWith(this.class, 'Led'))
+                    if (endsWith(obj.class, 'Led'))
                     {
                         panelbody.html(panelbody.html() +
-                            '<div class="input-group"><button type="button" class="btn btn-primary btn-sm btnled" data-toggle="button" aria-pressed="false" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri-on="' + this.methods['on'] + '" data-uri-off="' + this.methods['off'] + '" id="btn_' + elemid + '">\n' +
+                            '<div class="input-group"><button type="button" class="btn btn-primary btn-sm btnled" data-toggle="button" aria-pressed="false" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri-on="' + obj.methods['on'] + '" data-uri-off="' + obj.methods['off'] + '" id="btn_' + elemid + '">\n' +
                             name + ' on\n' +
                             '</button></div>');
-                        var uri = 'http://' + host + ':8080' + this.methods['state'];
+                        var uri = 'http://' + host + ':8080' + obj.methods['state'];
                         //console.log('uri: ' + uri);
                         $.ajax({
                             url: uri,
@@ -85,7 +76,11 @@
                             success: function (data) {
                                 //console.log('got value: ' + data['value']);
                                 var elem = $('#btn_' + this.indexValue);
-                                if (data['value'].toLowerCase() === 'true') {
+                                var value = data['value'];
+                                if (value === null) {
+                                    console.log('Null received for btn state: ' + name);
+                                }
+                                else if (value.toLowerCase() === 'true') {
                                     console.log('switching led state for ' + this.indexValue);
                                     elem.text(elem.data('name') + ' off');
                                     elem.addClass('active');
@@ -94,24 +89,39 @@
                             }
                         });
                     }
-                    else if (endsWith(this.class, 'Dht11'))
+                    else if (endsWith(obj.class, 'Dht11'))
                     {
                         panelbody.html(panelbody.html() +
-                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndht11" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + this.methods['value'] + '" id="btn_' + elemid + '">\n' +
+                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndht11" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['value'] + '" id="btn_' + elemid + '">\n' +
                             ' Read DHT: ' + name + '\n' +
-                            '</button><input type="textbox" id="dht11_' + elemid + '" /></div>');
+                            '</button><input type="textbox" id="dht11_' + elemid + '" /></div>\n');
                     }
-                    else if (endsWith(this.class, 'Adc'))
+                    else if (endsWith(obj.class, 'Adc') || endsWith(obj.class, 'Lightsensor') || endsWith(obj.class, 'Hygrometer'))
                     {
                         panelbody.html(panelbody.html() +
-                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnadc" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + this.methods['read'] + '" id="btn_' + elemid + '">\n' +
+                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnadc" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['read'] + '" id="btn_' + elemid + '">\n' +
                             ' Read ADC: ' + name + '\n' +
-                            '</button><input type="textbox" id="adc_' + elemid + '" /></div>');
+                            '</button><input type="textbox" id="adc_' + elemid + '" /></div>\n');
                     }
                     else
                     {
-                        console.log('Unhandled class: ' + this.class + ' from host: ' + host)
+                        console.log('Unhandled class: ' + obj.class + ' from host: ' + host + ' showing methods as buttons.');
+                        jQuery.each(obj.methods, function(method_name, method_uri) {
+                            // console.log('method_name=' + method_name + ' method_uri=' + method_uri);
+                            var method_friendly_name = method_name.split('_').join(' ');
+                            method_friendly_name = method_friendly_name.charAt(0).toUpperCase() + method_friendly_name.slice(1);
+                            panelbody.html(panelbody.html() +
+                                '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnmethod" autocomplete="off" data-name="' + method_friendly_name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + method_uri + '" id="btn_' + elemid + '">\n' +
+                                method_friendly_name + '\n</button></div>\n');
+                        });
                     }
+                });
+
+                $('.btnmethod').click(function() {
+                    var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                    $.ajax({
+                            url: uri,
+                            dataType: 'jsonp'});
                 });
 
                 $('.btnled').click(function(){
@@ -151,17 +161,21 @@
                                 //console.log('got value: ' + data['value']);
                                 var elem = '#adc_' + hostname + '_' + name.replace('.', '__').toLowerCase();
                                 //console.log('setting to ' + elem);
-                                $(elem).val(data['value']);
+                                var value = data['value'];
+                                if (value === null) {
+                                    value = 'No value returned';
+                                }
+                                $(elem).val(value);
                             }
                        });
                 });
 
                 $('.btndht11').click(function(){
-                       console.log('read');
+                       //console.log('read');
                        var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
                        var name = $(this).data('name');
                        var hostname = $(this).data('hostname');
-                       console.log('uri=' + uri);
+                       //console.log('uri=' + uri);
                        $.ajax({
                             url: uri,
                             dataType: 'jsonp',
@@ -169,7 +183,14 @@
                                 //console.log('got value: ' + data['value']);
                                 var elem = '#dht11_' + hostname + '_' + name.replace('.', '__').toLowerCase();
                                 //console.log('setting to ' + elem);
-                                $(elem).val(data['value'].replace('c', 'C ') + '%');
+                                var value = data['value'];
+                                if (value === null) {
+                                    value = 'No value returned';
+                                }
+                                else {
+                                    value = value.replace('c', 'C ') + '%';
+                                }
+                                $(elem).val(value);
                             }
                        });
                 });
@@ -183,7 +204,7 @@
         //update('sensor01');
         //update('sensor02');
         update('bastion');
-        update('192.168.1.195');
+        //update('192.168.1.195');
     });
     </script>
 

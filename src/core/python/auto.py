@@ -668,16 +668,16 @@ def build_client(cls, output_filename, client_template_instances):
 
 # folder_import()
 
-# from tank import Tank
-# build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
-# from tankproxy import TankProxy
-# build_client(TankProxy, 'tankproxyclient.py', [UdpTemplate, TcpTemplate])
-# from proxytest import ProxyTest
-# build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
-# from chaintest import A, B, C
-# build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
-# build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
-# build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
+from tank import Tank
+build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
+from tankproxy import TankProxy
+build_client(TankProxy, 'tankproxyclient.py', [UdpTemplate, TcpTemplate])
+from proxytest import ProxyTest
+build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
+from chaintest import A, B, C
+build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
+build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
+build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
 
 
 from sensor01 import Sensor01

@@ -197,7 +197,7 @@ def get_local_key_registry():
     try:
         st = os.stat(key_registry_path)
     except OSError as e:
-        if e.errno != 2:
+        if e.args[0] != 2:
             # ignore errno 2 - ENOENT (doesnt exist)
             raise
 
