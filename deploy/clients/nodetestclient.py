@@ -1,4 +1,4 @@
-# generated at 2017-09-07 23:56:19
+# generated at 2017-09-10 00:20:34
 import prometheus
 import socket
 import machine
@@ -387,3 +387,4 @@ class NodeTestRsaUdpClient(prometheus.RemoteTemplate):
             if data is not None:
                 return data
         return None
+

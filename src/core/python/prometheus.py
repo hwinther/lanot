@@ -2,7 +2,7 @@ import machine
 import gc
 
 
-__version__ = '0.1.3b'
+__version__ = '0.1.3c'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -246,7 +246,7 @@ class Led(Prometheus):
         self.pin = pin
         self.inverted = inverted
         # set initial state if it differs from what we have
-        if state is not None and self.pin.value() is not state:
+        if state is not None and self.pin.value() != state:
             if self.inverted:
                 self.pin.value(not state)
             else:
@@ -269,9 +269,28 @@ class Led(Prometheus):
     @Registry.register('Led', 'S', 'OUT')
     def state(self):
         if self.inverted:
-            return self.pin.value() is not True
+            return self.pin.value() != True
         else:
-            return self.pin.value() is True
+            return self.pin.value() == True
+
+
+class Digital(Prometheus):
+    def __init__(self, pin, inverted=False):
+        """
+        :type pin: machine.Pin
+        :type inverted: bool
+        :type state: bool
+        """
+        Prometheus.__init__(self)
+        self.pin = pin
+        self.inverted = inverted
+
+    @Registry.register('Digital', 'D', 'OUT')
+    def value(self):
+        if self.inverted:
+            return self.pin.value() != True
+        else:
+            return self.pin.value() == True
 
 
 class Adc(Prometheus):

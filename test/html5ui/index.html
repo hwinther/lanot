@@ -74,13 +74,13 @@
                             dataType: 'jsonp',
                             indexValue: elemid,
                             success: function (data) {
-                                //console.log('got value: ' + data['value']);
+                                // console.log('got value: ' + data['value']);
                                 var elem = $('#btn_' + this.indexValue);
                                 var value = data['value'];
-                                if (value === null) {
+                                if (value === null || value === undefined) {
                                     console.log('Null received for btn state: ' + name);
                                 }
-                                else if (value.toLowerCase() === 'true') {
+                                else if (value === true || value !== false && value.toLowerCase() === 'true') {
                                     console.log('switching led state for ' + this.indexValue);
                                     elem.text(elem.data('name') + ' off');
                                     elem.addClass('active');
@@ -102,6 +102,13 @@
                             '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnadc" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['read'] + '" id="btn_' + elemid + '">\n' +
                             ' Read ADC: ' + name + '\n' +
                             '</button><input type="textbox" id="adc_' + elemid + '" /></div>\n');
+                    }
+                    else if (endsWith(obj.class, 'Digital'))
+                    {
+                        panelbody.html(panelbody.html() +
+                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndigital" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['value'] + '" id="btn_' + elemid + '">\n' +
+                            ' Read digital: ' + name + '\n' +
+                            '</button><input type="textbox" id="digital_' + elemid + '" /></div>\n');
                     }
                     else
                     {
@@ -170,6 +177,28 @@
                        });
                 });
 
+                $('.btndigital').click(function(){
+                       //console.log('read');
+                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                       var name = $(this).data('name');
+                       var hostname = $(this).data('hostname');
+                       //console.log('uri=' + uri);
+                       $.ajax({
+                            url: uri,
+                            dataType: 'jsonp',
+                            success: function (data) {
+                                //console.log('got value: ' + data['value']);
+                                var elem = '#digital_' + hostname + '_' + name.replace('.', '__').toLowerCase();
+                                //console.log('setting to ' + elem);
+                                var value = data['value'];
+                                if (value === null) {
+                                    value = 'No value returned';
+                                }
+                                $(elem).val(value);
+                            }
+                       });
+                });
+
                 $('.btndht11').click(function(){
                        //console.log('read');
                        var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
@@ -203,8 +232,8 @@
         //update('nodetest');
         //update('sensor01');
         //update('sensor02');
-        update('bastion');
-        //update('192.168.1.195');
+        //update('bastion');
+        update('192.168.1.195');
     });
     </script>
 

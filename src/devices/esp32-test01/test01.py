@@ -19,3 +19,9 @@ class Test01(prometheus.Prometheus):
 
         self.lightsensor = prometheus.Adc(machine.Pin(36))
         self.register(prefix='s', lightsensor=self.lightsensor)
+
+        self.window01digital = prometheus.Digital(machine.Pin(15, machine.Pin.IN, machine.Pin.PULL_UP))
+        self.register(prefix='w1', window01digital=self.window01digital)
+
+        self.window02digital = prometheus.Digital(machine.Pin(4, machine.Pin.IN, machine.Pin.PULL_UP))
+        self.register(prefix='w2', window02digital=self.window02digital)

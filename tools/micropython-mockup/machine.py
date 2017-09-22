@@ -1,8 +1,7 @@
-import logging
 import time
 
 
-class UART:
+class UART(object):
     def __init__(self, channel, baudrate=None, pins=None):
         pass
 
@@ -16,7 +15,7 @@ class UART:
         return b'test'  # [0:length]
 
 
-class Pin:
+class Pin(object):
     """'init', 'value', 'toggle', 'id', 'mode', 'pull', 'drive', 'alt_list', 'irq', 'board', 'IN', 'OUT', 'OPEN_DRAIN',
      'ALT', 'ALT_OPEN_DRAIN', 'PULL_UP', 'PULL_DOWN', 'LOW_POWER', 'MED_POWER', 'HIGH_POWER', 'IRQ_FALLING',
      'IRQ_RISING', 'IRQ_LOW_LEVEL', 'IRQ_HIGH_LEVEL'"""
@@ -60,7 +59,7 @@ class Pin:
         self.state_value = not self.state_value
 
 
-class Timer:
+class Timer(object):
     A = 0
     B = 0
     ONE_SHOT = 0
@@ -86,7 +85,7 @@ class Timer:
         return TimerChannel()
 
 
-class TimerChannel:
+class TimerChannel(object):
     def __init__(self):
         pass
 
@@ -97,7 +96,7 @@ class TimerChannel:
         pass
 
 
-class RTC:
+class RTC(object):
     def __init__(self):
         pass
 
@@ -105,7 +104,7 @@ class RTC:
         pass
 
 
-class ADC:
+class ADC(object):
     def __init__(self, pin):
         self.pin = pin
 
