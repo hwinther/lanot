@@ -269,9 +269,9 @@ class Led(Prometheus):
     @Registry.register('Led', 'S', 'OUT')
     def state(self):
         if self.inverted:
-            return self.pin.value() is not True
+            return self.pin.value() != True
         else:
-            return self.pin.value() is True
+            return self.pin.value() == True
 
 
 class Adc(Prometheus):
