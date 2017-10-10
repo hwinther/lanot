@@ -318,6 +318,8 @@ def decrypt_packet(ciphertext, private_key, public_key=None):
     :return: cleartext
     """
     print('decrypt_packet')
+    if public_key:
+        print('with public key')
     if type(ciphertext) == str:
         ciphertext = ciphertext.encode('ascii')
     if ciphertext is None or ciphertext.count(b'\x00') < 5:
@@ -328,7 +330,11 @@ def decrypt_packet(ciphertext, private_key, public_key=None):
         s = b''
         try:
             for y in x:
-                s += b'%02d' % y
+                try:
+                    s += b'%02d' % y
+                except:
+                    print('y=%s' % repr(y))
+                    raise
             if s == '':
                 s = 0
             else:
@@ -359,6 +365,8 @@ def encrypt_packet(cleartext, public_key, private_key=None):
     :return: cleartext
     """
     print('encrypt_packet')
+    if private_key:
+        print('with private key')
     if type(cleartext) == str:
         cleartext = cleartext.encode('ascii')
     cleartext = b'%s\t%s' % (chr(time.localtime()[5]).encode('ascii'), cleartext)

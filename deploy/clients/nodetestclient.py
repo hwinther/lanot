@@ -165,7 +165,6 @@ class NodeTestUdpClient(prometheus.RemoteTemplate):
         return None
 
 
-
 class NodeTestRsaUdpClientBlueLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)

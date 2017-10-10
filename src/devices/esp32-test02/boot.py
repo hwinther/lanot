@@ -2,19 +2,17 @@
 # import esp
 # esp.osdebug(None)
 import gc
-# import webrepl
 import network
 import machine
 import os
 
-# webrepl.start()
 gc.collect()
 
 wlan = network.WLAN(network.STA_IF)
 # turn off ap
-ap_if = network.WLAN(network.AP_IF)
-if ap_if.active():
-    ap_if.active(False)
+# ap_if = network.WLAN(network.AP_IF)
+# if ap_if.active():
+#     ap_if.active(False)
 
 if not wlan.active():
     wlan.active(True)

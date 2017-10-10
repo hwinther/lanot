@@ -1,1 +1,1 @@
-python -m esptool --chip esp32 --port %1 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_freq 80m --flash_mode dio --flash_size 4MB 0x1000 v1.9.1-477-g75ead22-dirty-2017-09-22.bin
+python -m esptool --chip esp32 --port %1 --baud 921600 --before default_reset --after hard_reset write_flash -z --flash_freq 80m --flash_mode dio --flash_size 4MB 0x1000 v1.9.2-273-g56f1860-dirty-2017-09-28.bin

@@ -1,4 +1,4 @@
-import test01
+import test02
 import prometheus_servers
 import prometheus_tftpd
 import gc
@@ -11,7 +11,7 @@ def td():
     prometheus_tftpd.tftpd()
 
 
-node = test01.Test01()
+node = test02.Test02()
 ns = prometheus_servers.JsonRestServer(nt)
 gc.collect()
 gc.mem_free()
