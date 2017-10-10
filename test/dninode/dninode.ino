@@ -10,10 +10,10 @@
 //#include <ESP8266mDNS.h>
 //#include <ArduinoJson.h>
 
-//const char* ssid = "dniHQ";
-//const char* password = "dotnetinternals145";
-const char* ssid = "dgn";
-const char* password = "pingvin9195";
+const char* ssid = "dniHQ";
+const char* password = "dotnetinternals145";
+//const char* ssid = "dgn";
+//const char* password = "pingvin9195";
 ESP8266WebServer server(80);
 const int led = 16;
 const int numDevices = 4;      // number of MAX7219s used
