@@ -18,7 +18,7 @@ if not wlan.active():
     wlan.active(True)
 
 if not wlan.isconnected():
-    wlan.connect('dgn', 'pingvin9195')
+    wlan.connect('dgn.iot', 'umbFUTyJSvqhxNrQ')
     while not wlan.isconnected():
         machine.idle()
     cfg = wlan.ifconfig()

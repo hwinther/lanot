@@ -1,23 +1,22 @@
-//We always have to include the library
 #include "LedControlMS.h"
+#define bitSet(value, bit) ((value) |= (1ULL << (bit)))
+#define bitClear(value, bit) ((value) &= ~(1ULL << (bit)))
 
 /*
- Now we need a LedControl to work with.
- ***** These pin numbers will probably not work with your hardware *****
- pin 12 is connected to the DataIn 
- pin 11 is connected to the CLK 
- pin 10 is connected to LOAD 
- We have only a single MAX72XX.
+ pin 13 is connected to the DataIn 
+ pin 12 is connected to the CLK 
+ pin 14 is connected to LOAD 
+ We have 4 MAX7219 devices
  */
 #define NBR_MTX 4 
 LedControl lc=LedControl(13, 12, 14, NBR_MTX);
 
-String digits= "1234567890";
-int digitCounter=0;
 /* we always wait a bit between updates of the display */
-unsigned long delaytime=300;
+unsigned long delaytime=250;
 
 const char alphanum[] = "abcdefghijklmnopqrstuvwxyz0123456789";
+//                          a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9
+const int letterwidths[] = {3,3,3,3,3,3,3,3,2,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,3,2,3,3,3,3,3,3,3,3};
 const int alphanum_len = sizeof(alphanum);
 
 const uint64_t IMAGES[] = {
@@ -60,7 +59,10 @@ const uint64_t IMAGES[] = {
 };
 const int IMAGES_LEN = sizeof(IMAGES)/8;
 
-uint32_t FRAME[8] = { 0, 0, 0, 0,  0, 0, 0, 0 }; //1,1,1,1, 1,1,1,1
+uint64_t FRAME[8] = { 0, 0, 0, 0,  0, 0, 0, 0 }; //1,1,1,1, 1,1,1,1
+// if you use uint64_t for frame storage, then you have 16 bits on left and right side of undisplayed bits
+// so you've got to use an offset to draw and read of the center of this wider frame
+uint8_t FRAME_OFFSET = 0; //0 with uint32_t frame
 /*
   0b11000000110000001100000011000000,
   0b00100000000000100000000000100000,
@@ -76,8 +78,8 @@ void letterToFrame(int startRow, int startColumn, int letterHeight, int letterWi
   // out of bounds
   if (startRow+letterHeight >= 8)
     return;
-  if (startColumn+letterWidth >= 32)
-    return;
+  //if (startColumn+letterWidth >= 32)
+  //  return;
     
   for (int i = 0; i < letterHeight; ++i) {
     uint32_t row = (image >> i * 8) & 0xFF;
@@ -86,7 +88,9 @@ void letterToFrame(int startRow, int startColumn, int letterHeight, int letterWi
     //Serial.print(" row=");
     //Serial.print(row, BIN);
     for (int j = 0; j < letterWidth; ++j) {
-      bitWrite(FRAME[startRow+i], startColumn+j, bitRead(row, j));
+      bitWrite(FRAME[startRow + i], FRAME_OFFSET + startColumn + j, bitRead(row, j));
+      Serial.print(" FRAME_OFFSET + startColumn + j=");
+      Serial.println(FRAME_OFFSET + startColumn + j, DEC);
     }
     //Serial.print(" frame=");
     //Serial.println(FRAME[i], BIN);
@@ -96,11 +100,11 @@ void letterToFrame(int startRow, int startColumn, int letterHeight, int letterWi
 void spacerToFrame(int column, int startRow, int endRow) {
   --endRow;
   for (int i = startRow; i < endRow; ++i) {
-    bitWrite(FRAME[i], column, false);
+    bitWrite(FRAME[i], FRAME_OFFSET + column, false);
   }
 }
 
-uint32_t reverseBits(uint32_t n) {
+uint32_t reverseBits(uint32_t n) { // this should no longer work - its 64 bit
     n = (n >> 1) & 0x55555555 | (n << 1) & 0xaaaaaaaa;
     n = (n >> 2) & 0x33333333 | (n << 2) & 0xcccccccc;
     n = (n >> 4) & 0x0f0f0f0f | (n << 4) & 0xf0f0f0f0;
@@ -113,7 +117,7 @@ void displayFrame(bool reverse=false) {
   for (int row = 7; row > -1; --row) {
     int mtx = NBR_MTX-1;
     int mtxColumn = 0;
-    uint32_t frameRow;
+    uint64_t frameRow; //32 vs 64 diff spot
     
     if (reverse) {
       frameRow = reverseBits(FRAME[row]);
@@ -121,9 +125,14 @@ void displayFrame(bool reverse=false) {
     else {
       frameRow = FRAME[row];
     }
+
+    //Serial.print("frame=");
+    //Serial.println(frameRow, HEX);
     
     for (int column = 0; column < 32; ++column) {
-      lc.setLed(mtx, row, mtxColumn, bitRead(frameRow, column));
+      lc.setLed(mtx, row, mtxColumn, bitRead(frameRow, FRAME_OFFSET + column));
+      //Serial.print(" FRAME_OFFSET + column=");
+      //Serial.println(FRAME_OFFSET + column, DEC);
       ++mtxColumn;
 
       if (mtxColumn >= 8) {
@@ -151,10 +160,12 @@ void charsToFrame(char *buffer, int row=0) {
     if(ptr) {
       int index = ptr - alphanum;
       Serial.print(" image:");
-      Serial.println(index, DEC);
-      letterToFrame(row, column, 5, 3, IMAGES[index]);
-      spacerToFrame(column+3, 1, 6);
-      column += 4; // default width and spacing
+      Serial.print(index, DEC);
+      Serial.print(" letterwidths[index]=");
+      Serial.println(letterwidths[index], DEC);
+      letterToFrame(row, column, 5, letterwidths[index], IMAGES[index]);
+      spacerToFrame(column+letterwidths[index], 1, 6);
+      column += letterwidths[index] + 1; // default width and spacing
     } else {
       Serial.println(" image: unknown, using space");
       if (column != 0) {
@@ -163,15 +174,15 @@ void charsToFrame(char *buffer, int row=0) {
       }
     }
     
-    if (column >= 32) {
+    /*if (column >= 32) {
       Serial.println("break");
       break;
-    }
+    }*/ // TODO: we should be able to write on both sides of the invisible frame portions?
   }
 }
 
 void shiftFrameLeft(int amount = 1) {
-  // shift frame 1 bit to the left
+  // shift frame 1 bit to the left - if shifted further than FRAME_OFFSET, bits may be lost
   for (int j = 0; j < 8; j++) {
     FRAME[j] = FRAME[j] << amount;
   }
@@ -184,6 +195,16 @@ void shiftFrameRight(int amount = 1) {
   }
 }
 
+bool shiftLoop = false;
+uint8_t shiftLength = 0;
+bool shiftLoopDirection = 0;
+uint8_t shiftPosition = 0;
+
+bool scrollText = false;
+uint8_t scrollLength = 0;
+bool scrollDirection = 0;
+uint8_t scrollPosition = 0;
+
 void setup() {
   Serial.begin(115200);
     
@@ -191,7 +212,6 @@ void setup() {
    The MAX72XX is in power-saving mode on startup,
    we have to do a wakeup call
    */
-  digitCounter = 0;
   for (int i = 0; i < NBR_MTX; ++i) {
     lc.shutdown(i, false);
     /* Set the brightness to a medium values */
@@ -201,22 +221,94 @@ void setup() {
   }
 
   Serial.println("\ninit");
-  char teststr[] = "abcdefghi";
+  delay(1000);
+  
+  char teststr[] = "abcik10";
   charsToFrame(teststr, 1);
-  //letterToFrame(0, 0, 5, 3, IMAGES[35]);
-  //letterToFrame(0, 4, 5, 3, IMAGES[34]);
-  //letterToFrame(0, 8, 5, 3, IMAGES[33]);
+  //letterToFrame(0, 0, 5, 3, IMAGES[0]);
+  //letterToFrame(0, 4, 5, 3, IMAGES[1]);
+  //letterToFrame(0, 8, 5, 3, IMAGES[2]);
+  //letterToFrame(0, 12, 5, 3, IMAGES[3]);
   displayFrame();
   delay(2000);
+
+  shiftLoop = false;
+  shiftLength = 8;
+  shiftLoopDirection = false;
+  shiftPosition = 0;
+
+  scrollText = false;
+  scrollLength = 32;
+  scrollDirection = false;
+  scrollPosition = 0;
 }
 
 void loop() {
-  shiftFrameLeft(1);
+
+  //Serial.print("shiftLoop=");
+  //Serial.print(shiftLoop, DEC);
+  //Serial.print(" shiftLoopDirection=");
+  //Serial.print(shiftLoopDirection, DEC);
+  //Serial.print(" shiftPosition=");
+  //Serial.println(shiftPosition, DEC);
+
+  if (shiftLoop) {
+    if (shiftLoopDirection == false) {
+      shiftFrameLeft(1);
+      displayFrame();
+    } else if (shiftLoopDirection == true) {
+      shiftFrameRight(1);
+      displayFrame();
+    }
+
+    ++shiftPosition;
+
+    if (shiftLoopDirection == true && shiftPosition > shiftLength) { // * 2
+      shiftLoop = false; // stop the task
+    }
+    else if (shiftLoopDirection == false && shiftPosition > shiftLength) {
+      shiftLoopDirection = true; // go the other way
+      shiftPosition = 0;
+    }
+  }
+
+  //Serial.print("scrollText=");
+  //Serial.print(scrollText, DEC);
+  //Serial.print(" scrollDirection=");
+  //Serial.print(scrollDirection, DEC);
+  //Serial.print(" scrollPosition=");
+  //Serial.println(scrollPosition, DEC);
+
+  if (scrollText) {
+    if (scrollDirection == false) {
+      shiftFrameRight(1);
+      displayFrame();
+    }/* else if (scrollDirection == true) {
+      shiftFrameLeft(1);
+      displayFrame();
+    }*/
+
+    ++scrollPosition;
+
+    if (/*scrollDirection == true &&*/ scrollPosition > scrollLength) { // * 2
+      scrollText = false; // stop the task
+    }/*
+    else if (scrollDirection == false && scrollPosition > scrollLength) {
+      scrollDirection = true; // go the other way
+      scrollPosition = 0;
+    }*/
+  }
+
+  delay(delaytime);
+  
+  /*
+  shiftFrameRight(16);
   displayFrame();
   delay(500);
 
-  shiftFrameRight(1);
+  shiftFrameLeft(16);
   displayFrame();
   delay(500);
+  */
 }
 

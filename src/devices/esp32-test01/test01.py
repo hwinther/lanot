@@ -17,9 +17,6 @@ class Test01(prometheus.Prometheus):
         self.laser = prometheus.Led(machine.Pin(0, machine.Pin.OUT), state=False)
         self.register(prefix='l', laser=self.laser)
 
-        self.lightsensor = prometheus.Adc(machine.Pin(36))
-        self.register(prefix='s', lightsensor=self.lightsensor)
-
         self.window01digital = prometheus.Digital(machine.Pin(15, machine.Pin.IN, machine.Pin.PULL_UP))
         self.register(prefix='w1', window01digital=self.window01digital)
 

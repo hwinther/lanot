@@ -12,7 +12,7 @@ def td():
 
 
 node = test02.Test02()
-ns = prometheus_servers.JsonRestServer(nt)
+ns = prometheus_servers.JsonRestServer(node)
 gc.collect()
 gc.mem_free()
 print(ns.uname())

@@ -20,11 +20,11 @@ class ProxyTest2(prometheus.Prometheus):
         self.sensor02 = sensor02client.Sensor02UdpClient('sensor02', bind_port=random.randrange(1024, 9000))
         self.register(prefix='s2', sensor02=self.sensor02)
 
-        self.nodetest = nodetestclient.NodeTestRsaUdpClient('nodetest', bind_port=random.randrange(1024, 9000))
-        self.register(prefix='nt', nodetest=self.nodetest)
+        #self.nodetest = nodetestclient.NodeTestRsaUdpClient('nodetest', bind_port=random.randrange(1024, 9000))
+        #self.register(prefix='nt', nodetest=self.nodetest)
 
-        self.tankclient = tankclient.TankUdpClient('192.168.1.250', bind_port=random.randrange(1024, 9000))
-        self.register(prefix='tc', tankclient=self.tankclient)
+        #self.tankclient = tankclient.TankUdpClient('192.168.1.250', bind_port=random.randrange(1024, 9000))
+        #self.register(prefix='tc', tankclient=self.tankclient)
 
 
 if __name__ == '__main__':
@@ -32,14 +32,14 @@ if __name__ == '__main__':
     print('off')
     proxytest2.sensor01.integrated_led.off()
     proxytest2.sensor02.integrated_led.off()
-    proxytest2.nodetest.integrated_led.off()
-    proxytest2.tankclient.lightControl.all_on()
+    # proxytest2.nodetest.integrated_led.off()
+    # proxytest2.tankclient.lightControl.all_on()
     time.sleep(2)
     print('on')
     proxytest2.sensor01.integrated_led.on()
     proxytest2.sensor02.integrated_led.on()
-    proxytest2.nodetest.integrated_led.on()
-    proxytest2.tankclient.lightControl.all_off()
+    # proxytest2.nodetest.integrated_led.on()
+    # proxytest2.tankclient.lightControl.all_off()
     jsonrestserver = prometheus_servers.JsonRestServer(proxytest2, settimeout=0.1)  # , usessl=True)
     jsonrestserver.start()
 
