@@ -3,7 +3,7 @@ import random
 import prometheus
 import prometheus_servers
 import time
-sys.path.append('P:\lanot\deploy\clients')
+sys.path.append('P:\lanot\build\clients')
 import sensor01client
 import sensor02client
 import nodetestclient

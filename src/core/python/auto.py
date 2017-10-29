@@ -553,7 +553,7 @@ def folder_import():
 
     item = all_code[0]
     template = item.generate_template('SerialTemplate')
-    output_folder = os.path.join('..', '..', '..', 'deploy', 'clients')
+    output_folder = os.path.join('..', '..', '..', 'build', 'clients')
     outfile = os.path.join(output_folder, item.class_name + '.py')
     # print(template)
     print('writing to %s' % outfile)
@@ -659,7 +659,7 @@ def build_client(cls, output_filename, client_template_instances):
         code.append(generate_python_template(source_class=cls, template_class=client_template_instance,
                                              generated_class_name=generated_class_name, subclasses=subclasses))
         subclasses = False
-    output_path = os.path.join('..', '..', '..', 'deploy', 'clients', output_filename)
+    output_path = os.path.join('..', '..', '..', 'build', 'clients', output_filename)
     print('Writing to %s, classes: %s' % (output_path, ', '.join(classes)))
     open(output_path, 'w').write(
         '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+
