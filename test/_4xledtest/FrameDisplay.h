@@ -1,0 +1,88 @@
+#pragma once
+#include "LedControl.h"
+
+#define bitSet(value, bit) ((value) |= (1ULL << (bit)))
+#define bitClear(value, bit) ((value) &= ~(1ULL << (bit)))
+
+#pragma region
+const unsigned int num_devices = 4;
+
+/* we always wait a bit between updates of the display */
+const unsigned long delaytime = 250;
+
+// https://xantorohara.github.io/led-matrix-editor/#0000000505070502|0000000305070503|0000000701010107|0000000305050503|0000000701070107|0000000101070107|0000000705050107|0000000505070505|0000000101010101|0000000302020202|0000000503010305|0000000701010101|0000001115151b11|000000090d0f0b09|0000000705050507|0000000101070507|0000000107050507|0000000505030503|0000000304020106|0000000202020207|0000000705050505|0000000205050505|0000000a0e151111|0000000505020505|0000000202020505|0000000702040407|0000000705070507|0000000202020302|0000000701020403|0000000704060407|0000000404070506|0000000304030107|0000000705070107|0000000103060407|0000000705070507|0000000404070507|0000000100000000|0000000000070000|0000000700000000|0000000102040810|0000000000000000|0000000e1315190e|000000190f19061e|000000090f090606
+const char alphanum[] = "abcdefghijklmnopqrstuvwxyz0123456789.-_/ \xb8\xa6\xa5";
+//                           a b c d e f g h i j k l m n o p q r s t u v w x y z 0 1 2 3 4 5 6 7 8 9 . - _ / s ø æ å
+const int letterwidths[] = { 3,3,3,3,3,3,3,3,1,3,3,3,5,4,3,3,3,3,3,3,3,3,5,3,3,3,3,2,3,3,3,3,3,3,3,3,1,3,3,5,2,5,5,4 };
+const int alphanum_len = sizeof(alphanum);
+
+const uint64_t images[] = {
+	0x0000000505070502,
+	0x0000000305070503,
+	0x0000000701010107,
+	0x0000000305050503,
+	0x0000000701070107,
+	0x0000000101070107,
+	0x0000000705050107,
+	0x0000000505070505,
+	0x0000000101010101,
+	0x0000000302020202,
+	0x0000000503010305,
+	0x0000000701010101,
+	0x0000001115151b11,
+	0x000000090d0f0b09,
+	0x0000000705050507,
+	0x0000000101070507,
+	0x0000000107050507,
+	0x0000000505030503,
+	0x0000000304020106,
+	0x0000000202020207,
+	0x0000000705050505,
+	0x0000000205050505,
+	0x0000000a0e151111,
+	0x0000000505020505,
+	0x0000000202020505,
+	0x0000000702040407,
+	0x0000000705070507,
+	0x0000000202020302,
+	0x0000000701020403,
+	0x0000000704060407,
+	0x0000000404070506,
+	0x0000000304030107,
+	0x0000000705070107,
+	0x0000000103060407,
+	0x0000000705070507,
+	0x0000000404070507,
+	0x0000000100000000,
+	0x0000000000070000,
+	0x0000000700000000,
+	0x0000000102040810,
+	0x0000000000000000,
+  0x0000000e1315190e,
+  0x000000190f19061e,
+  0x000000090f090606
+};
+const int images_len = sizeof(images) / 8;
+#pragma endregion Constants
+
+class FrameDisplay
+{
+public:
+	FrameDisplay();
+	~FrameDisplay();
+	void letter_to_frame(int start_row, int start_column, const int letter_height, const int letter_width,
+	                     const uint64_t image);
+	void spacer_to_frame(int column, const int start_row, int end_row);
+	uint32_t reverse_bits(uint32_t n);
+	void display_frame(LedControl led_control, const bool reverse = false);
+	int chars_to_frame(char* buffer, const int buffer_size, const int row);
+	int rectangle_to_frame(int start_column, int start_row, int height, int width, bool infill);
+	int pth(const int x, const int y);
+	int circle_to_frame(int start_column, int start_row, const int radius, bool infill);
+	void shift_frame_left(const int amount);
+	void shift_frame_right(const int amount);
+  void clear_frame();
+	uint64_t frame[8];
+	uint8_t frame_offset;
+};
+

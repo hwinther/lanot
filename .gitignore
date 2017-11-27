@@ -107,3 +107,10 @@ _ReSharper.*
 bin
 obj
 packages
+
+tools/micropython
+tools/micropython-esp32
+tools/micropython-lib
+tools/ptftpd
+tools/tftpy-0.6.2
+tools/webrepl
