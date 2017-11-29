@@ -55,11 +55,13 @@ class Buffer(object):
                 self.Packets.append(s)
             else:
                 rest += self.splitChars + segment
+            gc.collect()
 
         if len(rest) > 100:
             print('pruning packetBuffer rest')
             rest = rest[0:20]
         self.packetBuffer = rest
+        gc.collect()
 
     def pop(self):
         # rtype: str

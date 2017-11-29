@@ -5,14 +5,15 @@ import json
 import gc
 from prometheus import Buffer, RegisteredMethod
 from prometheus import __version__ as prometheus__version
-if sys.platform in ['esp8266', 'esp32', 'WiPy']:
+is_micro = sys.platform in ['esp8266', 'esp32', 'WiPy']
+if is_micro:
     from ussl import wrap_socket as ssl_wrap_socket
     # from ussl import SSLEOFError as ssl_SSLEOFError
 else:
     from ssl import wrap_socket as ssl_wrap_socket
     from ssl import SSLEOFError as ssl_SSLEOFError
 
-__version__ = '0.1.3b'
+__version__ = '0.1.3cx'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -64,7 +65,8 @@ class Server(object):
         if command == '':
             return
 
-        print('input:', command)
+        if debug:
+            print('input:', command)
 
         if command == 'die':
             print('die command received')
@@ -77,7 +79,7 @@ class Server(object):
                 return_value = return_value + command
 
             # print('before: %s' % str(gc.mem_free()))
-            gc.collect()
+            # gc.collect()
             # print('after: %s' % str(gc.mem_free()))
 
             self.reply(return_value, source=source, **kwargs)
@@ -97,11 +99,13 @@ class Server(object):
         if debug:
             print('exiting Server.handle_data')
 
+        gc.collect()
+
     def uname(self):
         if debug:
             print('Server.uname')
         hostname = self.instance.__class__.__name__
-        if sys.platform in ['esp8266', 'esp32', 'WiPy']:
+        if is_micro:
             un = os.uname()
             return '%s %s %s %s %s MicroPython' % (un[0], hostname, un[2], un[3], un[4])
         else:
@@ -128,7 +132,7 @@ class Server(object):
         #     unsigned long  f_flag;     /* mount flags */
         #     unsigned long  f_namemax;  /* maximum filename length */
         # };
-        if sys.platform in ['esp8266', 'esp32', 'WiPy']:
+        if is_micro:
             stvfs = os.statvfs('/')
             freespace = (stvfs[0] * stvfs[3]) / 1048576
             gc.collect()
@@ -179,8 +183,9 @@ class UdpSocketServer(Server):
             print('Creating new buffer context')
             # TODO: clean up buffer contexts over time!
             # TODO: this must be done in Tcp implementation also
-            if len(self.buffers) > 4:
+            if len(self.buffers) > 2:
                 print('cleaning up old buffers')
+                del(self.buffers)
                 self.buffers = dict()
                 gc.collect()
             self.buffers[addr] = Buffer(split_chars=self.splitChars, end_chars=self.endChars)
@@ -200,6 +205,8 @@ class UdpSocketServer(Server):
             print('Calling handle data')
             self.handle_data(command, addr)
 
+        gc.collect()
+
     def post_loop(self, **kwargs):
         Server.post_loop(self, **kwargs)
 
@@ -217,6 +224,7 @@ class UdpSocketServer(Server):
         print('returning %s to %s' % (return_value, repr(source)))
         self.socket.sendto(b'%s%s%s' % (return_value, self.endChars.encode('ascii'),
                                         self.splitChars.encode('ascii')), source)
+        gc.collect()
 
 
 class TcpSocketServer(Server):

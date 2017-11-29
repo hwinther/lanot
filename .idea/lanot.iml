@@ -16,6 +16,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp8266-sensor02" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-test01" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp8266-nodetest" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-test02" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/test/oled_temp" />
       <excludeFolder url="file://$MODULE_DIR$/test/weartesr" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython" />
