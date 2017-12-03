@@ -1,21 +1,19 @@
 import nodetest
 import prometheus_servers
 # import prometheus_crypto
-# import prometheus_tftpd
+import prometheus_tftpd
 # import prometheus_servers_ssl
 import gc
 
 
 gc.collect()
 
-node = nodetest.NodeTest()
 
-# udpserver = prometheus_servers.UdpSocketServer(node)
-# gc.collect()
-# print(udpserver.uname())
-# gc.collect()
-# print(gc.mem_free())
-# udpserver.start()
+def td():
+    prometheus_tftpd.tftpd()
+
+
+node = nodetest.NodeTest()
 
 gc.collect()
 print(gc.mem_free())
