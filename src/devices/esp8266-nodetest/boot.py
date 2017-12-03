@@ -2,12 +2,12 @@
 # import esp
 # esp.osdebug(None)
 import gc
-import webrepl
+# import webrepl
 import network
 import machine
 import os
 
-webrepl.start()
+# webrepl.start()
 gc.collect()
 
 wlan = network.WLAN(network.STA_IF)

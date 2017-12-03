@@ -2,6 +2,7 @@ import prometheus
 import prometheus_esp8266
 import prometheus_servers
 import prometheus_crypto
+import prometheus_servers_ssl
 import machine
 
 
@@ -23,20 +24,26 @@ class LocalTest(prometheus.Prometheus):
 
 
 if __name__ == '__main__':
-    localtest = LocalTest()
+    node = LocalTest()
 
-    # udpserver = prometheus_servers.UdpSocketServer(localtest)
-    # udpserver.start()
+    multiserver = prometheus_servers.MultiServer()
 
-    # multiserver = prometheus_servers.MultiServer()
-    #
-    # udpserver = prometheus_servers.UdpSocketServer(localtest)
-    # multiserver.add(udpserver, bind_host='', bind_port=9195)
-    #
-    # jsonrestserver = prometheus_servers.JsonRestServer(localtest)
-    # multiserver.add(jsonrestserver, bind_host='', bind_port=8080)
-    #
-    # multiserver.start()
+    udpserver = prometheus_servers.UdpSocketServer(node)
+    multiserver.add(udpserver, bind_host='', bind_port=9190)
 
-    rsaserver = prometheus_crypto.RsaUdpSocketServer(localtest, clientencrypt=False)
-    rsaserver.start()
+    tcpserver = prometheus_servers.TcpSocketServer(node)
+    multiserver.add(tcpserver, bind_host='', bind_port=9191)
+
+    jsonrestserver = prometheus_servers.JsonRestServer(node,
+                                                       loop_tick_delay=0.1)
+    multiserver.add(jsonrestserver, bind_host='', bind_port=8080)
+
+    jsonrestsslserver = prometheus_servers.JsonRestServer(node,
+                                                          loop_tick_delay=0.1,  # for cpython, limits cpu cycles
+                                                          socketwrapper=prometheus_servers_ssl.SslSocket)
+    multiserver.add(jsonrestsslserver, bind_host='', bind_port=4443)
+
+    multiserver.start()
+
+    # rsaserver = prometheus_crypto.RsaUdpSocketServer(localtest, clientencrypt=False)
+    # rsaserver.start()

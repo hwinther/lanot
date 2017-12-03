@@ -3,17 +3,11 @@ import sys
 import os
 import json
 import gc
-from prometheus import Buffer, RegisteredMethod
-from prometheus import __version__ as prometheus__version
-is_micro = sys.platform in ['esp8266', 'esp32', 'WiPy']
-if is_micro:
-    from ussl import wrap_socket as ssl_wrap_socket
-    # from ussl import SSLEOFError as ssl_SSLEOFError
-else:
-    from ssl import wrap_socket as ssl_wrap_socket
-    from ssl import SSLEOFError as ssl_SSLEOFError
+import time
+import prometheus
+import prometheus_logging as logging
 
-__version__ = '0.1.3cx'
+__version__ = '0.1.4'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -29,21 +23,32 @@ favicon = b'\x00\x00\x01\x00\x01\x00\x10\x10\x10\x00\x01\x00\x04\x00(\x01\x00\x0
           b'\xcc\x7f\x00\x00\xff\xff\x00\x00\x8a\xb7\x00\x00\xb8\xa7\x00\x00\xba\x97\x00\x00\xbd\xb7\x00\x00\xff\xff\x00\x00'
 debug = False
 
+if prometheus.is_micro:
+    socket_error = Exception
+else:
+    socket_error = socket.error
+# 11 EAGAIN (try again later)
+# 110 Connection timed out
+# 23 cant read data?
+# 10035 WSAEWOULDBLOCK (A non-blocking socket operation could not be completed immediately)
+
 
 class Server(object):
     # :type data_commands: dict
+    # :type instance: Prometheus
+    # :type loopActive: bool
     def __init__(self, instance):
         """
         :type instance: Prometheus
         :param instance: Instance of Prometheus
         """
         self.instance = instance
-        self.loopActive = False
+        self.loop_active = False
 
     def start(self, **kwargs):
         self.pre_loop(**kwargs)
-        self.loopActive = True
-        while self.loopActive:
+        self.loop_active = True
+        while self.loop_active:
             self.loop_tick(**kwargs)
         self.post_loop(**kwargs)
 
@@ -61,27 +66,25 @@ class Server(object):
 
     def handle_data(self, command, source=None, **kwargs):
         if debug:
-            print('entering Server.handle_data')
+            logging.notice('entering Server.handle_data')
         if command == '':
             return
 
         if debug:
-            print('input:', command)
+            logging.notice('input: %s' % repr(command))
+
+        if type(command) is bytes:
+            command = command.decode('utf-8')
 
         if command == 'die':
-            print('die command received')
-            self.loopActive = False
+            logging.warn('die command received')
+            self.loop_active = False
             return
         elif command == 'cap':
             # capability
             return_value = ''
             for command in self.instance.cached_remap:
                 return_value = return_value + command
-
-            # print('before: %s' % str(gc.mem_free()))
-            # gc.collect()
-            # print('after: %s' % str(gc.mem_free()))
-
             self.reply(return_value, source=source, **kwargs)
         elif command == 'uname':
             self.reply(self.uname(), source=source, **kwargs)
@@ -90,22 +93,22 @@ class Server(object):
         elif command == 'sysinfo':
             self.reply(self.sysinfo(), source=source, **kwargs)
         elif command in self.instance.cached_remap:
-            registered_method = self.instance.cached_remap[command]  # type: RegisteredMethod
+            registered_method = self.instance.cached_remap[command]  # type: prometheus.RegisteredMethod
             return_value = registered_method.method_reference()
             if registered_method.return_type == 'str':
                 self.reply(return_value, source=source, **kwargs)
         else:
-            print('invalid cmd', command)
+            logging.error('invalid cmd: %s' % command)
         if debug:
-            print('exiting Server.handle_data')
+            logging.notice('exiting Server.handle_data')
 
         gc.collect()
 
     def uname(self):
         if debug:
-            print('Server.uname')
+            logging.notice('Server.uname')
         hostname = self.instance.__class__.__name__
-        if is_micro:
+        if prometheus.is_micro:
             un = os.uname()
             return '%s %s %s %s %s MicroPython' % (un[0], hostname, un[2], un[3], un[4])
         else:
@@ -116,7 +119,7 @@ class Server(object):
             return '%s-%s %s@%s %s %s %s CPython' % (un[0], un[2], hostname, un[1], un[3], str(sys.version).split(' ')[0], un[4])
 
     def version(self):
-        return '%s/%s' % (__version__, prometheus__version)
+        return '%s/%s' % (__version__, prometheus.__version__)
 
     def sysinfo(self):
         # struct statvfs {
@@ -132,7 +135,7 @@ class Server(object):
         #     unsigned long  f_flag;     /* mount flags */
         #     unsigned long  f_namemax;  /* maximum filename length */
         # };
-        if is_micro:
+        if prometheus.is_micro:
             stvfs = os.statvfs('/')
             freespace = (stvfs[0] * stvfs[3]) / 1048576
             gc.collect()
@@ -141,54 +144,74 @@ class Server(object):
             return 'Not implemented for this platform'
 
 
-class UdpSocketServer(Server):
-    def __init__(self, instance):
+class SocketServer(Server):
+    def __init__(self, instance, socketwrapper=None):
         Server.__init__(self, instance)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
-        self.splitChars = '\n'
-        self.endChars = '\r'
-        self.buffers = dict()  # :type list(Buffer)
+
+        if socketwrapper is None:
+            if debug:
+                logging.notice('using socket.socket default')
+            socketwrapper = socket.socket
+
+        if debug:
+            logging.notice('setting socketwrapper')
+        self.socketwrapper = socketwrapper
+
+
+class UdpSocketServer(SocketServer):
+    def __init__(self, instance, socketwrapper=None):
+        SocketServer.__init__(self, instance, socketwrapper)
+        self.socket = self.socketwrapper(socket.AF_INET, socket.SOCK_DGRAM)
+        self.split_chars = '\n'
+        self.end_chars = '\r'
+        self.buffers = dict()  # :type dict(Buffer)
 
     def start(self, bind_host='', bind_port=9195, **kwargs):
-        Server.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
+        SocketServer.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
     def pre_loop(self, bind_host, bind_port, **kwargs):
-        Server.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
+        SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         except:
-            print('could not bind with reuse flag')  # TODO: look into this
+            logging.warn('could not bind with reuse flag')  # TODO: look into this
         self.socket.bind((bind_host, bind_port))
         self.socket.settimeout(0)
-        print('listening on %s:%d' % (bind_host, bind_port))
+        logging.success('listening on %s:%d (udp)' % (bind_host, bind_port))
 
     def loop_tick(self, **kwargs):
-        Server.loop_tick(self, **kwargs)
+        SocketServer.loop_tick(self, **kwargs)
 
         data, addr = None, None
         try:
             # TODO: buffer could be higher, but then the buffer class needs to prune its rest buffer over time
             data, addr = self.socket.recvfrom(500)
-        except OSError as e:
-            if e.args[0] not in [110, 10035]:
-                raise
+        except socket_error as e:
+            if prometheus.is_micro:
+                if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
+                    logging.error(e)
+                    raise
+            else:
+                if e.errno != 11 and e.errno != 110 and e.errno != 10035:
+                    logging.error(e)
+                    raise
 
         if data is None:
             return
 
-        print('recv %s from %s' % (repr(data), repr(addr)))
+        logging.notice('recv %s from %s' % (repr(data), repr(addr)))
 
         if addr not in self.buffers.keys():
-            print('Creating new buffer context')
+            logging.notice('Creating new buffer context')
             # TODO: clean up buffer contexts over time!
             # TODO: this must be done in Tcp implementation also
             if len(self.buffers) > 2:
-                print('cleaning up old buffers')
-                del(self.buffers)
+                logging.notice('Cleaning up old buffers')
+                del self.buffers
                 self.buffers = dict()
                 gc.collect()
-            self.buffers[addr] = Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
 
         if type(data) is str:
             # convert to bytes?
@@ -198,22 +221,22 @@ class UdpSocketServer(Server):
         while True:
             command = self.buffers[addr].pop()
             if command is None:
-                # print('Breaking command loop')
+                # logging.notice('Breaking command loop')
                 break
             if type(command) is bytes:
                 command = command.decode('ascii')
-            print('Calling handle data')
+            logging.notice('Calling handle data')
             self.handle_data(command, addr)
 
         gc.collect()
 
     def post_loop(self, **kwargs):
-        Server.post_loop(self, **kwargs)
+        SocketServer.post_loop(self, **kwargs)
 
         self.socket.close()
 
     def reply(self, return_value, source=None, **kwargs):
-        Server.reply(self, return_value, **kwargs)
+        SocketServer.reply(self, return_value, **kwargs)
 
         if type(return_value) is str:
             return_value = return_value.encode('ascii')
@@ -221,52 +244,59 @@ class UdpSocketServer(Server):
             pass
         else:
             return_value = b'%s' % return_value
-        print('returning %s to %s' % (return_value, repr(source)))
-        self.socket.sendto(b'%s%s%s' % (return_value, self.endChars.encode('ascii'),
-                                        self.splitChars.encode('ascii')), source)
+        logging.notice('Returning %s to %s' % (return_value, repr(source)))
+        self.socket.sendto(b'%s%s%s' % (return_value, self.end_chars.encode('ascii'),
+                                        self.split_chars.encode('ascii')), source)
         gc.collect()
 
 
-class TcpSocketServer(Server):
-    def __init__(self, instance):
-        Server.__init__(self, instance)
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+class TcpSocketServer(SocketServer):
+    def __init__(self, instance, socketwrapper=None):
+        SocketServer.__init__(self, instance, socketwrapper)
+        self.socket = self.socketwrapper(socket.AF_INET, socket.SOCK_STREAM)
         self.splitChars = '\n'
         self.endChars = '\r'
         self.sockets = dict()  # type: dict((str,int), socket.socket)
-        self.buffers = dict()  # type: dict((str,int), Buffer)
+        self.buffers = dict()  # type: dict((str,int), prometheus.Buffer)
 
     def start(self, bind_host='', bind_port=9195):
-        Server.start(self, bind_host=bind_host, bind_port=bind_port)
+        SocketServer.start(self, bind_host=bind_host, bind_port=bind_port)
 
     def pre_loop(self, bind_host='', bind_port=9195, **kwargs):
-        Server.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
+        SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         except:
-            print('could not bind with reuse flag')  # TODO: look into this
+            logging.warn('could not bind with reuse flag')  # TODO: look into this
         self.socket.bind((bind_host, bind_port))
         self.socket.listen(1)
         self.socket.settimeout(0)
-        print('listening on %s:%d' % (bind_host, bind_port))
+        logging.success('listening on %s:%d (tcp)' % (bind_host, bind_port))
 
     def loop_tick(self, **kwargs):
-        Server.loop_tick(self, **kwargs)
+        SocketServer.loop_tick(self, **kwargs)
 
         sock, addr = None, None
         try:
             # TODO: put this pair in a wrapper class
             sock, addr = self.socket.accept()
-        except:
-            pass  # timeout, i hope
+        except socket_error as e:
+            if prometheus.is_micro:
+                if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
+                    logging.error(e)
+                    raise
+            else:
+                if e.errno != 11 and e.errno != 110 and e.errno != 10035:
+                    logging.error(e)
+                    raise
 
         if sock is not None:
-            print('Accepted connection from %s' % repr(addr))
+            logging.success('Accepted connection from %s' % repr(addr))
             sock.settimeout(0)
             # if addr not in buffers.keys():
-            print('Creating new buffer context')
-            self.buffers[addr] = Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+            logging.notice('Creating new buffer context')
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
             self.sockets[addr] = sock
 
         # TODO: would be more efficient by using Poll (which is the micropython way)
@@ -275,108 +305,118 @@ class TcpSocketServer(Server):
             data = None
             try:
                 data = self.sockets[addr].recv(100)
-            except:
-                pass
+            except socket_error as e:
+                if prometheus.is_micro:
+                    if e.args[0] == 104:
+                        logging.notice('disconnected')
+                        del self.buffers[addr]
+                        continue
+                    if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
+                        logging.error(e)
+                        raise
+                else:
+                    if e.errno == 104:
+                        logging.notice('disconnected')
+                        del self.buffers[addr]
+                        continue
+                    if e.errno != 11 and e.errno != 104 and e.errno != 110 and e.errno != 10035 and e.errno != 10054:
+                        logging.error(e)
+                        raise
 
             if data is not None:
-                print('Got data from %s' % repr(addr))
+                logging.notice('Got data from %s' % repr(addr))
                 self.buffers[addr].parse(data.decode('utf-8'))
 
                 while True:
                     command = self.buffers[addr].pop()
                     if command is None:
-                        print('Breaking command loop')
+                        logging.notice('Breaking command loop')
                         break
-                    print('Calling handle data')
+                    logging.notice('Calling handle data')
                     self.handle_data(command, self.sockets[addr])
 
     def post_loop(self, **kwargs):
-        Server.post_loop(self, **kwargs)
+        SocketServer.post_loop(self, **kwargs)
 
         # attempt a graceful shutdown of all sockets
         for addr in self.sockets.keys():
-            try:
-                self.sockets[addr].close()
-            except:
-                pass
+            self.sockets[addr].close()
         self.socket.close()
 
     def reply(self, return_value, source=None, **kwargs):
-        Server.reply(self, return_value, **kwargs)
+        SocketServer.reply(self, return_value, **kwargs)
 
-        print('returning %s to %s' % (return_value, repr(source)))
-        source.send(b'%s%s%s' % (return_value, self.endChars, self.splitChars))
+        if type(return_value) is str:
+            return_value = return_value.encode('utf-8')
+
+        logging.notice('returning %s to %s' % (return_value, repr(source)))
+        source.send(b'%s%s%s' % (return_value, self.endChars.encode('utf-8'), self.splitChars.encode('utf-8')))
 
 
-class JsonRestServer(Server):
-    def __init__(self, instance, usessl = False, settimeout=None):
-        Server.__init__(self, instance)
+class JsonRestServer(SocketServer):
+    def __init__(self, instance, socketwrapper=None, settimeout=0, loop_tick_delay=None):
+        SocketServer.__init__(self, instance, socketwrapper)
 
-        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.usessl = usessl
-        self.sslsock = None
+        self.socket = self.socketwrapper(socket.AF_INET, socket.SOCK_STREAM)
         self.settimeout = settimeout
+        self.loop_tick_delay = loop_tick_delay
 
     def start(self, bind_host='', bind_port=8080, **kwargs):
-        Server.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
+        SocketServer.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
     def pre_loop(self, bind_host, bind_port, **kwargs):
-        Server.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
+        SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         except:
-            print('could not bind with reuse flag')  # TODO: look into this
+            logging.warn('could not bind with reuse flag')  # TODO: look into this
         self.socket.bind((bind_host, bind_port))
         self.socket.listen(4)
-        if self.settimeout is None:
-            self.socket.settimeout(0)
-        else:
-            print('settimeout override: %s' % self.settimeout)
-            self.socket.settimeout(self.settimeout)
-        print('listening on %s:%d' % (bind_host, bind_port))
+        if debug:
+            logging.notice('settimeout: %s' % self.settimeout)
+        self.socket.settimeout(self.settimeout)
+        logging.success('listening on %s:%d (http/json)' % (bind_host, bind_port))
 
         self.instance.update_urls()
-        for key in self.instance.cached_urls.keys():
-            print('url: %s' % key)
+        if prometheus.data_debug:
+            for key in self.instance.cached_urls.keys():
+                logging.info('url: %s' % key)
 
     def loop_tick(self, **kwargs):
         if debug:
-            print('entering JsonRestServer.loop_tick')
-        Server.loop_tick(self, **kwargs)
+            logging.notice('entering JsonRestServer.loop_tick')
+        SocketServer.loop_tick(self, **kwargs)
 
-        sock, addr, self.sslsock = None, None, None
+        sock, addr = None, None
         try:
             # TODO: put this pair in a wrapper class
             sock, addr = self.socket.accept()
-        except:
-            pass  # timeout, i hope
+        except socket_error as e:
+            if prometheus.is_micro:
+                if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
+                    logging.error(e)
+                    raise
+            else:
+                if e.errno != 11 and e.errno != 110 and e.errno != 10035:
+                    logging.error(e)
+                    raise
 
         if sock is not None:
-            print('Accepted connection from %s' % repr(addr))
+            logging.success('Accepted connection from %s' % repr(addr))
 
-            if self.usessl:
-                print('ssl wrap')
-                ciphers = "ECDHE-ECDSA-AES128-GCM-SHA256:ECDHE-RSA-AES128-GCM-SHA256:AES128-GCM-SHA256:AES128-SHA256:HIGH:"
-                ciphers += "!aNULL:!eNULL:!EXPORT:!DSS:!DES:!RC4:!3DES:!MD5:!PSK"
-                keyfile = r'C:\Users\dg2\Downloads\bastion.oh.wsh.no.pem'
-                certfile = r'C:\Users\dg2\Downloads\bastion.oh.wsh.no-cert.pem'
-                cacerts = r'C:\Users\dg2\Downloads\cacert.pem'
-                try:
-                    self.sslsock = ssl_wrap_socket(sock, server_side=True, keyfile=keyfile, certfile=certfile, ca_certs=cacerts,
-                                                   ciphers=ciphers)
-                except ssl_SSLEOFError:
-                    print('SSLEOFError')
-                    return
-
+            data = None
             try:
-                if self.usessl:
-                    data = self.sslsock.read(1024)
+                data = sock.recv(1024)
+            except socket_error as e:
+                if prometheus.is_micro:
+                    if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
+                        logging.error(e)
+                        raise
                 else:
-                    sock.settimeout(2)
-                    data = sock.recv(1024)
-            except:
-                data = None
+                    if e.errno != 11 and e.errno != 110 and e.errno != 10035:
+                        logging.error(e)
+                        raise
 
             found = False
             if data is not None and data.find(b'\r\n') != -1:
@@ -394,10 +434,10 @@ class JsonRestServer(Server):
                                     query[key] = value
                                 else:
                                     query[q] = True
-                        print('get: %s (%s)' % (path, query))
+                        logging.notice('get: %s (%s)' % (path, query))
                         if path in self.instance.cached_urls.keys():
-                            print('found matching command_key')
-                            value = self.instance.cached_urls[path]  # type: RegisteredMethod
+                            logging.notice('found matching command_key')
+                            value = self.instance.cached_urls[path]  # type: prometheus.RegisteredMethod
                             self.handle_data(value.command_key, source=sock, query=query)
                             if value.return_type != 'str':
                                 # give default empty response
@@ -406,21 +446,21 @@ class JsonRestServer(Server):
                         elif path == b'/api' and b'class' in query.keys():
                             d = dict()
                             for key in self.instance.cached_urls.keys():
-                                value = self.instance.cached_urls[key]  # type: RegisteredMethod
+                                value = self.instance.cached_urls[key]  # type: prometheus.RegisteredMethod
                                 logical_key = value.logical_path.replace('root.', '')
                                 if logical_key not in d.keys():
                                     d[logical_key] = {'methods': dict(), 'class': value.class_name, 'path': value.logical_path}
                                 d[logical_key]['methods'][value.method_name] = key.decode('utf-8')
-                            # print('before: %s' % str(gc.mem_free()))
+                            # logging.notice('before: %s' % str(gc.mem_free()))
                             gc.collect()
-                            # print('after: %s' % str(gc.mem_free()))
+                            # logging.notice('after: %s' % str(gc.mem_free()))
                             self.reply(return_value=d, source=sock, query=query)
                             found = True
                         elif path == b'/api':
-                            l = list()
+                            lst = list()
                             for key in self.instance.cached_urls.keys():
-                                l.append(key.decode('utf-8'))
-                            self.reply(return_value=l, source=sock, query=query)
+                                lst.append(key.decode('utf-8'))
+                            self.reply(return_value=lst, source=sock, query=query)
                             found = True
                         elif path == b'/uname':
                             self.reply(return_value=self.uname(), source=sock, query=query)
@@ -440,28 +480,24 @@ class JsonRestServer(Server):
                             found = True
 
             if not found and data is not None:
-                print('Returning 404')
+                logging.warn('Returning 404')
                 sock.send(b'HTTP/1.1 404 Not found\r\n')
-            # noinspection PyBroadException
-            try:
-                if self.usessl:
-                    self.sslsock.close()
-                    sock.close()  # TODO: required?
-                else:
-                    sock.close()
-            except:
-                pass
+
+            sock.close()
+
+        if self.loop_tick_delay is not None:
+            time.sleep(self.loop_tick_delay)
 
         if debug:
-            print('exiting JsonRestServer.loop_tick')
+            logging.notice('exiting JsonRestServer.loop_tick')
 
     def post_loop(self, **kwargs):
-        Server.post_loop(self, **kwargs)
+        SocketServer.post_loop(self, **kwargs)
 
         self.socket.close()
 
     def reply(self, return_value, source=None, query=None, contenttype=None, **kwargs):
-        Server.reply(self, return_value, **kwargs)
+        SocketServer.reply(self, return_value, **kwargs)
 
         # JSON contenttype is assumed/default
         if contenttype is None:
@@ -479,23 +515,20 @@ class JsonRestServer(Server):
             # convert to bytes
             msg = msg.encode('ascii')
             if debug:
-                print('returning %s to %s' % (msg, repr(source)))
+                logging.notice('returning %s to %s' % (msg, repr(source)))
             else:
-                print('returning %d bytes' % len(msg))
+                logging.notice('returning %d bytes' % len(msg))
         else:
             # raw mode - could be image or other binary data
             msg = return_value
-            print('returning %d bytes' % len(msg))
+            logging.notice('returning %d bytes' % len(msg))
 
         response = b'HTTP/1.1 200 OK\r\nServer: ps-%s\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n' % \
                    (__version__.encode('ascii'), contenttype.encode('ascii'), len(msg))
         response = response + msg
-        # print(repr(response))
+        # logging.notice(repr(response))
 
-        if self.usessl:
-            self.sslsock.write(response)
-        else:
-            source.send(response)
+        source.send(response)
 
 
 class WrappedServer(object):
@@ -516,12 +549,12 @@ class MultiServer(object):
             wrappedserver.server.pre_loop(**wrappedserver.kwargs)
             wrappedserver.server.loopActive = True
 
-        loopActive = True
-        while loopActive:
+        loop_active = True
+        while loop_active:
             for wrappedserver in self.wrappedservers:
                 wrappedserver.server.loop_tick(**wrappedserver.kwargs)
                 if not wrappedserver.server.loopActive:
-                    loopActive = False
+                    loop_active = False
                     break
 
         for wrappedserver in self.wrappedservers:

@@ -1,11 +1,16 @@
 import machine
 import gc
+import sys
+import prometheus_logging as logging
 
-
-__version__ = '0.1.3b'
+__version__ = '0.1.4'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
+
+is_micro = sys.platform in ['esp8266', 'esp32', 'WiPy']
+# turn this on to debug command byte assigments
+data_debug = False
 
 
 class Buffer(object):
@@ -43,22 +48,22 @@ class Buffer(object):
 
         self.packetBuffer += packetdata
         rest = b''
-        # print('for segment in split on %s len=%d' % (self.splitChars, len(self.packetBuffer.split(self.splitChars))))
+        # logging.notice('for segment in split on %s len=%d' % (self.splitChars, len(self.packetBuffer.split(self.splitChars))))
         for segment in self.packetBuffer.split(self.splitChars):
-            # print('segment[%s].find %s = %s' % (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
+            # logging.notice('segment[%s].find %s = %s' % (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
             if segment == b'':
                 # the segment empty or only POLYNOMIAL, ignore it
                 pass
             elif segment.find(self.endChars) != -1:
                 s = segment.split(self.endChars)[0]  # discard everything after
-                # print('appending packet')
+                # logging.notice('appending packet')
                 self.Packets.append(s)
             else:
                 rest += self.splitChars + segment
             gc.collect()
 
         if len(rest) > 100:
-            print('pruning packetBuffer rest')
+            # logging.notice('pruning packetBuffer rest')
             rest = rest[0:20]
         self.packetBuffer = rest
         gc.collect()
@@ -82,7 +87,8 @@ class RegisteredMethod(object):
         self.command_key = None
 
     def __repr__(self):
-        return u"RegisteredMethod(class_name='%s' method_name='%s' method_reference=%s data_value='%s' return_type=%s)" % (self.class_name, self.method_name, self.method_reference, self.data_value, self.return_type)
+        return u"RegisteredMethod(class_name='%s' method_name='%s' method_reference=%s data_value='%s' return_type=%s)" % \
+               (self.class_name, self.method_name, self.method_reference, self.data_value, self.return_type)
 
 
 class Registry(object):
@@ -139,7 +145,7 @@ class Prometheus(object):
             for key in Registry.r[self.__class__.__name__]:
                 value = Registry.r[self.__class__.__name__][key]
                 method_reference = getattr(self, value.method_name)
-                # print('method ref: %s %s %d' %(method_reference, self, len(self.commands)))
+                # logging.notice('method ref: %s %s %d' %(method_reference, self, len(self.commands)))
                 self.commands[key] = RegisteredMethod(class_name=value.class_name, method_name=value.method_name,
                                                       method_reference=method_reference, data_value=value.data_value,
                                                       return_type=value.return_type, instance=self)
@@ -184,20 +190,20 @@ class Prometheus(object):
 
         self.prefix_cache = dict()
         for prometheus_attribute in prometheus_attributes:
-            # print('prometheus_attribute=%s' % str(prometheus_attribute))
+            # logging.notice('prometheus_attribute=%s' % str(prometheus_attribute))
             prefix = prometheus_attribute.prefix
-            # print('debug, prefix=%s' % repr(prefix))
+            # logging.notice('debug, prefix=%s' % repr(prefix))
             if prometheus_attribute.prefix is not None:
                 self.prefix_cache[prometheus_attribute.instance.__class__.__name__] = prefix
             else:
                 for key in self.prefix_cache.keys():
                     if prometheus_attribute.instance.__class__.__name__.find(key) != -1:
                         prefix = self.prefix_cache[key]
-                        # print('found cached prefix: %s' % prefix)
+                        # logging.notice('found cached prefix: %s' % prefix)
                         break
             attribute_commands = prometheus_attribute.instance.data_commands(data_value_prefix=prefix)
             for akey in attribute_commands.keys():
-                # print('debug, akey=%s' % akey)
+                # logging.notice('debug, akey=%s' % akey)
                 self.cached_remap[akey] = attribute_commands[akey]
 
         return self.cached_remap
@@ -215,14 +221,15 @@ class Prometheus(object):
                 else:
                     command_key = value.data_value
                 if command_key in commands.keys():
-                    print('Warning: overwriting reference for data_value %s' % command_key)
+                    logging.warn('Warning: overwriting reference for data_value %s' % command_key)
                 value.command_key = command_key
                 commands[command_key] = value
                 value.logical_path = ''
                 if value.instance:
                     logical_path = value.instance.logical_path()
                     value.logical_path = logical_path
-                print('%s\t-> %s\t%s\t%s' % (command_key, value.method_name, value.logical_path, value.method_reference))
+                if data_debug:
+                    logging.notice('%s\t-> %s\t%s\t%s' % (command_key, value.method_name, value.logical_path, value.method_reference))
 
         return commands
 
@@ -268,8 +275,27 @@ class Led(Prometheus):
         else:
             self.pin.value(False)
 
-    @Registry.register('Led', 'S', 'OUT')
-    def state(self):
+    @Registry.register('Led', 'v', 'OUT')
+    def value(self):
+        if self.inverted:
+            return self.pin.value() != True
+        else:
+            return self.pin.value() == True
+
+
+class Digital(Prometheus):
+    def __init__(self, pin, inverted=False):
+        """
+        :type pin: machine.Pin
+        :type inverted: bool
+        :type state: bool
+        """
+        Prometheus.__init__(self)
+        self.pin = pin
+        self.inverted = inverted
+
+    @Registry.register('Digital', 'v', 'OUT')
+    def value(self):
         if self.inverted:
             return self.pin.value() != True
         else:
@@ -319,10 +345,10 @@ class RemoteTemplate(Prometheus):
         Prometheus.__init__(self)
 
     def send(self, data):
-        print('send: %s' % repr(data))
+        logging.notice('send: %s' % repr(data))
 
     def recv(self, buffersize=None):
-        print('recv buffersize=%s' % buffersize)
+        logging.notice('recv buffersize=%s' % buffersize)
         return None
 
     def die(self):
@@ -330,16 +356,24 @@ class RemoteTemplate(Prometheus):
 
     def cap(self):
         self.send('cap')
-        print('cap: %s' % repr(self.recv(100)))
+        data = self.recv(100)
+        logging.notice('cap: %s' % repr(data))
+        return data
 
     def uname(self):
         self.send('uname')
-        print('uname: %s' % repr(self.recv(100)))
+        data = self.recv(100)
+        logging.notice('uname: %s' % repr(data))
+        return data
 
     def version(self):
         self.send('version')
-        print('version: %s' % repr(self.recv(100)))
+        data = self.recv(100)
+        logging.notice('version: %s' % repr(data))
+        return data
 
     def sysinfo(self):
         self.send('sysinfo')
-        print('sysinfo: %s' % repr(self.recv(100)))
+        data = self.recv(100)
+        logging.notice('sysinfo: %s' % repr(data))
+        return data

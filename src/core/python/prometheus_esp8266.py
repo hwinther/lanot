@@ -2,7 +2,7 @@ import dht
 import prometheus
 import gc
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -61,3 +61,11 @@ class Dht22(prometheus.Prometheus):
     @prometheus.Registry.register('Dht22', 'h', 'OUT')
     def humidity(self):
         return self.dht.humidity()
+
+    @prometheus.Registry.register('Dht22', 'v', 'OUT')
+    def value(self):
+        try:
+            self.dht.measure()
+        except OSError:
+            return 'timeout'
+        return '%sc%s' % (self.dht.temperature(), self.dht.humidity())

@@ -8,6 +8,10 @@ to run:
 set PYTHONPATH=p:\lanot\src\core\python
 '''
 
-prometheus_tftpd.tftp_client('nodetest.iot.oh.wsh.no', 'boot.py')
-prometheus_tftpd.tftp_client('nodetest.iot.oh.wsh.no', 'main.py')
-prometheus_tftpd.tftp_client('nodetest.iot.oh.wsh.no', 'nodetest.py')
+# prometheus_tftpd.tftp_client('nodetest', 'boot.py')
+prometheus_tftpd.tftp_client('nodetest', 'main.py')
+# prometheus_tftpd.tftp_client('nodetest', 'nodetest.py')
+
+# prometheus_tftpd.tftp_client('nodetest', 'cacert.pem')
+# prometheus_tftpd.tftp_client('nodetest', 'cert.pem')
+# prometheus_tftpd.tftp_client('nodetest', 'key.pem')

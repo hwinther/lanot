@@ -1,6 +1,5 @@
 import prometheus
 import prometheus_esp8266
-import prometheus_servers
 import machine
 
 

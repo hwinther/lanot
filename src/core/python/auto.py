@@ -553,7 +553,7 @@ def folder_import():
 
     item = all_code[0]
     template = item.generate_template('SerialTemplate')
-    output_folder = os.path.join('..', '..', '..', 'build', 'clients')
+    output_folder = os.path.join('..', '..', '..', 'deploy', 'clients')
     outfile = os.path.join(output_folder, item.class_name + '.py')
     # print(template)
     print('writing to %s' % outfile)
@@ -656,18 +656,20 @@ def build_client(cls, output_filename, client_template_instances):
         generated_class_name = cls.__name__ + client_template_instance.__name__.replace('Template', '') + 'Client'
         # print('Generating class: %s' % generated_class_name)
         classes.append(generated_class_name)
-        code.append(generate_python_template(source_class=cls, template_class=client_template_instance,
-                                             generated_class_name=generated_class_name, subclasses=subclasses))
+        code.append('# region ' + generated_class_name + '\n' +
+                    generate_python_template(source_class=cls, template_class=client_template_instance,
+                                             generated_class_name=generated_class_name, subclasses=subclasses) +
+                    '\n# endregion\n\n')
         subclasses = False
-    output_path = os.path.join('..', '..', '..', 'build', 'clients', output_filename)
+    output_path = os.path.join('..', '..', '..', 'deploy', 'clients', output_filename)
     print('Writing to %s, classes: %s' % (output_path, ', '.join(classes)))
     open(output_path, 'w').write(
         '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+
-        imports + '\n\n'.join(code))
+        imports + '\n'.join(code)[:-1])
 
 
 # folder_import()
-
+"""
 from tank import Tank
 build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
 from tankproxy import TankProxy
@@ -678,14 +680,23 @@ from chaintest import A, B, C
 build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
 build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
 build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
+"""
 
-
+"""
 from sensor01 import Sensor01
 build_client(Sensor01, 'sensor01client.py', [UdpTemplate, RsaUdpTemplate])
 from sensor02 import Sensor02
 build_client(Sensor02, 'sensor02client.py', [UdpTemplate, RsaUdpTemplate])
+"""
 from nodetest import NodeTest
-build_client(NodeTest, 'nodetestclient.py', [UdpTemplate, RsaUdpTemplate])
+build_client(NodeTest, 'nodetestclient.py', [UdpTemplate, TcpTemplate])
+from localtest import LocalTest
+build_client(LocalTest, 'localtestclient.py', [UdpTemplate, TcpTemplate])
+from proxytest2 import ProxyTest2
+build_client(ProxyTest2, 'proxytest2client.py', [UdpTemplate, TcpTemplate])
+from test01 import Test01
+build_client(Test01, 'test01client.py', [UdpTemplate, TcpTemplate])
+# , RsaUdpTemplate
 
 # u = RsaUdpTemplate('192.168.1.102', bind_port=9191, clientencrypt=False)
 # u.send(b'version')

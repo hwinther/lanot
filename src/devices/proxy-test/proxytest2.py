@@ -1,13 +1,14 @@
 import sys
 import random
+import time
 import prometheus
 import prometheus_servers
-import time
-sys.path.append('P:\lanot\build\clients')
-import sensor01client
-import sensor02client
-import nodetestclient
-import tankclient
+import prometheus_servers_ssl
+# sys.path.append('P:\lanot\build\clients')
+import deploy.clients.sensor01client as sensor01client
+import deploy.clients.sensor02client as sensor02client
+import deploy.clients.nodetestclient as nodetestclient
+import deploy.clients.tankclient as tankclient
 
 
 class ProxyTest2(prometheus.Prometheus):
@@ -28,20 +29,37 @@ class ProxyTest2(prometheus.Prometheus):
 
 
 if __name__ == '__main__':
-    proxytest2 = ProxyTest2()
-    print('off')
-    proxytest2.sensor01.integrated_led.off()
-    proxytest2.sensor02.integrated_led.off()
+    node = ProxyTest2()
+    # print('off')
+    # proxytest2.sensor01.integrated_led.off()
+    # proxytest2.sensor02.integrated_led.off()
     # proxytest2.nodetest.integrated_led.off()
     # proxytest2.tankclient.lightControl.all_on()
-    time.sleep(2)
-    print('on')
-    proxytest2.sensor01.integrated_led.on()
-    proxytest2.sensor02.integrated_led.on()
+    # time.sleep(2)
+    # print('on')
+    # proxytest2.sensor01.integrated_led.on()
+    # proxytest2.sensor02.integrated_led.on()
     # proxytest2.nodetest.integrated_led.on()
     # proxytest2.tankclient.lightControl.all_off()
-    jsonrestserver = prometheus_servers.JsonRestServer(proxytest2, settimeout=0.1)  # , usessl=True)
-    jsonrestserver.start()
+
+    multiserver = prometheus_servers.MultiServer()
+
+    udpserver = prometheus_servers.UdpSocketServer(node)
+    multiserver.add(udpserver, bind_host='', bind_port=9190)
+
+    tcpserver = prometheus_servers.TcpSocketServer(node)
+    multiserver.add(tcpserver, bind_host='', bind_port=9191)
+
+    jsonrestserver = prometheus_servers.JsonRestServer(node,
+                                                       loop_tick_delay=0.1)
+    multiserver.add(jsonrestserver, bind_host='', bind_port=8080)
+
+    jsonrestsslserver = prometheus_servers.JsonRestServer(node,
+                                                          loop_tick_delay=0.1,  # for cpython, limits cpu cycles
+                                                          socketwrapper=prometheus_servers_ssl.SslSocket)
+    multiserver.add(jsonrestsslserver, bind_host='', bind_port=4443)
+
+    multiserver.start()
 
     # time.struct_time(tm_year=2017, tm_mon=9, tm_mday=3, tm_hour=1, tm_min=22, tm_sec
     # =54, tm_wday=6, tm_yday=246, tm_isdst=1)

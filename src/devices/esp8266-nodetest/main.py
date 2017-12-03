@@ -1,22 +1,39 @@
 import nodetest
 import prometheus_servers
 # import prometheus_crypto
+# import prometheus_tftpd
+# import prometheus_servers_ssl
 import gc
 
 
 gc.collect()
 
 node = nodetest.NodeTest()
-udpserver = prometheus_servers.UdpSocketServer(node)
-gc.collect()
-print(udpserver.uname())
+
+# udpserver = prometheus_servers.UdpSocketServer(node)
+# gc.collect()
+# print(udpserver.uname())
+# gc.collect()
+# print(gc.mem_free())
+# udpserver.start()
+
 gc.collect()
 print(gc.mem_free())
+multiserver = prometheus_servers.MultiServer()
 
-udpserver.start()
+udpserver = prometheus_servers.UdpSocketServer(node)
+multiserver.add(udpserver, bind_host='', bind_port=9190)
+gc.collect()
 
-# ns.start()
-# multiserver = prometheus_servers.MultiServer()
-# multiserver.add(udpserver, bind_host='', bind_port=9195)
-# jsonrestserver = prometheus_servers.JsonRestServer(nt)
-# multiserver.add(jsonrestserver, bind_host='', bind_port=8080)
+tcpserver = prometheus_servers.TcpSocketServer(node)
+multiserver.add(tcpserver, bind_host='', bind_port=9191)
+gc.collect()
+
+jsonrestserver = prometheus_servers.JsonRestServer(node,
+                                                   loop_tick_delay=0.1)
+multiserver.add(jsonrestserver, bind_host='', bind_port=8080)
+gc.collect()
+
+print(udpserver.uname())
+print(gc.mem_free())
+multiserver.start()

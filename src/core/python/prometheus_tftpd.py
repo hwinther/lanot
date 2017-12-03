@@ -1,7 +1,7 @@
 import socket
 import gc
 
-__version__ = '0.1.1'
+__version__ = '0.1.2'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -27,6 +27,7 @@ def tftpd():
                     break
                 data = data + line
                 # print('read')
+                gc.collect()
             except:
                 # print('exc')
                 break
@@ -38,13 +39,14 @@ def tftpd():
             f.write(content)
             f.close()
         client.close()
+        gc.collect()
 
 
-def tftp_client(host, file):
+def tftp_client(host, filename):
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     print('Connecting')
     sock.connect((host, 69))
-    data = open(file, 'r').read()
+    data = open(filename, 'r').read()
     print('Sending %d bytes' % len(data))
-    sock.send('%s\00\01\02\03%s' % (file, data))
+    sock.send('%s\00\01\02\03%s' % (filename, data))
     print('done')
