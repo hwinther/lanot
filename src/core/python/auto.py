@@ -682,20 +682,23 @@ build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
 build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
 """
 
-"""
+
 from sensor01 import Sensor01
-build_client(Sensor01, 'sensor01client.py', [UdpTemplate, RsaUdpTemplate])
+build_client(Sensor01, 'sensor01client.py', [UdpTemplate])
 from sensor02 import Sensor02
-build_client(Sensor02, 'sensor02client.py', [UdpTemplate, RsaUdpTemplate])
-"""
+build_client(Sensor02, 'sensor02client.py', [UdpTemplate])
+
 from nodetest import NodeTest
 build_client(NodeTest, 'nodetestclient.py', [UdpTemplate, TcpTemplate])
 from localtest import LocalTest
 build_client(LocalTest, 'localtestclient.py', [UdpTemplate, TcpTemplate])
-from proxytest2 import ProxyTest2
-build_client(ProxyTest2, 'proxytest2client.py', [UdpTemplate, TcpTemplate])
 from test01 import Test01
 build_client(Test01, 'test01client.py', [UdpTemplate, TcpTemplate])
+from test02 import Test02
+build_client(Test02, 'test02client.py', [UdpTemplate, TcpTemplate])
+
+from proxytest2 import ProxyTest2
+build_client(ProxyTest2, 'proxytest2client.py', [UdpTemplate, TcpTemplate])
 # , RsaUdpTemplate
 
 # u = RsaUdpTemplate('192.168.1.102', bind_port=9191, clientencrypt=False)

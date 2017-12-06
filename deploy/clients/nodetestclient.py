@@ -1,4 +1,4 @@
-# generated at 2017-12-03 02:12:19
+# generated at 2017-12-04 20:53:52
 import prometheus
 import socket
 import machine
@@ -16,6 +16,11 @@ class NodeTestUdpClientRedLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
+    @prometheus.Registry.register('NodeTestUdpClientRedLed', 'rv', 'OUT')
+    def value(self):
+        self.send(b'rv')
+        return self.recv(10)
+
     @prometheus.Registry.register('NodeTestUdpClientRedLed', 'r0')
     def off(self):
         self.send(b'r0')
@@ -24,17 +29,17 @@ class NodeTestUdpClientRedLed(prometheus.Prometheus):
     def on(self):
         self.send(b'r1')
 
-    @prometheus.Registry.register('NodeTestUdpClientRedLed', 'rS', 'OUT')
-    def state(self):
-        self.send(b'rS')
-        return self.recv(10)
-
 
 class NodeTestUdpClientBlueLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
+
+    @prometheus.Registry.register('NodeTestUdpClientBlueLed', 'bv', 'OUT')
+    def value(self):
+        self.send(b'bv')
+        return self.recv(10)
 
     @prometheus.Registry.register('NodeTestUdpClientBlueLed', 'b0')
     def off(self):
@@ -43,11 +48,6 @@ class NodeTestUdpClientBlueLed(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientBlueLed', 'b1')
     def on(self):
         self.send(b'b1')
-
-    @prometheus.Registry.register('NodeTestUdpClientBlueLed', 'bS', 'OUT')
-    def state(self):
-        self.send(b'bS')
-        return self.recv(10)
 
 
 class NodeTestUdpClientIntegratedLed(prometheus.Prometheus):
@@ -64,9 +64,9 @@ class NodeTestUdpClientIntegratedLed(prometheus.Prometheus):
     def off(self):
         self.send(b'i0')
 
-    @prometheus.Registry.register('NodeTestUdpClientIntegratedLed', 'iS', 'OUT')
-    def state(self):
-        self.send(b'iS')
+    @prometheus.Registry.register('NodeTestUdpClientIntegratedLed', 'iv', 'OUT')
+    def value(self):
+        self.send(b'iv')
         return self.recv(10)
 
 
@@ -176,6 +176,11 @@ class NodeTestTcpClientRedLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
+    @prometheus.Registry.register('NodeTestTcpClientRedLed', 'rv', 'OUT')
+    def value(self):
+        self.send(b'rv')
+        return self.recv(10)
+
     @prometheus.Registry.register('NodeTestTcpClientRedLed', 'r0')
     def off(self):
         self.send(b'r0')
@@ -184,17 +189,17 @@ class NodeTestTcpClientRedLed(prometheus.Prometheus):
     def on(self):
         self.send(b'r1')
 
-    @prometheus.Registry.register('NodeTestTcpClientRedLed', 'rS', 'OUT')
-    def state(self):
-        self.send(b'rS')
-        return self.recv(10)
-
 
 class NodeTestTcpClientBlueLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
+
+    @prometheus.Registry.register('NodeTestTcpClientBlueLed', 'bv', 'OUT')
+    def value(self):
+        self.send(b'bv')
+        return self.recv(10)
 
     @prometheus.Registry.register('NodeTestTcpClientBlueLed', 'b0')
     def off(self):
@@ -203,11 +208,6 @@ class NodeTestTcpClientBlueLed(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientBlueLed', 'b1')
     def on(self):
         self.send(b'b1')
-
-    @prometheus.Registry.register('NodeTestTcpClientBlueLed', 'bS', 'OUT')
-    def state(self):
-        self.send(b'bS')
-        return self.recv(10)
 
 
 class NodeTestTcpClientIntegratedLed(prometheus.Prometheus):
@@ -224,9 +224,9 @@ class NodeTestTcpClientIntegratedLed(prometheus.Prometheus):
     def off(self):
         self.send(b'i0')
 
-    @prometheus.Registry.register('NodeTestTcpClientIntegratedLed', 'iS', 'OUT')
-    def state(self):
-        self.send(b'iS')
+    @prometheus.Registry.register('NodeTestTcpClientIntegratedLed', 'iv', 'OUT')
+    def value(self):
+        self.send(b'iv')
         return self.recv(10)
 
 

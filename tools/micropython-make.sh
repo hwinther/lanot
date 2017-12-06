@@ -33,8 +33,8 @@ make -C mpy-cross MICROPY_PY_FUNCTION_ATTRS=1
 export mpyversion=`cat mpy-cross/build/genhdr/mpversion.h | grep MICROPY_GIT_TAG | cut -d' ' -f3 | cut -d'"' -f2`
 export mpybuilddate=`cat mpy-cross/build/genhdr/mpversion.h | grep MICROPY_BUILD_DATE | cut -d' ' -f3 | cut -d'"' -f2`
 
-cd esp32
+cd ports/esp32
 printf "${BLUE}*******************************************${NC}\n"
 printf "${BLUE}* Making esp32 $mpyversion-$mpybuilddate *${NC}\n"
 printf "${BLUE}*******************************************${NC}\n"
-make MICROPY_PY_FUNCTION_ATTRS=1 && cp build/firmware.bin ../../../deploy/micropython/esp32/$mpyversion-$mpybuilddate.bin
+make MICROPY_PY_FUNCTION_ATTRS=1 && cp build/firmware.bin ../../../../deploy/micropython/esp32/$mpyversion-$mpybuilddate.bin

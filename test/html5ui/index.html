@@ -61,7 +61,7 @@
                     name = name.charAt(0).toUpperCase() + name.slice(1);
                     var elemid = hostname + '_' + index.replace('.', '__');
                     // console.log('elemid: ' + elemid);
-                    if (endsWith(obj.class, 'Led'))
+                    if (endsWith(obj.class, 'Led') || endsWith(obj.class, 'Laser'))
                     {
                         panelbody.html(panelbody.html() +
                             '<div class="input-group"><button type="button" class="btn btn-primary btn-sm btnled" data-toggle="button" aria-pressed="false" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri-on="' + obj.methods['on'] + '" data-uri-off="' + obj.methods['off'] + '" id="btn_' + elemid + '">\n' +
@@ -96,12 +96,26 @@
                             ' Read DHT: ' + name + '\n' +
                             '</button><input type="textbox" id="dht11_' + elemid + '" /></div>\n');
                     }
+                    else if (endsWith(obj.class, 'Dsb') || endsWith(obj.class, 'dsb'))
+                    {
+                        panelbody.html(panelbody.html() +
+                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndsb" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['value'] + '" id="btn_' + elemid + '">\n' +
+                            ' Read ADC: ' + name + '\n' +
+                            '</button><input type="textbox" id="dsb_' + elemid + '" /></div>\n');
+                    }
                     else if (endsWith(obj.class, 'Adc') || endsWith(obj.class, 'Lightsensor') || endsWith(obj.class, 'Hygrometer'))
                     {
                         panelbody.html(panelbody.html() +
                             '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnadc" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['read'] + '" id="btn_' + elemid + '">\n' +
                             ' Read ADC: ' + name + '\n' +
                             '</button><input type="textbox" id="adc_' + elemid + '" /></div>\n');
+                    }
+                    else if (endsWith(obj.class, 'Digital') || endsWith(obj.class, 'digital'))
+                    {
+                        panelbody.html(panelbody.html() +
+                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndigital" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['value'] + '" id="btn_' + elemid + '">\n' +
+                            ' Read ADC: ' + name + '\n' +
+                            '</button><input type="textbox" id="digital_' + elemid + '" /></div>\n');
                     }
                     else
                     {
@@ -116,14 +130,7 @@
                         });
                     }
                 });
-
-                $('.btnmethod').click(function() {
-                    var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
-                    $.ajax({
-                            url: uri,
-                            dataType: 'jsonp'});
-                });
-
+                
                 $('.btnled').click(function(){
                    var toggled = $(this).hasClass('active');
                    if (toggled)
@@ -148,26 +155,11 @@
                    }
                 });
 
-                $('.btnadc').click(function(){
-                       //console.log('read');
-                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
-                       var name = $(this).data('name');
-                       var hostname = $(this).data('hostname');
-                       //console.log('uri=' + uri);
-                       $.ajax({
+                $('.btnmethod').click(function() {
+                    var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                    $.ajax({
                             url: uri,
-                            dataType: 'jsonp',
-                            success: function (data) {
-                                //console.log('got value: ' + data['value']);
-                                var elem = '#adc_' + hostname + '_' + name.replace('.', '__').toLowerCase();
-                                //console.log('setting to ' + elem);
-                                var value = data['value'];
-                                if (value === null) {
-                                    value = 'No value returned';
-                                }
-                                $(elem).val(value);
-                            }
-                       });
+                            dataType: 'jsonp'});
                 });
 
                 $('.btndht11').click(function(){
@@ -194,6 +186,74 @@
                             }
                        });
                 });
+                
+                $('.btndsb').click(function(){
+                       //console.log('read');
+                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                       var name = $(this).data('name');
+                       var hostname = $(this).data('hostname');
+                       //console.log('uri=' + uri);
+                       $.ajax({
+                            url: uri,
+                            dataType: 'jsonp',
+                            success: function (data) {
+                                //console.log('got value: ' + data['value']);
+                                var elem = '#dsb_' + hostname + '_' + name.replace('.', '__').toLowerCase();
+                                //console.log('setting to ' + elem);
+                                var value = data['value'];
+                                if (value === null) {
+                                    value = 'No value returned';
+                                } else {
+                                    value = value + 'C';
+                                }
+                                $(elem).val(value);
+                            }
+                       });
+                });
+
+                $('.btnadc').click(function(){
+                       //console.log('read');
+                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                       var name = $(this).data('name');
+                       var hostname = $(this).data('hostname');
+                       //console.log('uri=' + uri);
+                       $.ajax({
+                            url: uri,
+                            dataType: 'jsonp',
+                            success: function (data) {
+                                //console.log('got value: ' + data['value']);
+                                var elem = '#adc_' + hostname + '_' + name.replace('.', '__').toLowerCase();
+                                //console.log('setting to ' + elem);
+                                var value = data['value'];
+                                if (value === null) {
+                                    value = 'No value returned';
+                                }
+                                $(elem).val(value);
+                            }
+                       });
+                });
+
+                $('.btndigital').click(function(){
+                       //console.log('read');
+                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                       var name = $(this).data('name');
+                       var hostname = $(this).data('hostname');
+                       //console.log('uri=' + uri);
+                       $.ajax({
+                            url: uri,
+                            dataType: 'jsonp',
+                            success: function (data) {
+                                //console.log('got value: ' + data['value']);
+                                var elem = '#digital_' + hostname + '_' + name.replace('.', '__').toLowerCase();
+                                //console.log('setting to ' + elem);
+                                var value = data['value'];
+                                if (value === null) {
+                                    value = 'No value returned';
+                                }
+                                $(elem).val(value);
+                            }
+                       });
+                });
             }
         });
     }
@@ -201,8 +261,8 @@
     $(function() {
         //update('localhost');
         //update('nodetest');
-        //update('sensor01');
-        //update('sensor02');
+        update('test01');
+        //update('test02');
         update('bastion');
         //update('192.168.1.195');
     });

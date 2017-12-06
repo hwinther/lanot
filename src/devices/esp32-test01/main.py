@@ -2,6 +2,7 @@ import test01
 import prometheus_servers
 import prometheus_tftpd
 import prometheus_servers_ssl
+import prometheus_logging as logging
 import gc
 
 
@@ -14,7 +15,7 @@ def td():
 
 node = test01.Test01()
 gc.collect()
-print(gc.mem_free())
+logging.debug('mem_free: %s' % gc.mem_free())
 multiserver = prometheus_servers.MultiServer()
 
 udpserver = prometheus_servers.UdpSocketServer(node)
@@ -30,6 +31,11 @@ jsonrestserver = prometheus_servers.JsonRestServer(node,
 multiserver.add(jsonrestserver, bind_host='', bind_port=8080)
 gc.collect()
 
-print(udpserver.uname())
-print(gc.mem_free())
+# jsonrestsslserver = prometheus_servers.JsonRestServer(node,
+#                                                       loop_tick_delay=0.1,  # for cpython, limits cpu cycles
+#                                                       socketwrapper=prometheus_servers_ssl.SslSocket)
+# multiserver.add(jsonrestsslserver, bind_host='', bind_port=4443)
+# gc.collect()
+
+logging.boot(udpserver)
 multiserver.start()

@@ -8,6 +8,8 @@ import prometheus_servers_ssl
 import deploy.clients.sensor01client as sensor01client
 import deploy.clients.sensor02client as sensor02client
 import deploy.clients.nodetestclient as nodetestclient
+import deploy.clients.test01client as test01client
+import deploy.clients.test02client as test02client
 import deploy.clients.tankclient as tankclient
 
 
@@ -21,8 +23,14 @@ class ProxyTest2(prometheus.Prometheus):
         self.sensor02 = sensor02client.Sensor02UdpClient('sensor02', bind_port=random.randrange(1024, 9000))
         self.register(prefix='s2', sensor02=self.sensor02)
 
-        # self.nodetest = nodetestclient.NodeTestRsaUdpClient('nodetest', bind_port=random.randrange(1024, 9000))
-        # self.register(prefix='nt', nodetest=self.nodetest)
+        self.nodetest = nodetestclient.NodeTestUdpClient('nodetest', remote_port=9190, bind_port=random.randrange(1024, 9000))
+        self.register(prefix='nt', nodetest=self.nodetest)
+
+        self.test01 = test01client.Test01UdpClient('test01', remote_port=9190, bind_port=random.randrange(1024, 9000))
+        self.register(prefix='t1', test01=self.test01)
+
+        self.test02 = test02client.Test02UdpClient('test02', remote_port=9190, bind_port=random.randrange(1024, 9000))
+        self.register(prefix='t2', test02=self.test02)
 
         # self.tankclient = tankclient.TankUdpClient('192.168.1.250', bind_port=random.randrange(1024, 9000))
         # self.register(prefix='tc', tankclient=self.tankclient)
