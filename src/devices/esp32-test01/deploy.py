@@ -8,10 +8,10 @@ to run:
 set PYTHONPATH=p:\lanot\src\core\python
 '''
 
-# prometheus_tftpd.tftp_client('10.20.2.115', 'boot.py')
-prometheus_tftpd.tftp_client('10.20.2.115', 'main.py')
-prometheus_tftpd.tftp_client('10.20.2.115', 'test01.py')
+# prometheus_tftpd.tftp_client('test01', 'boot.py')
+prometheus_tftpd.tftp_client('test01', 'main.py')
+prometheus_tftpd.tftp_client('test01', 'test01.py')
 
-# prometheus_tftpd.tftp_client('10.20.2.115', 'cacert.pem')
-# prometheus_tftpd.tftp_client('10.20.2.115', 'cert.pem')
-# prometheus_tftpd.tftp_client('10.20.2.115', 'key.pem')
+# prometheus_tftpd.tftp_client('test01', 'cacert.pem')
+# prometheus_tftpd.tftp_client('test01', 'cert.pem')
+# prometheus_tftpd.tftp_client('test01', 'key.pem')
