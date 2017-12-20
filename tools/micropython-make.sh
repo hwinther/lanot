@@ -28,7 +28,8 @@ make BTARGET=application BTYPE=release BOARD=WIPY MICROPY_PY_FUNCTION_ATTRS=1 &&
 printf "${BLUE}*******************************************${NC}\n"
 printf "${BLUE}* Making (esp32) mpy cross compiler *${NC}\n"
 printf "${BLUE}*******************************************${NC}\n"
-cd ../../../micropython-esp32
+# cd ../../../micropython-esp32
+cd ../esp32
 make -C mpy-cross MICROPY_PY_FUNCTION_ATTRS=1
 export mpyversion=`cat mpy-cross/build/genhdr/mpversion.h | grep MICROPY_GIT_TAG | cut -d' ' -f3 | cut -d'"' -f2`
 export mpybuilddate=`cat mpy-cross/build/genhdr/mpversion.h | grep MICROPY_BUILD_DATE | cut -d' ' -f3 | cut -d'"' -f2`

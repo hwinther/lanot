@@ -3,7 +3,7 @@ import gc
 import sys
 import prometheus_logging as logging
 
-__version__ = '0.1.4'
+__version__ = '0.1.5a'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -207,6 +207,16 @@ class Prometheus(object):
                 self.cached_remap[akey] = attribute_commands[akey]
 
         return self.cached_remap
+
+    def recursive_cleanup(self):
+        for key in self.attributes.keys():
+            self.attributes[key].instance.recursive_cleanup()
+            # value = self.attributes[key]  # :type PrometheusAttribute
+            # instances.append(value)
+            # instances.extend(value.instance.recursive_attributes())
+        self.commands = dict()
+        self.attributes = dict()
+        self.prefix_cache = dict()
 
     def data_commands(self, data_value_prefix=None):
         commands = dict()

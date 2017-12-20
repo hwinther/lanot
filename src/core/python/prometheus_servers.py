@@ -7,7 +7,7 @@ import time
 import prometheus
 import prometheus_logging as logging
 
-__version__ = '0.1.4'
+__version__ = '0.1.5a'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -53,10 +53,20 @@ class Server(object):
         self.post_loop(**kwargs)
 
     def pre_loop(self, **kwargs):
+        gc.collect()
+        if prometheus.is_micro:
+            logging.debug('mem_free before remap: %s' % gc.mem_free())
         self.instance.recursive_remap()
+        gc.collect()
+        if prometheus.is_micro:
+            logging.debug('mem_free after remap: %s' % gc.mem_free())
+        self.instance.recursive_cleanup()
+        gc.collect()
+        if prometheus.is_micro:
+            logging.debug('mem_free after cleanup: %s' % gc.mem_free())
 
     def loop_tick(self, **kwargs):
-        pass
+        gc.collect()
 
     def post_loop(self, **kwargs):
         pass
@@ -67,12 +77,13 @@ class Server(object):
     def handle_data(self, command, source=None, **kwargs):
         if debug:
             logging.notice('entering Server.handle_data')
-        if command == '':
+        if command is b'' or command is None:
             return
 
         if debug:
             logging.notice('input: %s' % repr(command))
 
+        # TODO: handle byte data instead of converting to string, might same some memory
         if type(command) is bytes:
             command = command.decode('utf-8')
 
@@ -310,30 +321,58 @@ class TcpSocketServer(SocketServer):
                     if e.args[0] == 104:
                         logging.notice('disconnected')
                         del self.buffers[addr]
+                        del self.sockets[addr]
                         continue
                     if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
                         logging.error(e)
                         raise
+                    # else:
+                    #     logging.debug(e)
                 else:
                     if e.errno == 104:
                         logging.notice('disconnected')
                         del self.buffers[addr]
+                        del self.sockets[addr]
                         continue
                     if e.errno != 11 and e.errno != 104 and e.errno != 110 and e.errno != 10035 and e.errno != 10054:
                         logging.error(e)
                         raise
+                    # else:
+                    #     logging.debug(e)
+
+            if data == b'':
+                logging.notice('disconnected (empty data)')
+                del self.buffers[addr]
+                del self.sockets[addr]
+                continue
+
+            if data is None:
+                continue
+
+            logging.notice('Got data from %s' % repr(addr))
+            try:
+                data = data.decode('utf-8')
+            except UnicodeError:
+                data = None
 
             if data is not None:
-                logging.notice('Got data from %s' % repr(addr))
-                self.buffers[addr].parse(data.decode('utf-8'))
+                self.buffers[addr].parse(data)
 
-                while True:
-                    command = self.buffers[addr].pop()
-                    if command is None:
-                        logging.notice('Breaking command loop')
-                        break
-                    logging.notice('Calling handle data')
-                    self.handle_data(command, self.sockets[addr])
+            while True:
+                command = self.buffers[addr].pop()
+                if command is None:
+                    # logging.notice('Breaking command loop')
+                    break
+
+                if command == b'shell':
+                    logging.warn('dupterm %s:0' % repr(addr))
+                    del self.buffers[addr]
+                    os.dupterm(self.sockets[addr], 0)
+                    # del self.sockets[addr]
+                    break
+
+                logging.notice('Calling handle data')
+                self.handle_data(command, self.sockets[addr])
 
     def post_loop(self, **kwargs):
         SocketServer.post_loop(self, **kwargs)
@@ -378,10 +417,17 @@ class JsonRestServer(SocketServer):
         self.socket.settimeout(self.settimeout)
         logging.success('listening on %s:%d (http/json)' % (bind_host, bind_port))
 
+        # TODO: optimize memory usage
+        gc.collect()
+        if prometheus.is_micro:
+            logging.debug('mem_free before urls: %s' % gc.mem_free())
         self.instance.update_urls()
         if prometheus.data_debug:
             for key in self.instance.cached_urls.keys():
                 logging.info('url: %s' % key)
+        gc.collect()
+        if prometheus.is_micro:
+            logging.debug('mem_free after urls: %s' % gc.mem_free())
 
     def loop_tick(self, **kwargs):
         if debug:

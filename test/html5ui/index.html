@@ -16,11 +16,12 @@
             return str.indexOf(suffix, str.length - suffix.length) !== -1;
         }
 
-    function update(host)
+    function update(host, port, _proto)
     {
+	var baseuri = _proto + '://' + host + ':' + port;
         // console.log('making query');
         $.ajax({
-            url: 'http://' + host + ':8080/api?class=true',
+            url: baseuri + '/api?class=true',
             dataType: 'jsonp',
             indexValue: host,
             success: function (data) {
@@ -39,7 +40,7 @@
 
                 // get and show version
                 $.ajax({
-                    url: 'http://' + host + ':8080/version',
+                    url: baseuri + '/version',
                     dataType: 'jsonp',
                     indexValue: hostname,
                     success: function (data) {
@@ -67,7 +68,7 @@
                             '<div class="input-group"><button type="button" class="btn btn-primary btn-sm btnled" data-toggle="button" aria-pressed="false" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri-on="' + obj.methods['on'] + '" data-uri-off="' + obj.methods['off'] + '" id="btn_' + elemid + '">\n' +
                             name + ' on\n' +
                             '</button></div>');
-                        var uri = 'http://' + host + ':8080' + obj.methods['state'];
+                        var uri = baseuri + obj.methods['state'];
                         //console.log('uri: ' + uri);
                         $.ajax({
                             url: uri,
@@ -137,7 +138,8 @@
                    {
                        //console.log('turning off');
                        $(this).text($(this).data('name') + ' on');
-                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri-off');
+			//$(this).data('host')
+                       var uri = baseuri + $(this).data('uri-off');
                        //console.log('uri=' + uri);
                        $.ajax({
                             url: uri,
@@ -147,7 +149,7 @@
                    {
                        //console.log('turning on');
                        $(this).text($(this).data('name') + ' off');
-                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri-on');
+                       var uri = baseuri + $(this).data('uri-on');
                        //console.log('uri=' + uri);
                        $.ajax({
                             url: uri,
@@ -156,7 +158,7 @@
                 });
 
                 $('.btnmethod').click(function() {
-                    var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                    var uri = baseuri + $(this).data('uri');
                     $.ajax({
                             url: uri,
                             dataType: 'jsonp'});
@@ -164,7 +166,7 @@
 
                 $('.btndht11').click(function(){
                        //console.log('read');
-                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                       var uri = baseuri + $(this).data('uri');
                        var name = $(this).data('name');
                        var hostname = $(this).data('hostname');
                        //console.log('uri=' + uri);
@@ -189,7 +191,7 @@
                 
                 $('.btndsb').click(function(){
                        //console.log('read');
-                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                       var uri = baseuri + $(this).data('uri');
                        var name = $(this).data('name');
                        var hostname = $(this).data('hostname');
                        //console.log('uri=' + uri);
@@ -213,7 +215,7 @@
 
                 $('.btnadc').click(function(){
                        //console.log('read');
-                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                       var uri = baseuri + $(this).data('uri');
                        var name = $(this).data('name');
                        var hostname = $(this).data('hostname');
                        //console.log('uri=' + uri);
@@ -235,7 +237,7 @@
 
                 $('.btndigital').click(function(){
                        //console.log('read');
-                       var uri = 'http://' + $(this).data('host') + ':8080' + $(this).data('uri');
+                       var uri = baseuri + $(this).data('uri');
                        var name = $(this).data('name');
                        var hostname = $(this).data('hostname');
                        //console.log('uri=' + uri);
@@ -263,9 +265,9 @@
         //update('nodetest');
         //update('test01');
         //update('test02');
-        //update('bastion');
-        update('greenhouse01.iot.oh.wsh.no');
-        update('greenhouse02.iot.oh.wsh.no');
+        update('serenity.oh.wsh.no', '4443', 'https');
+        //update('greenhouse01.iot.oh.wsh.no');
+        //update('greenhouse02.iot.oh.wsh.no');
     });
     </script>
 

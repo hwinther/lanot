@@ -4,6 +4,7 @@ import time
 import prometheus
 import prometheus_servers
 import prometheus_servers_ssl
+import prometheus_logging as logging
 # sys.path.append('P:\lanot\build\clients')
 import deploy.clients.sensor01client as sensor01client
 import deploy.clients.sensor02client as sensor02client
@@ -67,6 +68,7 @@ if __name__ == '__main__':
                                                           socketwrapper=prometheus_servers_ssl.SslSocket)
     multiserver.add(jsonrestsslserver, bind_host='', bind_port=4443)
 
+    logging.boot(udpserver)
     multiserver.start()
 
     # time.struct_time(tm_year=2017, tm_mon=9, tm_mday=3, tm_hour=1, tm_min=22, tm_sec

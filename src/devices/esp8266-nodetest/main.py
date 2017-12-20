@@ -27,3 +27,4 @@ gc.collect()
 
 logging.boot(udpserver)
 multiserver.start()
+# udpserver.start()

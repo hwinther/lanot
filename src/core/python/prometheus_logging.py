@@ -1,5 +1,5 @@
+import prometheus
 import gc
-import sys
 
 __version__ = '0.1.1'
 __author__ = 'Hans Christian Winther-Sorensen'
@@ -48,6 +48,9 @@ def debug(text):
 
 
 def boot(srv):
+    gc.collect()
     print('%sversion%s: %s%s%s' % (__magenta, __white, __cyan, srv.version(), __reset))
     print('%suname%s: %s%s%s' % (__magenta, __white, __cyan, srv.uname(), __reset))
-    print('%smem_free%s: %s%s%s' % (__magenta, __white, __cyan, gc.mem_free(), __reset))
+    if prometheus.is_micro:
+        print('%smem_free%s: %s%s%s' % (__magenta, __white, __cyan, gc.mem_free(), __reset))
+    gc.collect()
