@@ -16,18 +16,18 @@
             return str.indexOf(suffix, str.length - suffix.length) !== -1;
         }
 
-    function update(host, port, _proto)
+    function update(host, port, _proto, uriprefix)
     {
-	var baseuri = _proto + '://' + host + ':' + port;
+	var baseuri = _proto + '://' + host + ':' + port + uriprefix;
         // console.log('making query');
         $.ajax({
             url: baseuri + '/api?class=true',
             dataType: 'jsonp',
-            indexValue: host,
+            indexValue: host + uriprefix, //.replace('/', '_'),
             success: function (data) {
                 //console.log(data);
                 var host = this.indexValue;
-                var hostname = host.replace(/\./g, '');
+                var hostname = host.replace(/\./g, '').replace('/', '_');
                 //console.log(hostname);
                 var uir = $('#uiroot');
                 if (uir.find('#' + hostname + 'container').length === 0)
@@ -35,7 +35,8 @@
                     uir.html(uir.html() + '<div id="' + hostname + 'container" class="panel panel-default"></div>');
                 }
                 var container = $('#' + hostname + 'container');
-                container.html(container.html() +  '<div class="panel-heading">' + host + '</div>' + '<div id="' + hostname + 'panelbody" class="panel-body"><div id="' + hostname + '_infocontainer" class="infocontainer"></div></div>');
+                container.html(container.html() +  '<div class="panel-heading">' + host + '</div>' +
+'<div id="' + hostname + 'panelbody" class="panel-body"><div id="' + hostname + '_infocontainer" class="infocontainer"></div></div>');
                 var panelbody = $('#' + hostname + 'panelbody');
 
                 // get and show version
@@ -68,8 +69,9 @@
                             '<div class="input-group"><button type="button" class="btn btn-primary btn-sm btnled" data-toggle="button" aria-pressed="false" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri-on="' + obj.methods['on'] + '" data-uri-off="' + obj.methods['off'] + '" id="btn_' + elemid + '">\n' +
                             name + ' on\n' +
                             '</button></div>');
-                        var uri = baseuri + obj.methods['state'];
-                        //console.log('uri: ' + uri);
+                        var uri = baseuri + obj.methods['value'];
+                        //console.log('uri: ' + uri + ' obj: ' + obj);
+			//window.objtest = obj;
                         $.ajax({
                             url: uri,
                             dataType: 'jsonp',
@@ -81,7 +83,10 @@
                                 if (value === null) {
                                     console.log('Null received for btn state: ' + name);
                                 }
-                                else if (value.toLowerCase() === 'true') {
+				else if (value === false) {
+                                    //console.log('value is false');
+                                }
+                                else if (value === true || value.toLowerCase() === 'true') {
                                     console.log('switching led state for ' + this.indexValue);
                                     elem.text(elem.data('name') + ' off');
                                     elem.addClass('active');
@@ -265,9 +270,11 @@
         //update('nodetest');
         //update('test01');
         //update('test02');
-        update('serenity.oh.wsh.no', '4443', 'https');
-        //update('greenhouse01.iot.oh.wsh.no');
-        //update('greenhouse02.iot.oh.wsh.no');
+        update('serenity.oh.wsh.no', '4443', 'https', '');
+	update('serenity.oh.wsh.no', '443', 'https', '/greenhouse01');
+	update('serenity.oh.wsh.no', '443', 'https', '/greenhouse02');
+        //update('greenhouse01.iot.oh.wsh.no', '8080', 'http', '');
+        //update('greenhouse02.iot.oh.wsh.no', '8080', 'http', '');
     });
     </script>
 
