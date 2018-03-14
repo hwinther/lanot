@@ -682,7 +682,7 @@ build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
 build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
 """
 
-
+"""
 from sensor01 import Sensor01
 build_client(Sensor01, 'sensor01client.py', [UdpTemplate])
 from sensor02 import Sensor02
@@ -705,3 +705,7 @@ build_client(ProxyTest2, 'proxytest2client.py', [UdpTemplate, TcpTemplate])
 # u.send(b'version')
 # v = u.recv(250)
 # print('version: %s' % v)
+"""
+
+from rover01 import Rover01
+build_client(Rover01, 'rover01client.py', [UdpTemplate, TcpTemplate])
