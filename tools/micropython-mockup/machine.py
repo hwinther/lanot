@@ -36,7 +36,7 @@ class Pin(object):
     IRQ_LOW_LEVEL = 0
     IRQ_HIGH_LEVEL = 0
 
-    def __init__(self, pin, mode, alt=None):
+    def __init__(self, pin, mode=OUT, alt=None):
         self.pin = pin
         self.mode = mode
         self.alt = alt
@@ -106,6 +106,9 @@ class RTC(object):
 
 
 class ADC(object):
+    WIDTH_12BIT = 0
+    ATTN_11DB = 0
+
     def __init__(self, pin):
         self.pin = pin
 
@@ -118,6 +121,19 @@ class I2C(object):
         self.freq = freq
         self.scl = scl
         self.sda = sda
+
+
+class SD(object):
+    def __init__(self):
+        pass
+
+
+class TouchPad(object):
+    def __init__(self, pin):
+        pass
+
+    def read(self):
+        return None
 
 
 # make time.sleep_ms valid :D

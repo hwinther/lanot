@@ -1,9 +1,9 @@
 import test01
-import prometheus_servers
-# import prometheus_servers_ssl
+import servers.socketserver.udp
+import servers.multiserver
 import prometheus_tftpd
 import prometheus_logging as logging
-import gc
+import prometheus_gc as gc
 import machine
 import time
 import socket
@@ -18,11 +18,11 @@ def td():
 
 
 node = test01.Test01()
-multiserver = prometheus_servers.MultiServer()
+multiserver = servers.multiserver.MultiServer()
 gc.collect()
 logging.debug('mem_free: %s' % gc.mem_free())
 
-udpserver = prometheus_servers.UdpSocketServer(node)
+udpserver = servers.socketserver.udp.UdpSocketServer(node)
 # multiserver.add(udpserver)
 # gc.collect()
 #

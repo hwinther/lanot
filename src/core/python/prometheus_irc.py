@@ -14,14 +14,14 @@ ss = ssl_wrap_socket(s)
 
 ss.write('NICK dgramtest\r\n')
 ss.write('USER dgramtest 0 * :dgrams test\r\n')
-buffer = prometheus.Buffer(split_chars='\n', end_chars='\r')
+_buffer = prometheus.Buffer(split_chars='\n', end_chars='\r')
 
 while True:
     data = ss.read(100)
     print('recv: %s' % data)
-    buffer.parse(data)
+    _buffer.parse(data)
     while True:
-        command = buffer.pop()
+        command = _buffer.pop()
         if command is None:
             # logging.notice('Breaking command loop')
             break

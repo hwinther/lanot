@@ -1,5 +1,4 @@
 import prometheus
-import prometheus_esp8266
 import machine
 import gc
 

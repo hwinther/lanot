@@ -6,19 +6,18 @@ import machine
 from machine import SD
 from network import WLAN
 import os
-import time
 
 #
 # Set up WLAN
 #
-wlan = WLAN() # get current object, without changing the mode
+wlan = WLAN()  # get current object, without changing the mode
 
-ssid     = 'dgn'
+ssid = 'dgn'
 password = 'pingvin9195'
-ip       = '192.168.1.250'
+ip = '192.168.1.250'
 net_mask = '255.255.255.0'
-gateway  = '192.168.1.1'
-dns      = '192.168.1.5'
+gateway = '192.168.1.1'
+dns = '192.168.1.5'
 
 
 def init():
@@ -29,17 +28,18 @@ def init():
 def connect():
     wlan.connect(ssid, auth=(WLAN.WPA2, password), timeout=5000)
     while not wlan.isconnected():
-        machine.idle() # save power while waiting
+        machine.idle()  # save power while waiting
     cfg = wlan.ifconfig()
     print('WLAN connected ip {} gateway {}'.format(cfg[0], cfg[2]))
 
 
-def set():
+def setup():
     init()
     if not wlan.isconnected():
         connect()
 
-set()
+
+setup()
 
 #
 # Set up server

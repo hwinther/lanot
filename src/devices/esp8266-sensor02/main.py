@@ -1,12 +1,11 @@
 import sensor02
-import prometheus_servers
-import gc
-
+import servers.socketserver.udp
+import prometheus_gc as gc
 
 gc.collect()
 
 node = sensor02.Sensor02()
-udpserver = prometheus_servers.UdpSocketServer(node)
+udpserver = servers.socketserver.udp.UdpSocketServer(node)
 gc.collect()
 print(udpserver.uname())
 gc.collect()

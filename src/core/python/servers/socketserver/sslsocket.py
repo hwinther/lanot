@@ -11,7 +11,7 @@ else:
     from ssl import wrap_socket as ssl_wrap_socket
     from ssl import SSLEOFError as ssl_SSLEOFError
 
-__version__ = '0.1.2'
+__version__ = '0.1.2a'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -23,9 +23,9 @@ if not prometheus.is_micro:
 
 
 class SslSocket(object):
-    def __init__(self, family=socket.AF_INET, type=socket.SOCK_STREAM, proto=0, _sock=None):
+    def __init__(self, family=socket.AF_INET, _type=socket.SOCK_STREAM, proto=0, _sock=None):
         if _sock is None:
-            _sock = socket.socket(family, type, proto)
+            _sock = socket.socket(family, _type, proto)
         self._sock = _sock
         self.sslsock = None
         for method in _delegate_methods:

@@ -1,7 +1,10 @@
 import prometheus
 import prometheus_esp8266
-import prometheus_servers
-import prometheus_servers_ssl
+import servers.multiserver
+import servers.socketserver.tcp
+import servers.socketserver.udp
+import servers.socketserver.jsonrest
+from servers.socketserver.sslsocket import SslSocket
 import prometheus_logging as logging
 import machine
 # import pickle
@@ -28,19 +31,21 @@ class LocalTest(prometheus.Prometheus):
 if __name__ == '__main__':
     node = LocalTest()
 
-    multiserver = prometheus_servers.MultiServer()
+    multiserver = servers.multiserver.MultiServer()
 
-    udpserver = prometheus_servers.UdpSocketServer(node)
+    udpserver = servers.socketserver.udp.UdpSocketServer(node)
     multiserver.add(udpserver)
 
-    tcpserver = prometheus_servers.TcpSocketServer(node)
+    tcpserver = servers.socketserver.tcp.TcpSocketServer(node)
     multiserver.add(tcpserver)
 
-    jsonrestserver = prometheus_servers.JsonRestServer(node, loop_tick_delay=0.1)
+    jsonrestserver = servers.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
     multiserver.add(jsonrestserver, bind_port=8080)
 
-    jsonrestsslserver = prometheus_servers.JsonRestServer(node, loop_tick_delay=0.1,  # for cpython, limits cpu cycles
-                                                          socketwrapper=prometheus_servers_ssl.SslSocket)
+    # loop_tick_delay is for cpython, limits cpu cycles
+    jsonrestsslserver = servers.socketserver.jsonrest.JsonRestServer(node,
+                                                                     loop_tick_delay=0.1,
+                                                                     socketwrapper=SslSocket)
     multiserver.add(jsonrestsslserver, bind_port=4443)
 
     # s = pickle.dumps(node)

@@ -2,7 +2,7 @@ import sys
 import gc
 import os
 import time
-from prometheus_servers import Server, UdpSocketServer, TcpSocketServer
+import servers.socketserver.udp
 if sys.platform in ['esp8266', 'esp32', 'WiPy']:
     from urandom import randrange
 else:
@@ -113,7 +113,7 @@ def encrypt(pk, plaintext):
     key, n = pk
     # Convert each letter in the plaintext to numbers based on the character using a^b mod m
     # cipher = [(ord(char) ** key) % n for char in plaintext]
-    cipher = [pow(ord(char),key,n) for char in plaintext]
+    cipher = [pow(ord(char), key, n) for char in plaintext]
     # Return the array of bytes
     return cipher
 
@@ -229,16 +229,16 @@ def set_local_key_registry(d):
 
 def eratosthenes():
     # Yields the sequence of prime numbers via the Sieve of Eratosthenes.
-    D = {}  # map composite integers to primes witnessing their compositeness
+    d = {}  # map composite integers to primes witnessing their compositeness
     q = 2  # first integer to test for primality
     while 1:
-        if q not in D:
+        if q not in d:
             yield q  # not marked composite, must be prime
-            D[q * q] = [q]  # first multiple of q not already marked
+            d[q * q] = [q]  # first multiple of q not already marked
         else:
-            for p in D[q]:  # move each witness to its next multiple
-                D.setdefault(p + q, []).append(p)
-            del D[q]  # no longer need D[q], free memory
+            for p in d[q]:  # move each witness to its next multiple
+                d.setdefault(p + q, []).append(p)
+            del d[q]  # no longer need d[q], free memory
         q += 1
 
 
@@ -253,9 +253,9 @@ def test():
     print(decrypt(pub, encrypted_msg))
 
 
-class RsaUdpSocketServer(UdpSocketServer):
+class RsaUdpSocketServer(servers.socketserver.udp.UdpSocketServer):
     def __init__(self, instance, clientencrypt=False):
-        UdpSocketServer.__init__(self, instance)
+        servers.socketserver.udp.UdpSocketServer.__init__(self, instance)
         self.public_key, self.private_key = get_or_create_local_keys()
         self.clientencrypt = clientencrypt
         self.key_registry = get_local_key_registry()
@@ -294,16 +294,16 @@ class RsaUdpSocketServer(UdpSocketServer):
         if decrypted is not None:
             command = decrypted
 
-        UdpSocketServer.handle_data(self, command, source=source, **kwargs)
+        servers.socketserver.udp.UdpSocketServer.handle_data(self, command, source=source, **kwargs)
 
-    def reply(self, return_value, source=None, encrypt=True, **kwargs):
-        if encrypt:
+    def reply(self, return_value, source=None, _encrypt=True, **kwargs):
+        if _encrypt:
             if self.clientencrypt and source[0] in self.key_registry.keys():
                 return_value = encrypt_packet(return_value, self.private_key, self.key_registry[source[0]])
             else:
                 return_value = encrypt_packet(return_value, self.private_key)
 
-        UdpSocketServer.reply(self, return_value, source, **kwargs)
+        servers.socketserver.udp.UdpSocketServer.reply(self, return_value, source, **kwargs)
 
 
 def decrypt_packet(ciphertext, private_key, public_key=None):

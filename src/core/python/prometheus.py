@@ -9,7 +9,7 @@ __author__ = 'Hans Christian Winther-Sorensen'
 gc.collect()
 
 is_micro = sys.platform in ['esp8266', 'esp32', 'WiPy']
-# turn this on to debug command byte assigments
+# turn this on to debug command byte assignments
 data_debug = False
 
 
@@ -48,9 +48,11 @@ class Buffer(object):
 
         self.packetBuffer += packetdata
         rest = b''
-        # logging.notice('for segment in split on %s len=%d' % (self.splitChars, len(self.packetBuffer.split(self.splitChars))))
+        # logging.notice('for segment in split on %s len=%d' %
+        #  (self.splitChars, len(self.packetBuffer.split(self.splitChars))))
         for segment in self.packetBuffer.split(self.splitChars):
-            # logging.notice('segment[%s].find %s = %s' % (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
+            # logging.notice('segment[%s].find %s = %s' %
+            #  (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
             if segment == b'':
                 # the segment empty or only POLYNOMIAL, ignore it
                 pass
@@ -239,7 +241,8 @@ class Prometheus(object):
                     logical_path = value.instance.logical_path()
                     value.logical_path = logical_path
                 if data_debug:
-                    logging.notice('%s\t-> %s\t%s\t%s' % (command_key, value.method_name, value.logical_path, value.method_reference))
+                    logging.notice('%s\t-> %s\t%s\t%s' % (command_key, value.method_name, value.logical_path,
+                                                          value.method_reference))
 
         return commands
 
@@ -298,7 +301,6 @@ class Digital(Prometheus):
         """
         :type pin: machine.Pin
         :type inverted: bool
-        :type state: bool
         """
         Prometheus.__init__(self)
         self.pin = pin
@@ -316,7 +318,7 @@ class Adc(Prometheus):
     def __init__(self, pin):
         """
         TODO: Warning - pin in analog mode requires max 1.8v, use volt divider to ensure this
-        :type pin: int
+        # not always::type pin: int
         """
         Prometheus.__init__(self)
         self.pin = pin

@@ -4,7 +4,7 @@ import os
 import untplib
 import gc
 from tank import Tank
-from prometheus_servers import UdpSocketServer
+from servers.socketserver.udp import UdpSocketServer
 
 gc.collect()
 
@@ -76,6 +76,6 @@ def start_event_timer():
 # start_event_timer()
 # tank.start_socket_server()
 gc.collect()
-s =  UdpSocketServer(tank)
+s = UdpSocketServer(tank)
 gc.collect()
 s.start()

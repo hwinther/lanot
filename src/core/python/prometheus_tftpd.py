@@ -34,7 +34,7 @@ def tftpd():
         # print(repr(data))
         if data.find(b'\00\01\02\03') != -1:
             name, content = data.split(b'\00\01\02\03', 1)
-            print('name: %s len: %d' %(repr(name), len(content)))
+            print('name: %s len: %d' % (repr(name), len(content)))
             f = open(name, 'w')
             f.write(content)
             f.close()

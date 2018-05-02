@@ -4,7 +4,7 @@ import socket
 import machine
 import time
 import gc
-import prometheus_crypto
+# import prometheus_crypto
 
 gc.collect()
 
