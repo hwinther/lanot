@@ -31,29 +31,36 @@ class LocalEvents(prometheus_servers.Server):
         self.instance.ssd.show()
 
     def loop_tick(self, **kwargs):
-        if self.state is ST_STOPPED and self.instance.driving:
+        if self.state is ST_STOPPED and self.instance.driving is not 0:
                 self.state = ST_DRIVING
-                print('now driving')
+                # print('now driving: %s' + self.instance.driving)
 
-        if time.time() - self.timer >= 2:
+        diff = time.time() - self.instance.driving
+        # print(diff)
+        if self.state is ST_DRIVING and self.instance.driving != 0 and diff >= 2:
+            # print('over 2 sec since driving')
+            # if self.state is ST_DRIVING and self.instance.driving:
+            self.state = ST_STOPPED
+            print('full stop')
+            self.instance.full_stop()
+
+        if time.time() - self.timer >= 1:
             self.timer = time.time()
-            print('1s')
+            # print('1 sec event, diff=%d' % diff)
             assert isinstance(self.instance, rover01.Rover01)
-
-            if self.state is ST_DRIVING and self.instance.driving:
-                self.state = ST_STOPPED
-                print('full stop')
-                self.instance.full_stop()
 
             if self.state == ST_STOPPED:
                 st = 'stopped'
             else:
                 st = 'driving'
 
+            # ssd_timer = time.time()
             self.instance.ssd.fill(False)
-            self.instance.ssd.text('st: %s' % st, 0, 0)
-            self.instance.ssd.text('s: %s' % self.timer, 0, 10)
+            self.instance.ssd.text('v: %s' % self.version(), 0, 0)
+            self.instance.ssd.text('st: %s' % st, 0, 10)
+            self.instance.ssd.text('s: %s' % self.timer, 0, 20)
             self.instance.ssd.show()
+            # print(time.time() - ssd_timer)
 
 
 def td():
@@ -66,16 +73,15 @@ gc.collect()
 logging.debug('mem_free: %s' % gc.mem_free())
 
 udpserver = prometheus_servers.UdpSocketServer(node)
-multiserver.add(udpserver, bind_host='', bind_port=9190)
+multiserver.add(udpserver)
 gc.collect()
 #
 tcpserver = prometheus_servers.TcpSocketServer(node)
-multiserver.add(tcpserver, bind_host='', bind_port=9191)
+multiserver.add(tcpserver)
 gc.collect()
 
-jsonrestserver = prometheus_servers.JsonRestServer(node,
-                                                   loop_tick_delay=0.1)
-multiserver.add(jsonrestserver, bind_host='', bind_port=8080)
+jsonrestserver = prometheus_servers.JsonRestServer(node, loop_tick_delay=0.1)
+multiserver.add(jsonrestserver, bind_port=8080)
 gc.collect()
 
 # jsonrestsslserver = prometheus_servers.JsonRestServer(node,

@@ -7,7 +7,7 @@ import time
 import prometheus
 import prometheus_logging as logging
 
-__version__ = '0.1.5a'
+__version__ = '0.1.5b'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -180,7 +180,7 @@ class UdpSocketServer(SocketServer):
     def start(self, bind_host='', bind_port=9195, **kwargs):
         SocketServer.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
-    def pre_loop(self, bind_host, bind_port, **kwargs):
+    def pre_loop(self, bind_host='', bind_port=9195, **kwargs):
         SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
         try:
@@ -403,7 +403,7 @@ class JsonRestServer(SocketServer):
     def start(self, bind_host='', bind_port=8080, **kwargs):
         SocketServer.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
-    def pre_loop(self, bind_host, bind_port, **kwargs):
+    def pre_loop(self, bind_host='', bind_port=8080, **kwargs):
         SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
         try:
@@ -585,23 +585,23 @@ class WrappedServer(object):
 
 class MultiServer(object):
     def __init__(self):
-        self.wrappedservers = list()
+        self.wrapped_servers = list()
 
     def add(self, server, **kwargs):
-        self.wrappedservers.append(WrappedServer(server, kwargs))
+        self.wrapped_servers.append(WrappedServer(server, kwargs))
 
     def start(self):
-        for wrappedserver in self.wrappedservers:
-            wrappedserver.server.pre_loop(**wrappedserver.kwargs)
-            wrappedserver.server.loopActive = True
+        for wrapped_server in self.wrapped_servers:
+            wrapped_server.server.pre_loop(**wrapped_server.kwargs)
+            wrapped_server.server.loopActive = True
 
         loop_active = True
         while loop_active:
-            for wrappedserver in self.wrappedservers:
-                wrappedserver.server.loop_tick(**wrappedserver.kwargs)
-                if not wrappedserver.server.loopActive:
+            for wrapped_server in self.wrapped_servers:
+                wrapped_server.server.loop_tick(**wrapped_server.kwargs)
+                if not wrapped_server.server.loopActive:
                     loop_active = False
                     break
 
-        for wrappedserver in self.wrappedservers:
-            wrappedserver.server.post_loop(**wrappedserver.kwargs)
+        for wrapped_server in self.wrapped_servers:
+            wrapped_server.server.post_loop(**wrapped_server.kwargs)

@@ -3,7 +3,7 @@ import gc
 import sys
 import prometheus_logging as logging
 
-__version__ = '0.1.5a'
+__version__ = '0.1.5b'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -362,28 +362,28 @@ class RemoteTemplate(Prometheus):
         return None
 
     def die(self):
-        self.send('die')
+        self.send(b'die')
 
     def cap(self):
-        self.send('cap')
+        self.send(b'cap')
         data = self.recv(100)
         logging.notice('cap: %s' % repr(data))
         return data
 
     def uname(self):
-        self.send('uname')
+        self.send(b'uname')
         data = self.recv(100)
         logging.notice('uname: %s' % repr(data))
         return data
 
     def version(self):
-        self.send('version')
+        self.send(b'version')
         data = self.recv(100)
         logging.notice('version: %s' % repr(data))
         return data
 
     def sysinfo(self):
-        self.send('sysinfo')
+        self.send(b'sysinfo')
         data = self.recv(100)
         logging.notice('sysinfo: %s' % repr(data))
         return data
