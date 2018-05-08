@@ -1,16 +1,18 @@
-# generated at 2017-08-30 23:03:13
+# generated at 2018-05-08 23:40:45
 import prometheus
 import socket
 import machine
 import time
 import gc
+import prometheus.crypto
+import prometheus.misc
 
 gc.collect()
 
 
-class LightControl(prometheus.RemoteTemplate):
+class LightControl(prometheus.misc.RemoteTemplate):
     def __init__(self, channel, baudrate):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.uart = machine.UART(channel, baudrate=baudrate)
         self.buffer = prometheus.Buffer(split_chars=b'\n', end_chars=b'\r')
 

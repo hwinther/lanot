@@ -1,5 +1,5 @@
 import prometheus
-import prometheus_logging as logging
+import prometheus.logging as logging
 import socket
 import gc
 import sys
@@ -14,12 +14,13 @@ else:
 __version__ = '0.1.2a'
 __author__ = 'Hans Christian Winther-Sorensen'
 
-gc.collect()
 # All the method names that must be delegated to either the real socket
 # object or the _closedsocket object.
 _delegate_methods = ('recvfrom', 'sendto', 'bind', 'listen', 'settimeout', 'setsockopt')
 if not prometheus.is_micro:
     _delegate_methods = _delegate_methods + ('recv_into', 'recvfrom_into')
+
+gc.collect()
 
 
 class SslSocket(object):

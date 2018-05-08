@@ -12,12 +12,12 @@ import os
 #
 wlan = WLAN()  # get current object, without changing the mode
 
-ssid = 'dgn'
-password = 'pingvin9195'
-ip = '192.168.1.250'
+ssid = 'dgn.iot'
+password = 'umbFUTyJSvqhxNrQ'
+ip = '10.20.2.250'
 net_mask = '255.255.255.0'
-gateway = '192.168.1.1'
-dns = '192.168.1.5'
+gateway = '10.20.2.1'
+dns = '10.20.2.5'
 
 
 def init():

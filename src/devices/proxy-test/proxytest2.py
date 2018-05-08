@@ -1,11 +1,11 @@
 import random
 import prometheus
-import servers.multiserver
-import servers.socketserver.udp
-import servers.socketserver.tcp
-import servers.socketserver.jsonrest
-from servers.socketserver.sslsocket import SslSocket
-import prometheus_logging as logging
+import prometheus.server.multiserver
+import prometheus.server.socketserver.udp
+import prometheus.server.socketserver.tcp
+import prometheus.server.socketserver.jsonrest
+from prometheus.server.socketserver.sslsocket import SslSocket
+import prometheus.logging as logging
 # sys.path.append('P:\lanot\build\clients')
 import deploy.clients.sensor01client as sensor01client
 import deploy.clients.sensor02client as sensor02client
@@ -53,20 +53,20 @@ if __name__ == '__main__':
     # proxytest2.nodetest.integrated_led.on()
     # proxytest2.tankclient.lightControl.all_off()
 
-    multiserver = servers.multiserver.MultiServer()
+    multiserver = prometheus.server.multiserver.MultiServer()
 
-    udpserver = servers.socketserver.udp.UdpSocketServer(node)
+    udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
     multiserver.add(udpserver)
 
-    tcpserver = servers.socketserver.tcp.TcpSocketServer(node)
+    tcpserver = prometheus.server.socketserver.tcp.TcpSocketServer(node)
     multiserver.add(tcpserver)
 
-    jsonrestserver = servers.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
+    jsonrestserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
     multiserver.add(jsonrestserver, bind_port=8080)
 
     # for cpython, limits cpu cycles
-    jsonrestsslserver = servers.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1,
-                                                                     socketwrapper=SslSocket)
+    jsonrestsslserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1,
+                                                                                     socketwrapper=SslSocket)
     multiserver.add(jsonrestsslserver, bind_port=4443)
 
     logging.boot(udpserver)

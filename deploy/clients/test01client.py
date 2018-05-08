@@ -1,39 +1,16 @@
-# generated at 2017-12-04 20:53:52
+# generated at 2018-05-08 23:40:46
 import prometheus
 import socket
 import machine
 import time
 import gc
-import prometheus_crypto
+import prometheus.crypto
+import prometheus.misc
 
 gc.collect()
 
 
 # region Test01UdpClient
-class Test01UdpClientWindow01digital(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('Test01UdpClientWindow01digital', 'w1v', 'OUT')
-    def value(self):
-        self.send(b'w1v')
-        return self.recv(10)
-
-
-class Test01UdpClientWindow02digital(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('Test01UdpClientWindow02digital', 'w2v', 'OUT')
-    def value(self):
-        self.send(b'w2v')
-        return self.recv(10)
-
-
 class Test01UdpClientIntegratedLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -74,9 +51,81 @@ class Test01UdpClientLaser(prometheus.Prometheus):
         self.send(b'l1')
 
 
-class Test01UdpClient(prometheus.RemoteTemplate):
+class Test01UdpClientJoysticky(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01UdpClientJoysticky', 'yr', 'OUT')
+    def read(self):
+        self.send(b'yr')
+        return self.recv(10)
+
+
+class Test01UdpClientJoystickx(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01UdpClientJoystickx', 'xr', 'OUT')
+    def read(self):
+        self.send(b'xr')
+        return self.recv(10)
+
+
+class Test01UdpClientSwitch(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01UdpClientSwitch', 'sv', 'OUT')
+    def value(self):
+        self.send(b'sv')
+        return self.recv(10)
+
+
+class Test01UdpClientJoystickswitch(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01UdpClientJoystickswitch', 'jv', 'OUT')
+    def value(self):
+        self.send(b'jv')
+        return self.recv(10)
+
+
+class Test01UdpClientWindow01digital(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01UdpClientWindow01digital', 'w1v', 'OUT')
+    def value(self):
+        self.send(b'w1v')
+        return self.recv(10)
+
+
+class Test01UdpClientWindow02digital(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01UdpClientWindow02digital', 'w2v', 'OUT')
+    def value(self):
+        self.send(b'w2v')
+        return self.recv(10)
+
+
+class Test01UdpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
         print('listening on %s:%d' % (bind_host, bind_port))
@@ -88,8 +137,16 @@ class Test01UdpClient(prometheus.RemoteTemplate):
         
         self.integrated_led = Test01UdpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
+        self.joystickswitch = Test01UdpClientJoystickswitch(self.send, self.recv)
+        self.register(joystickswitch=self.joystickswitch)
+        self.joystickx = Test01UdpClientJoystickx(self.send, self.recv)
+        self.register(joystickx=self.joystickx)
+        self.joysticky = Test01UdpClientJoysticky(self.send, self.recv)
+        self.register(joysticky=self.joysticky)
         self.laser = Test01UdpClientLaser(self.send, self.recv)
         self.register(laser=self.laser)
+        self.switch = Test01UdpClientSwitch(self.send, self.recv)
+        self.register(switch=self.switch)
         self.window01digital = Test01UdpClientWindow01digital(self.send, self.recv)
         self.register(window01digital=self.window01digital)
         self.window02digital = Test01UdpClientWindow02digital(self.send, self.recv)
@@ -101,7 +158,7 @@ class Test01UdpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv_once(self, buffersize=10):
@@ -134,30 +191,6 @@ class Test01UdpClient(prometheus.RemoteTemplate):
 
 
 # region Test01TcpClient
-class Test01TcpClientWindow01digital(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('Test01TcpClientWindow01digital', 'w1v', 'OUT')
-    def value(self):
-        self.send(b'w1v')
-        return self.recv(10)
-
-
-class Test01TcpClientWindow02digital(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('Test01TcpClientWindow02digital', 'w2v', 'OUT')
-    def value(self):
-        self.send(b'w2v')
-        return self.recv(10)
-
-
 class Test01TcpClientIntegratedLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -198,9 +231,81 @@ class Test01TcpClientLaser(prometheus.Prometheus):
         self.send(b'l1')
 
 
-class Test01TcpClient(prometheus.RemoteTemplate):
+class Test01TcpClientJoysticky(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01TcpClientJoysticky', 'yr', 'OUT')
+    def read(self):
+        self.send(b'yr')
+        return self.recv(10)
+
+
+class Test01TcpClientJoystickx(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01TcpClientJoystickx', 'xr', 'OUT')
+    def read(self):
+        self.send(b'xr')
+        return self.recv(10)
+
+
+class Test01TcpClientSwitch(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01TcpClientSwitch', 'sv', 'OUT')
+    def value(self):
+        self.send(b'sv')
+        return self.recv(10)
+
+
+class Test01TcpClientJoystickswitch(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01TcpClientJoystickswitch', 'jv', 'OUT')
+    def value(self):
+        self.send(b'jv')
+        return self.recv(10)
+
+
+class Test01TcpClientWindow01digital(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01TcpClientWindow01digital', 'w1v', 'OUT')
+    def value(self):
+        self.send(b'w1v')
+        return self.recv(10)
+
+
+class Test01TcpClientWindow02digital(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Test01TcpClientWindow02digital', 'w2v', 'OUT')
+    def value(self):
+        self.send(b'w2v')
+        return self.recv(10)
+
+
+class Test01TcpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host=None, bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = None  # type: socket.socket
         self.bind_host = bind_host
         self.bind_port = bind_port
@@ -211,8 +316,16 @@ class Test01TcpClient(prometheus.RemoteTemplate):
         
         self.integrated_led = Test01TcpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
+        self.joystickswitch = Test01TcpClientJoystickswitch(self.send, self.recv)
+        self.register(joystickswitch=self.joystickswitch)
+        self.joystickx = Test01TcpClientJoystickx(self.send, self.recv)
+        self.register(joystickx=self.joystickx)
+        self.joysticky = Test01TcpClientJoysticky(self.send, self.recv)
+        self.register(joysticky=self.joysticky)
         self.laser = Test01TcpClientLaser(self.send, self.recv)
         self.register(laser=self.laser)
+        self.switch = Test01TcpClientSwitch(self.send, self.recv)
+        self.register(switch=self.switch)
         self.window01digital = Test01TcpClientWindow01digital(self.send, self.recv)
         self.register(window01digital=self.window01digital)
         self.window02digital = Test01TcpClientWindow02digital(self.send, self.recv)
@@ -241,7 +354,7 @@ class Test01TcpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv(self, buffersize=10):

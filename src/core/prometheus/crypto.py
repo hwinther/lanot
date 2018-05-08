@@ -2,7 +2,7 @@ import sys
 import gc
 import os
 import time
-import servers.socketserver.udp
+import prometheus.server.socketserver.udp
 if sys.platform in ['esp8266', 'esp32', 'WiPy']:
     from urandom import randrange
 else:
@@ -253,9 +253,9 @@ def test():
     print(decrypt(pub, encrypted_msg))
 
 
-class RsaUdpSocketServer(servers.socketserver.udp.UdpSocketServer):
+class RsaUdpSocketServer(prometheus.server.socketserver.udp.UdpSocketServer):
     def __init__(self, instance, clientencrypt=False):
-        servers.socketserver.udp.UdpSocketServer.__init__(self, instance)
+        prometheus.server.socketserver.udp.UdpSocketServer.__init__(self, instance)
         self.public_key, self.private_key = get_or_create_local_keys()
         self.clientencrypt = clientencrypt
         self.key_registry = get_local_key_registry()
@@ -294,7 +294,7 @@ class RsaUdpSocketServer(servers.socketserver.udp.UdpSocketServer):
         if decrypted is not None:
             command = decrypted
 
-        servers.socketserver.udp.UdpSocketServer.handle_data(self, command, source=source, **kwargs)
+            prometheus.server.socketserver.udp.UdpSocketServer.handle_data(self, command, source=source, **kwargs)
 
     def reply(self, return_value, source=None, _encrypt=True, **kwargs):
         if _encrypt:
@@ -303,7 +303,7 @@ class RsaUdpSocketServer(servers.socketserver.udp.UdpSocketServer):
             else:
                 return_value = encrypt_packet(return_value, self.private_key)
 
-        servers.socketserver.udp.UdpSocketServer.reply(self, return_value, source, **kwargs)
+                prometheus.server.socketserver.udp.UdpSocketServer.reply(self, return_value, source, **kwargs)
 
 
 def decrypt_packet(ciphertext, private_key, public_key=None):

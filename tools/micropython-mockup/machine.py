@@ -115,6 +115,12 @@ class ADC(object):
     def read(self):
         return 0
 
+    def width(self, w):
+        pass
+
+    def atten(self, w):
+        pass
+
 
 class I2C(object):
     def __init__(self, freq, scl, sda):

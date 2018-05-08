@@ -1,10 +1,11 @@
-# generated at 2017-12-04 20:53:52
+# generated at 2018-05-08 23:40:46
 import prometheus
 import socket
 import machine
 import time
 import gc
-import prometheus_crypto
+import prometheus.crypto
+import prometheus.misc
 
 gc.collect()
 
@@ -142,9 +143,9 @@ class Test02UdpClientGreenLed(prometheus.Prometheus):
         self.send(b'g0')
 
 
-class Test02UdpClient(prometheus.RemoteTemplate):
+class Test02UdpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
         print('listening on %s:%d' % (bind_host, bind_port))
@@ -175,7 +176,7 @@ class Test02UdpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv_once(self, buffersize=10):
@@ -340,9 +341,9 @@ class Test02TcpClientGreenLed(prometheus.Prometheus):
         self.send(b'g0')
 
 
-class Test02TcpClient(prometheus.RemoteTemplate):
+class Test02TcpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host=None, bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = None  # type: socket.socket
         self.bind_host = bind_host
         self.bind_port = bind_port
@@ -389,7 +390,7 @@ class Test02TcpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv(self, buffersize=10):

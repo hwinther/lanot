@@ -1,10 +1,11 @@
-# generated at 2017-12-04 20:53:51
+# generated at 2018-05-08 23:40:45
 import prometheus
 import socket
 import machine
 import time
 import gc
-import prometheus_crypto
+import prometheus.crypto
+import prometheus.misc
 
 gc.collect()
 
@@ -80,9 +81,9 @@ class Sensor02UdpClientDht11(prometheus.Prometheus):
         return self.recv(10)
 
 
-class Sensor02UdpClient(prometheus.RemoteTemplate):
+class Sensor02UdpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
         print('listening on %s:%d' % (bind_host, bind_port))
@@ -107,7 +108,7 @@ class Sensor02UdpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv_once(self, buffersize=10):

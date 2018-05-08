@@ -1,34 +1,29 @@
 import test02
-import servers.multiserver
-import servers.socketserver.udp
-import servers.socketserver.tcp
-import servers.socketserver.jsonrest
-import prometheus_tftpd
-import prometheus_logging as logging
-import prometheus_gc as gc
-
+import prometheus.pgc as gc
+import prometheus.server.multiserver
+import prometheus.server.socketserver.udp
+import prometheus.server.socketserver.tcp
+import prometheus.server.socketserver.jsonrest
+import prometheus.tftpd
+import prometheus.logging as logging
 
 gc.collect()
-
-
-def td():
-    prometheus_tftpd.tftpd()
 
 
 node = test02.Test02()
 gc.collect()
 logging.debug(gc.mem_free())
-multiserver = servers.multiserver.MultiServer()
+multiserver = prometheus.server.multiserver.MultiServer()
 
-udpserver = servers.socketserver.udp.UdpSocketServer(node)
+udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
 multiserver.add(udpserver)
 gc.collect()
 
-tcpserver = servers.socketserver.tcp.TcpSocketServer(node)
+tcpserver = prometheus.server.socketserver.tcp.TcpSocketServer(node)
 multiserver.add(tcpserver)
 gc.collect()
 
-jsonrestserver = servers.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
+jsonrestserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
 multiserver.add(jsonrestserver, bind_port=8080)
 gc.collect()
 

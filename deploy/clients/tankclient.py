@@ -1,86 +1,26 @@
-# generated at 2017-09-10 00:20:32
+# generated at 2018-05-08 23:40:45
 import prometheus
 import socket
 import machine
 import time
 import gc
-import prometheus_crypto
+import prometheus.crypto
+import prometheus.misc
 
 gc.collect()
 
 
-class TankUdpClientLightControl(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('TankUdpClientLightControl', '0', 'OUT')
-    def all_off(self):
-        self.send(b'0')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankUdpClientLightControl', '5', 'OUT')
-    def all_on(self):
-        self.send(b'5')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankUdpClientLightControl', '?', 'OUT')
-    def capability(self):
-        self.send(b'?')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankUdpClientLightControl', '4', 'OUT')
-    def front_on(self):
-        self.send(b'4')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankUdpClientLightControl', '2', 'OUT')
-    def left_on(self):
-        self.send(b'2')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankUdpClientLightControl', '1', 'OUT')
-    def main_on(self):
-        self.send(b'1')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankUdpClientLightControl', '3', 'OUT')
-    def right_on(self):
-        self.send(b'3')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankUdpClientLightControl', 'V', 'OUT')
-    def version(self):
-        self.send(b'V')
-        return self.recv(10)
-
-
-class TankUdpClientBlueLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('TankUdpClientBlueLed', 'b0')
-    def off(self):
-        self.send(b'b0')
-
-    @prometheus.Registry.register('TankUdpClientBlueLed', 'b1')
-    def on(self):
-        self.send(b'b1')
-
-    @prometheus.Registry.register('TankUdpClientBlueLed', 'bS', 'OUT')
-    def state(self):
-        self.send(b'bS')
-        return self.recv(10)
-
-
+# region TankUdpClient
 class TankUdpClientRedLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
+
+    @prometheus.Registry.register('TankUdpClientRedLed', 'rv', 'OUT')
+    def value(self):
+        self.send(b'rv')
+        return self.recv(10)
 
     @prometheus.Registry.register('TankUdpClientRedLed', 'r0')
     def off(self):
@@ -90,15 +30,77 @@ class TankUdpClientRedLed(prometheus.Prometheus):
     def on(self):
         self.send(b'r1')
 
-    @prometheus.Registry.register('TankUdpClientRedLed', 'rS', 'OUT')
-    def state(self):
-        self.send(b'rS')
+
+class TankUdpClientBlueLed(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('TankUdpClientBlueLed', 'bv', 'OUT')
+    def value(self):
+        self.send(b'bv')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankUdpClientBlueLed', 'b0')
+    def off(self):
+        self.send(b'b0')
+
+    @prometheus.Registry.register('TankUdpClientBlueLed', 'b1')
+    def on(self):
+        self.send(b'b1')
+
+
+class TankUdpClientLightControl(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('TankUdpClientLightControl', '1', 'OUT')
+    def main_on(self):
+        self.send(b'1')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankUdpClientLightControl', '0', 'OUT')
+    def all_off(self):
+        self.send(b'0')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankUdpClientLightControl', '3', 'OUT')
+    def right_on(self):
+        self.send(b'3')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankUdpClientLightControl', '2', 'OUT')
+    def left_on(self):
+        self.send(b'2')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankUdpClientLightControl', '5', 'OUT')
+    def all_on(self):
+        self.send(b'5')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankUdpClientLightControl', '4', 'OUT')
+    def front_on(self):
+        self.send(b'4')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankUdpClientLightControl', 'V', 'OUT')
+    def version(self):
+        self.send(b'V')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankUdpClientLightControl', '?', 'OUT')
+    def capability(self):
+        self.send(b'?')
         return self.recv(10)
 
 
-class TankUdpClient(prometheus.RemoteTemplate):
+class TankUdpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
         print('listening on %s:%d' % (bind_host, bind_port))
@@ -121,7 +123,7 @@ class TankUdpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv_once(self, buffersize=10):
@@ -149,13 +151,17 @@ class TankUdpClient(prometheus.RemoteTemplate):
                 return data
         return None
 
+    @prometheus.Registry.register('TankUdpClient', 'A')
+    def turn_left_fast(self):
+        self.send(b'A')
+
+    @prometheus.Registry.register('TankUdpClient', 'a')
+    def turn_left_slow(self):
+        self.send(b'a')
+
     @prometheus.Registry.register('TankUdpClient', 'b')
     def blink_lights(self):
         self.send(b'b')
-
-    @prometheus.Registry.register('TankUdpClient', 'S')
-    def fast_backward(self):
-        self.send(b'S')
 
     @prometheus.Registry.register('TankUdpClient', 'W')
     def fast_forward(self):
@@ -165,6 +171,14 @@ class TankUdpClient(prometheus.RemoteTemplate):
     def full_stop(self):
         self.send(b'g')
 
+    @prometheus.Registry.register('TankUdpClient', 'S')
+    def fast_backward(self):
+        self.send(b'S')
+
+    @prometheus.Registry.register('TankUdpClient', 'd')
+    def turn_right_slow(self):
+        self.send(b'd')
+
     @prometheus.Registry.register('TankUdpClient', 's')
     def slow_backward(self):
         self.send(b's')
@@ -173,95 +187,24 @@ class TankUdpClient(prometheus.RemoteTemplate):
     def slow_forward(self):
         self.send(b'w')
 
-    @prometheus.Registry.register('TankUdpClient', 'A')
-    def turn_left_fast(self):
-        self.send(b'A')
-
-    @prometheus.Registry.register('TankUdpClient', 'a')
-    def turn_left_slow(self):
-        self.send(b'a')
-
     @prometheus.Registry.register('TankUdpClient', 'D')
     def turn_right_fast(self):
         self.send(b'D')
 
-    @prometheus.Registry.register('TankUdpClient', 'd')
-    def turn_right_slow(self):
-        self.send(b'd')
+# endregion
 
 
-class TankTcpClientLightControl(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('TankTcpClientLightControl', '0', 'OUT')
-    def all_off(self):
-        self.send(b'0')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankTcpClientLightControl', '5', 'OUT')
-    def all_on(self):
-        self.send(b'5')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankTcpClientLightControl', '?', 'OUT')
-    def capability(self):
-        self.send(b'?')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankTcpClientLightControl', '4', 'OUT')
-    def front_on(self):
-        self.send(b'4')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankTcpClientLightControl', '2', 'OUT')
-    def left_on(self):
-        self.send(b'2')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankTcpClientLightControl', '1', 'OUT')
-    def main_on(self):
-        self.send(b'1')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankTcpClientLightControl', '3', 'OUT')
-    def right_on(self):
-        self.send(b'3')
-        return self.recv(10)
-
-    @prometheus.Registry.register('TankTcpClientLightControl', 'V', 'OUT')
-    def version(self):
-        self.send(b'V')
-        return self.recv(10)
-
-
-class TankTcpClientBlueLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('TankTcpClientBlueLed', 'b0')
-    def off(self):
-        self.send(b'b0')
-
-    @prometheus.Registry.register('TankTcpClientBlueLed', 'b1')
-    def on(self):
-        self.send(b'b1')
-
-    @prometheus.Registry.register('TankTcpClientBlueLed', 'bS', 'OUT')
-    def state(self):
-        self.send(b'bS')
-        return self.recv(10)
-
-
+# region TankTcpClient
 class TankTcpClientRedLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
+
+    @prometheus.Registry.register('TankTcpClientRedLed', 'rv', 'OUT')
+    def value(self):
+        self.send(b'rv')
+        return self.recv(10)
 
     @prometheus.Registry.register('TankTcpClientRedLed', 'r0')
     def off(self):
@@ -271,15 +214,77 @@ class TankTcpClientRedLed(prometheus.Prometheus):
     def on(self):
         self.send(b'r1')
 
-    @prometheus.Registry.register('TankTcpClientRedLed', 'rS', 'OUT')
-    def state(self):
-        self.send(b'rS')
+
+class TankTcpClientBlueLed(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('TankTcpClientBlueLed', 'bv', 'OUT')
+    def value(self):
+        self.send(b'bv')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankTcpClientBlueLed', 'b0')
+    def off(self):
+        self.send(b'b0')
+
+    @prometheus.Registry.register('TankTcpClientBlueLed', 'b1')
+    def on(self):
+        self.send(b'b1')
+
+
+class TankTcpClientLightControl(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('TankTcpClientLightControl', '1', 'OUT')
+    def main_on(self):
+        self.send(b'1')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankTcpClientLightControl', '0', 'OUT')
+    def all_off(self):
+        self.send(b'0')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankTcpClientLightControl', '3', 'OUT')
+    def right_on(self):
+        self.send(b'3')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankTcpClientLightControl', '2', 'OUT')
+    def left_on(self):
+        self.send(b'2')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankTcpClientLightControl', '5', 'OUT')
+    def all_on(self):
+        self.send(b'5')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankTcpClientLightControl', '4', 'OUT')
+    def front_on(self):
+        self.send(b'4')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankTcpClientLightControl', 'V', 'OUT')
+    def version(self):
+        self.send(b'V')
+        return self.recv(10)
+
+    @prometheus.Registry.register('TankTcpClientLightControl', '?', 'OUT')
+    def capability(self):
+        self.send(b'?')
         return self.recv(10)
 
 
-class TankTcpClient(prometheus.RemoteTemplate):
+class TankTcpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host=None, bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = None  # type: socket.socket
         self.bind_host = bind_host
         self.bind_port = bind_port
@@ -318,7 +323,7 @@ class TankTcpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv(self, buffersize=10):
@@ -330,13 +335,17 @@ class TankTcpClient(prometheus.RemoteTemplate):
         self.buffers[addr].parse(data)
         return self.buffers[addr].pop()
 
+    @prometheus.Registry.register('TankTcpClient', 'A')
+    def turn_left_fast(self):
+        self.send(b'A')
+
+    @prometheus.Registry.register('TankTcpClient', 'a')
+    def turn_left_slow(self):
+        self.send(b'a')
+
     @prometheus.Registry.register('TankTcpClient', 'b')
     def blink_lights(self):
         self.send(b'b')
-
-    @prometheus.Registry.register('TankTcpClient', 'S')
-    def fast_backward(self):
-        self.send(b'S')
 
     @prometheus.Registry.register('TankTcpClient', 'W')
     def fast_forward(self):
@@ -346,6 +355,14 @@ class TankTcpClient(prometheus.RemoteTemplate):
     def full_stop(self):
         self.send(b'g')
 
+    @prometheus.Registry.register('TankTcpClient', 'S')
+    def fast_backward(self):
+        self.send(b'S')
+
+    @prometheus.Registry.register('TankTcpClient', 'd')
+    def turn_right_slow(self):
+        self.send(b'd')
+
     @prometheus.Registry.register('TankTcpClient', 's')
     def slow_backward(self):
         self.send(b's')
@@ -354,18 +371,8 @@ class TankTcpClient(prometheus.RemoteTemplate):
     def slow_forward(self):
         self.send(b'w')
 
-    @prometheus.Registry.register('TankTcpClient', 'A')
-    def turn_left_fast(self):
-        self.send(b'A')
-
-    @prometheus.Registry.register('TankTcpClient', 'a')
-    def turn_left_slow(self):
-        self.send(b'a')
-
     @prometheus.Registry.register('TankTcpClient', 'D')
     def turn_right_fast(self):
         self.send(b'D')
 
-    @prometheus.Registry.register('TankTcpClient', 'd')
-    def turn_right_slow(self):
-        self.send(b'd')
+# endregion

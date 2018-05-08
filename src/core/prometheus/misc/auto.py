@@ -7,15 +7,16 @@ import socket
 import datetime
 import time
 import prometheus
-import prometheus_crypto
+import prometheus.crypto
+import prometheus.misc
 
 # TODO: move these template classes to another python file? perhaps one for each via python modules
-# TODO: none of the inheritors of prometheus.RemoteTemplate call super outside of init
+# TODO: none of the inheritors of prometheus.misc.RemoteTemplate call super outside of init
 
 
-class SerialTemplate(prometheus.RemoteTemplate):
+class SerialTemplate(prometheus.misc.RemoteTemplate):
     def __init__(self, channel, baudrate):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.uart = machine.UART(channel, baudrate=baudrate)
         self.buffer = prometheus.Buffer(split_chars=b'\n', end_chars=b'\r')
         # POST_INIT
@@ -51,9 +52,9 @@ class SerialTemplate(prometheus.RemoteTemplate):
         return self.buffer.pop()
 
 
-class UdpTemplate(prometheus.RemoteTemplate):
+class UdpTemplate(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
         print('listening on %s:%d' % (bind_host, bind_port))
@@ -70,7 +71,8 @@ class UdpTemplate(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
+            # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
             return None, None
 
     def recv_once(self, buffersize=10):
@@ -113,9 +115,9 @@ class UdpTemplate(prometheus.RemoteTemplate):
         return self.recv_timeout(10, 0.5)
 
 
-class TcpTemplate(prometheus.RemoteTemplate):
+class TcpTemplate(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host=None, bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = None  # type: socket.socket
         self.bind_host = bind_host
         self.bind_port = bind_port
@@ -148,7 +150,8 @@ class TcpTemplate(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
+            # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
             return None, None
 
     def recv(self, buffersize=10):
@@ -174,9 +177,9 @@ class TcpTemplate(prometheus.RemoteTemplate):
         return self.recv(10)
 
 
-class RsaUdpTemplate(prometheus.RemoteTemplate):
+class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195, clientencrypt=False):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
         print('listening on %s:%d' % (bind_host, bind_port))
@@ -193,7 +196,7 @@ class RsaUdpTemplate(prometheus.RemoteTemplate):
         # POST_INIT
 
     def negotiate(self, revalidate=False):
-        d = prometheus_crypto.get_local_key_registry()
+        d = prometheus.crypto.get_local_key_registry()
         if self.remote_addr[0] in d.keys() and revalidate is False:
             # got key already
             print('found cached pubkey for %s' % self.remote_addr[0])
@@ -220,12 +223,12 @@ class RsaUdpTemplate(prometheus.RemoteTemplate):
                     update = False
             if update:
                 d[self.remote_addr[0]] = self.remote_key
-                prometheus_crypto.set_local_key_registry(d)
+                prometheus.crypto.set_local_key_registry(d)
 
         if self.clientencrypt:
             if self.private_key is None:
                 print('generating new keys')
-                self.public_key, self.private_key = prometheus_crypto.get_or_create_local_keys()
+                self.public_key, self.private_key = prometheus.crypto.get_or_create_local_keys()
 
             # send version command to get pubkey request in return?
             print('sending version')
@@ -245,9 +248,9 @@ class RsaUdpTemplate(prometheus.RemoteTemplate):
     def send_crypted(self, data):
         print('send_crypted: cleartext is %d bytes' % len(data))
         if self.clientencrypt:
-            data = prometheus_crypto.encrypt_packet(data, self.remote_key, self.private_key)
+            data = prometheus.crypto.encrypt_packet(data, self.remote_key, self.private_key)
         else:
-            data = prometheus_crypto.encrypt_packet(data, self.remote_key)
+            data = prometheus.crypto.encrypt_packet(data, self.remote_key)
         self.send_raw(data)
 
     def send(self, data):
@@ -258,7 +261,8 @@ class RsaUdpTemplate(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
+            # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
             return None, None
 
     def recv_once(self, buffersize=250):
@@ -274,9 +278,9 @@ class RsaUdpTemplate(prometheus.RemoteTemplate):
         data = self.recv_timeout(buffersize, 0.5)
         if self.negotiated:
             if self.clientencrypt:
-                data = prometheus_crypto.decrypt_packet(data, self.remote_key, self.private_key)
+                data = prometheus.crypto.decrypt_packet(data, self.remote_key, self.private_key)
             else:
-                data = prometheus_crypto.decrypt_packet(data, self.remote_key)
+                data = prometheus.crypto.decrypt_packet(data, self.remote_key)
         return data
 
     def recv_timeout(self, buffersize, timeout):
@@ -543,7 +547,7 @@ def parse_folder(path):
 
 
 def folder_import():
-    path = os.path.join('..', '..', 'devices')
+    path = os.path.join('..', '..', '..', 'devices')
     all_code = list()
     for folder in os.listdir(path):
         folder_path = os.path.join(path, folder)
@@ -553,13 +557,13 @@ def folder_import():
 
     item = all_code[0]
     template = item.generate_template('SerialTemplate')
-    output_folder = os.path.join('..', '..', '..', 'deploy', 'clients')
+    output_folder = os.path.join('..', '..', '..', '..', 'deploy', 'clients')
     outfile = os.path.join(output_folder, item.class_name + '.py')
     # print(template)
     print('writing to %s' % outfile)
     open(outfile, 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +
                              'import prometheus\nimport socket\nimport machine\nimport time\nimport gc\n' +
-                             'import prometheus_crypto\n' +
+                             'import prometheus.crypto\nimport prometheus.misc\n' +
                              '\ngc.collect()\n\n\n'
                              + template)
     # '\n\n' + ''.join(inspect.getsourcelines(prometheus.Prometheus)[0])
@@ -593,13 +597,14 @@ def generate_template_classes(template_classes, instance, name, parent=None, pre
     # should only contain inheritors of prometheus
     for key in instance.attributes.keys():
         prometheus_attribute = instance.attributes[key]  # type: prometheus.PrometheusAttribute
-        generate_template_classes(template_classes, prometheus_attribute.instance, key, prometheus_template, prefix=prometheus_attribute.prefix)
+        generate_template_classes(template_classes, prometheus_attribute.instance, key, prometheus_template,
+                                  prefix=prometheus_attribute.prefix)
 
 
 def generate_python_template(source_class, template_class, generated_class_name, subclasses=True):
     """
     :type source_class: Type<prometheus.Prometheus>
-    :type template_class: Type<prometheus.RemoteTemplate>
+    :type template_class: Type<prometheus.misc.RemoteTemplate>
     :type generated_class_name: str
     :type subclasses: bool
     """
@@ -609,7 +614,8 @@ def generate_python_template(source_class, template_class, generated_class_name,
     # template_class = getattr(sys.modules[__name__], template_class_name)
 
     template_classes = list()
-    # this will only work for a Prometheus inheritor, but it should be kept separate from it in order to separate code templating/build from dist
+    # this will only work for a Prometheus inheritor, but it should be kept separate
+    #  from it in order to separate code templating/build from dist
     generate_template_classes(template_classes, instance, 'self')
 
     # remap_counter = prometheus.RemapCounter(65)
@@ -622,15 +628,19 @@ def generate_python_template(source_class, template_class, generated_class_name,
 
         # print(prometheus_template.name, prometheus_template.instance)
         if prometheus_template.name == 'self':
-            mainclass_template = prometheus_template.generate(template_class, generated_class_name, generated_class_name)
+            mainclass_template = prometheus_template.generate(template_class,
+                                                              generated_class_name,
+                                                              generated_class_name)
         else:
             # data_value_prefix = chr(remap_counter.next())
             # print('prefix=%s for %s' % (data_value_prefix, prometheus_template.name))
-            supportclass_template = prometheus_template.generate(prometheus.InputOutputProxy, generated_class_name,
+            supportclass_template = prometheus_template.generate(prometheus.misc.InputOutputProxy,
+                                                                 generated_class_name,
                                                                  generate_class_name(prometheus_template.name),
                                                                  data_value_prefix=None)
             supportclass_template = supportclass_template.replace('(Prometheus):', '(prometheus.Prometheus):')
-            supportclass_template = supportclass_template.replace('Prometheus.__init__(self)', 'prometheus.Prometheus.__init__(self)')
+            supportclass_template = supportclass_template.replace('Prometheus.__init__(self)',
+                                                                  'prometheus.Prometheus.__init__(self)')
             supportclass_template = supportclass_template.replace('@Registry.register', '@prometheus.Registry.register')
             supportclass_templates.append(supportclass_template)
 
@@ -647,7 +657,7 @@ def build_client(cls, output_filename, client_template_instances):
     """
     # TODO: dynamically determine imports necesary for this specific module?
     imports = 'import prometheus\nimport socket\nimport machine\nimport time\nimport gc\n' +\
-              'import prometheus_crypto\n' +\
+              'import prometheus.crypto\nimport prometheus.misc\n' +\
               '\ngc.collect()\n\n\n'
     code = list()
     subclasses = True  # only for the first instance
@@ -661,28 +671,28 @@ def build_client(cls, output_filename, client_template_instances):
                                              generated_class_name=generated_class_name, subclasses=subclasses) +
                     '\n# endregion\n\n')
         subclasses = False
-    output_path = os.path.join('..', '..', '..', 'deploy', 'clients', output_filename)
+    output_path = os.path.join('..', '..', '..', '..', 'deploy', 'clients', output_filename)
     print('Writing to %s, classes: %s' % (output_path, ', '.join(classes)))
     open(output_path, 'w').write(
-        '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S')+
+        '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +
         imports + '\n'.join(code)[:-1])
 
 
-# folder_import()
-"""
+# to "make" lightcontrol and other things from basic sources
+folder_import()
+
 from tank import Tank
 build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
 from tankproxy import TankProxy
 build_client(TankProxy, 'tankproxyclient.py', [UdpTemplate, TcpTemplate])
-from proxytest import ProxyTest
-build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
+# from proxytest import ProxyTest
+# build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
 from chaintest import A, B, C
 build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
 build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
 build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
-"""
 
-"""
+
 from sensor01 import Sensor01
 build_client(Sensor01, 'sensor01client.py', [UdpTemplate])
 from sensor02 import Sensor02
@@ -705,7 +715,7 @@ build_client(ProxyTest2, 'proxytest2client.py', [UdpTemplate, TcpTemplate])
 # u.send(b'version')
 # v = u.recv(250)
 # print('version: %s' % v)
-"""
+
 
 from rover01 import Rover01
 build_client(Rover01, 'rover01client.py', [UdpTemplate, TcpTemplate])

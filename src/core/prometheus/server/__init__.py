@@ -1,11 +1,11 @@
 import sys
 import os
-# import prometheus_gc as gc
+import prometheus.pgc as gc
 import gc
 import prometheus
-import prometheus_logging as logging
+import prometheus.logging as logging
 
-__version__ = '0.1.5c'
+__version__ = '0.1.6a'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()

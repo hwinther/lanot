@@ -1,8 +1,8 @@
 import socket
 import gc
-import servers
 import prometheus
-import prometheus_logging as logging
+import prometheus.server
+import prometheus.logging as logging
 
 gc.collect()
 
@@ -16,15 +16,15 @@ else:
 # 10035 WSAEWOULDBLOCK (A non-blocking socket operation could not be completed immediately)
 
 
-class SocketServer(servers.Server):
+class SocketServer(prometheus.server.Server):
     def __init__(self, instance, socketwrapper=None):
-        servers.Server.__init__(self, instance)
+        prometheus.server.Server.__init__(self, instance)
 
         if socketwrapper is None:
-            if servers.debug:
+            if prometheus.server.debug:
                 logging.notice('using socket.socket default')
             socketwrapper = socket.socket
 
-        if servers.debug:
+        if prometheus.server.debug:
             logging.notice('setting socketwrapper')
         self.socketwrapper = socketwrapper

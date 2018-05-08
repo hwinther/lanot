@@ -1,19 +1,26 @@
-# generated at 2017-09-10 00:20:33
+# generated at 2018-05-08 23:40:45
 import prometheus
 import socket
 import machine
 import time
 import gc
-import prometheus_crypto
+import prometheus.crypto
+import prometheus.misc
 
 gc.collect()
 
 
+# region AUdpClient
 class AUdpClientALed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
+
+    @prometheus.Registry.register('AUdpClientALed', 'alv', 'OUT')
+    def value(self):
+        self.send(b'alv')
+        return self.recv(10)
 
     @prometheus.Registry.register('AUdpClientALed', 'al0')
     def off(self):
@@ -23,15 +30,10 @@ class AUdpClientALed(prometheus.Prometheus):
     def on(self):
         self.send(b'al1')
 
-    @prometheus.Registry.register('AUdpClientALed', 'alS', 'OUT')
-    def state(self):
-        self.send(b'alS')
-        return self.recv(10)
 
-
-class AUdpClient(prometheus.RemoteTemplate):
+class AUdpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
         print('listening on %s:%d' % (bind_host, bind_port))
@@ -50,7 +52,7 @@ class AUdpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv_once(self, buffersize=10):
@@ -82,12 +84,20 @@ class AUdpClient(prometheus.RemoteTemplate):
     def toggle(self):
         self.send(b'T')
 
+# endregion
 
+
+# region ATcpClient
 class ATcpClientALed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
+
+    @prometheus.Registry.register('ATcpClientALed', 'alv', 'OUT')
+    def value(self):
+        self.send(b'alv')
+        return self.recv(10)
 
     @prometheus.Registry.register('ATcpClientALed', 'al0')
     def off(self):
@@ -97,15 +107,10 @@ class ATcpClientALed(prometheus.Prometheus):
     def on(self):
         self.send(b'al1')
 
-    @prometheus.Registry.register('ATcpClientALed', 'alS', 'OUT')
-    def state(self):
-        self.send(b'alS')
-        return self.recv(10)
 
-
-class ATcpClient(prometheus.RemoteTemplate):
+class ATcpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host=None, bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = None  # type: socket.socket
         self.bind_host = bind_host
         self.bind_port = bind_port
@@ -140,7 +145,7 @@ class ATcpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv(self, buffersize=10):
@@ -155,3 +160,5 @@ class ATcpClient(prometheus.RemoteTemplate):
     @prometheus.Registry.register('ATcpClient', 'T')
     def toggle(self):
         self.send(b'T')
+
+# endregion

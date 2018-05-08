@@ -1,16 +1,16 @@
 import socket
 import gc
 import os
-import servers.socketserver
 import prometheus
-import prometheus_logging as logging
+import prometheus.server.socketserver as socketserver
+import prometheus.logging as logging
 
 gc.collect()
 
 
-class TcpSocketServer(servers.socketserver.SocketServer):
+class TcpSocketServer(socketserver.SocketServer):
     def __init__(self, instance, socketwrapper=None):
-        servers.socketserver.SocketServer.__init__(self, instance, socketwrapper)
+        socketserver.SocketServer.__init__(self, instance, socketwrapper)
         self.socket = self.socketwrapper(socket.AF_INET, socket.SOCK_STREAM)
         self.splitChars = '\n'
         self.endChars = '\r'
@@ -18,10 +18,10 @@ class TcpSocketServer(servers.socketserver.SocketServer):
         self.buffers = dict()  # type: dict((str,int), prometheus.Buffer)
 
     def start(self, bind_host='', bind_port=9195):
-        servers.socketserver.SocketServer.start(self, bind_host=bind_host, bind_port=bind_port)
+        socketserver.SocketServer.start(self, bind_host=bind_host, bind_port=bind_port)
 
     def pre_loop(self, bind_host='', bind_port=9195, **kwargs):
-        servers.socketserver.SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
+        socketserver.SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -33,13 +33,13 @@ class TcpSocketServer(servers.socketserver.SocketServer):
         logging.success('listening on %s:%d (tcp)' % (bind_host, bind_port))
 
     def loop_tick(self, **kwargs):
-        servers.socketserver.SocketServer.loop_tick(self, **kwargs)
+        socketserver.SocketServer.loop_tick(self, **kwargs)
 
         sock, addr = None, None
         try:
             # TODO: put this pair in a wrapper class
             sock, addr = self.socket.accept()
-        except servers.socketserver.socket_error as e:
+        except socketserver.socket_error as e:
             if prometheus.is_micro:
                 if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
                     logging.error(e)
@@ -63,7 +63,7 @@ class TcpSocketServer(servers.socketserver.SocketServer):
             data = None
             try:
                 data = self.sockets[addr].recv(100)
-            except servers.socketserver.socket_error as e:
+            except socketserver.socket_error as e:
                 if prometheus.is_micro:
                     if e.args[0] == 104:
                         logging.notice('disconnected')
@@ -124,7 +124,7 @@ class TcpSocketServer(servers.socketserver.SocketServer):
                 self.handle_data(command, self.sockets[addr])
 
     def post_loop(self, **kwargs):
-        servers.socketserver.SocketServer.post_loop(self, **kwargs)
+        socketserver.SocketServer.post_loop(self, **kwargs)
 
         # attempt a graceful shutdown of all sockets
         for addr in self.sockets.keys():
@@ -132,7 +132,7 @@ class TcpSocketServer(servers.socketserver.SocketServer):
         self.socket.close()
 
     def reply(self, return_value, source=None, **kwargs):
-        servers.socketserver.SocketServer.reply(self, return_value, **kwargs)
+        socketserver.SocketServer.reply(self, return_value, **kwargs)
 
         if type(return_value) is str:
             return_value = return_value.encode('utf-8')

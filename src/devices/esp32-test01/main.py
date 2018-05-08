@@ -1,28 +1,27 @@
 import test01
-import servers.socketserver.udp
-import servers.multiserver
-import prometheus_tftpd
-import prometheus_logging as logging
-import prometheus_gc as gc
+import prometheus.server.socketserver.udp
+import prometheus.server.multiserver
+import prometheus.tftpd
+import prometheus.logging as logging
+import prometheus.pgc as gc
 import machine
 import time
 import socket
 import rover01client
 
-
 gc.collect()
 
 
 def td():
-    prometheus_tftpd.tftpd()
+    prometheus.tftpd.tftpd()
 
 
 node = test01.Test01()
-multiserver = servers.multiserver.MultiServer()
+multiserver = prometheus.server.multiserver.MultiServer()
 gc.collect()
 logging.debug('mem_free: %s' % gc.mem_free())
 
-udpserver = servers.socketserver.udp.UdpSocketServer(node)
+udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
 # multiserver.add(udpserver)
 # gc.collect()
 #

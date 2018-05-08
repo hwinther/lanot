@@ -1,12 +1,12 @@
 import prometheus
-import prometheus_logging as logging
+import prometheus.logging as logging
 import socket
 if prometheus.is_micro:
     from ussl import wrap_socket as ssl_wrap_socket
     ssl_SSLEOFError = OSError
 else:
     from ssl import wrap_socket as ssl_wrap_socket
-    from ssl import SSLEOFError as ssl_SSLEOFError
+    # from ssl import SSLEOFError as ssl_SSLEOFError
 
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.connect(('5.9.191.98', 6697))

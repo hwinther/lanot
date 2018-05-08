@@ -1,12 +1,7 @@
 import nodetest
-# import servers.multiserver
-import servers.socketserver.udp
-# import servers.socketserver.tcp
-# import servers.socketserver.jsonrest
-import prometheus_logging as logging
-# import prometheus_gc as gc
-import gc
-
+import prometheus.server.socketserver.udp
+import prometheus.logging as logging
+import prometheus.pgc as gc
 
 gc.collect()
 
@@ -14,17 +9,17 @@ node = nodetest.NodeTest()
 
 gc.collect()
 logging.debug(gc.mem_free())
-# multiserver = servers.multiserver.MultiServer()
+# multiserver = server.multiserver.MultiServer()
 
-udpserver = servers.socketserver.udp.UdpSocketServer(node)
+udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
 # multiserver.add(udpserver)
 # gc.collect()
 
-# tcpserver = servers.socketserver.tcp.TcpSocketServer(node)
+# tcpserver = server.socketserver.tcp.TcpSocketServer(node)
 # multiserver.add(tcpserver)
 # gc.collect()
 
-# jsonrestserver = servers.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
+# jsonrestserver = server.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
 # multiserver.add(jsonrestserver, bind_port=8080)
 gc.collect()
 

@@ -1,28 +1,28 @@
 import socket
-# import prometheus_gc as gc
-import gc
+import prometheus.pgc as gc
 import time
 import json
-import servers.socketserver
 import prometheus
-import prometheus_logging as logging
+import prometheus.server
+import prometheus.server.socketserver as socketserver
+import prometheus.logging as logging
 
 gc.collect()
 
 
-class JsonRestServer(servers.socketserver.SocketServer):
+class JsonRestServer(socketserver.SocketServer):
     def __init__(self, instance, socketwrapper=None, settimeout=0, loop_tick_delay=None):
-        servers.socketserver.SocketServer.__init__(self, instance, socketwrapper)
+        socketserver.SocketServer.__init__(self, instance, socketwrapper)
 
         self.socket = self.socketwrapper(socket.AF_INET, socket.SOCK_STREAM)
         self.settimeout = settimeout
         self.loop_tick_delay = loop_tick_delay
 
     def start(self, bind_host='', bind_port=8080, **kwargs):
-        servers.socketserver.SocketServer.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
+        socketserver.SocketServer.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
     def pre_loop(self, bind_host='', bind_port=8080, **kwargs):
-        servers.socketserver.SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
+        socketserver.SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -30,7 +30,7 @@ class JsonRestServer(servers.socketserver.SocketServer):
             logging.warn('could not bind with reuse flag')  # TODO: look into this
         self.socket.bind((bind_host, bind_port))
         self.socket.listen(4)
-        if servers.debug:
+        if prometheus.server.debug:
             logging.notice('settimeout: %s' % self.settimeout)
         self.socket.settimeout(self.settimeout)
         logging.success('listening on %s:%d (http/json)' % (bind_host, bind_port))
@@ -48,15 +48,15 @@ class JsonRestServer(servers.socketserver.SocketServer):
             logging.debug('mem_free after urls: %s' % gc.mem_free())
 
     def loop_tick(self, **kwargs):
-        if servers.debug:
+        if prometheus.server.debug:
             logging.notice('entering JsonRestServer.loop_tick')
-            servers.socketserver.SocketServer.loop_tick(self, **kwargs)
+            socketserver.SocketServer.loop_tick(self, **kwargs)
 
         sock, addr = None, None
         try:
             # TODO: put this pair in a wrapper class
             sock, addr = self.socket.accept()
-        except servers.socketserver.socket_error as e:
+        except socketserver.socket_error as e:
             if prometheus.is_micro:
                 if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
                     logging.error(e)
@@ -72,7 +72,7 @@ class JsonRestServer(servers.socketserver.SocketServer):
             data = None
             try:
                 data = sock.recv(1024)
-            except servers.socketserver.socket_error as e:
+            except socketserver.socket_error as e:
                 if prometheus.is_micro:
                     if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
                         logging.error(e)
@@ -141,7 +141,7 @@ class JsonRestServer(servers.socketserver.SocketServer):
                             self.loopActive = False
                             found = True
                         elif path == b'/favicon.ico':
-                            self.reply(return_value=servers.favicon,
+                            self.reply(return_value=prometheus.server.favicon,
                                        source=sock,
                                        contenttype='image/x-icon')
                             found = True
@@ -155,16 +155,16 @@ class JsonRestServer(servers.socketserver.SocketServer):
         if self.loop_tick_delay is not None:
             time.sleep(self.loop_tick_delay)
 
-        if servers.debug:
+        if prometheus.server.debug:
             logging.notice('exiting JsonRestServer.loop_tick')
 
     def post_loop(self, **kwargs):
-        servers.socketserver.SocketServer.post_loop(self, **kwargs)
+        socketserver.SocketServer.post_loop(self, **kwargs)
 
         self.socket.close()
 
     def reply(self, return_value, source=None, query=None, contenttype=None, **kwargs):
-        servers.socketserver.SocketServer.reply(self, return_value, **kwargs)
+        socketserver.SocketServer.reply(self, return_value, **kwargs)
 
         # JSON contenttype is assumed/default
         if contenttype is None:
@@ -181,7 +181,7 @@ class JsonRestServer(servers.socketserver.SocketServer):
 
             # convert to bytes
             msg = msg.encode('ascii')
-            if servers.debug:
+            if prometheus.server.debug:
                 logging.notice('returning %s to %s' % (msg, repr(source)))
             else:
                 logging.notice('returning %d bytes' % len(msg))
@@ -192,7 +192,7 @@ class JsonRestServer(servers.socketserver.SocketServer):
 
         response = b'HTTP/1.1 200 OK\r\n' +\
                    b'Server: ps-%s\r\nAccess-Control-Allow-Origin: *\r\nContent-Type: %s\r\nContent-Length: %d\r\n\r\n'\
-                   % (servers.__version__.encode('ascii'), contenttype.encode('ascii'), len(msg))
+                   % (prometheus.server.__version__.encode('ascii'), contenttype.encode('ascii'), len(msg))
         response = response + msg
         # logging.notice(repr(response))
 

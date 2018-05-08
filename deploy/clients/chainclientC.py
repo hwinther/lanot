@@ -1,34 +1,16 @@
-# generated at 2017-09-10 00:20:33
+# generated at 2018-05-08 23:40:45
 import prometheus
 import socket
 import machine
 import time
 import gc
-import prometheus_crypto
+import prometheus.crypto
+import prometheus.misc
 
 gc.collect()
 
 
-class CUdpClientCLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('CUdpClientCLed', 'cl0')
-    def off(self):
-        self.send(b'cl0')
-
-    @prometheus.Registry.register('CUdpClientCLed', 'cl1')
-    def on(self):
-        self.send(b'cl1')
-
-    @prometheus.Registry.register('CUdpClientCLed', 'clS', 'OUT')
-    def state(self):
-        self.send(b'clS')
-        return self.recv(10)
-
-
+# region CUdpClient
 class CUdpClientBObject(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -51,18 +33,18 @@ class CUdpClientBLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('CUdpClientBLed', 'bl0')
-    def off(self):
-        self.send(b'bl0')
+    @prometheus.Registry.register('CUdpClientBLed', 'blv', 'OUT')
+    def value(self):
+        self.send(b'blv')
+        return self.recv(10)
 
     @prometheus.Registry.register('CUdpClientBLed', 'bl1')
     def on(self):
         self.send(b'bl1')
 
-    @prometheus.Registry.register('CUdpClientBLed', 'blS', 'OUT')
-    def state(self):
-        self.send(b'blS')
-        return self.recv(10)
+    @prometheus.Registry.register('CUdpClientBLed', 'bl0')
+    def off(self):
+        self.send(b'bl0')
 
 
 class CUdpClientAObject(prometheus.Prometheus):
@@ -85,6 +67,11 @@ class CUdpClientALed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
+    @prometheus.Registry.register('CUdpClientALed', 'alv', 'OUT')
+    def value(self):
+        self.send(b'alv')
+        return self.recv(10)
+
     @prometheus.Registry.register('CUdpClientALed', 'al0')
     def off(self):
         self.send(b'al0')
@@ -93,15 +80,30 @@ class CUdpClientALed(prometheus.Prometheus):
     def on(self):
         self.send(b'al1')
 
-    @prometheus.Registry.register('CUdpClientALed', 'alS', 'OUT')
-    def state(self):
-        self.send(b'alS')
+
+class CUdpClientCLed(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('CUdpClientCLed', 'clv', 'OUT')
+    def value(self):
+        self.send(b'clv')
         return self.recv(10)
 
+    @prometheus.Registry.register('CUdpClientCLed', 'cl0')
+    def off(self):
+        self.send(b'cl0')
 
-class CUdpClient(prometheus.RemoteTemplate):
+    @prometheus.Registry.register('CUdpClientCLed', 'cl1')
+    def on(self):
+        self.send(b'cl1')
+
+
+class CUdpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
         print('listening on %s:%d' % (bind_host, bind_port))
@@ -122,7 +124,7 @@ class CUdpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv_once(self, buffersize=10):
@@ -154,27 +156,10 @@ class CUdpClient(prometheus.RemoteTemplate):
     def toggle(self):
         self.send(b'T')
 
-
-class CTcpClientCLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('CTcpClientCLed', 'cl0')
-    def off(self):
-        self.send(b'cl0')
-
-    @prometheus.Registry.register('CTcpClientCLed', 'cl1')
-    def on(self):
-        self.send(b'cl1')
-
-    @prometheus.Registry.register('CTcpClientCLed', 'clS', 'OUT')
-    def state(self):
-        self.send(b'clS')
-        return self.recv(10)
+# endregion
 
 
+# region CTcpClient
 class CTcpClientBObject(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -197,18 +182,18 @@ class CTcpClientBLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('CTcpClientBLed', 'bl0')
-    def off(self):
-        self.send(b'bl0')
+    @prometheus.Registry.register('CTcpClientBLed', 'blv', 'OUT')
+    def value(self):
+        self.send(b'blv')
+        return self.recv(10)
 
     @prometheus.Registry.register('CTcpClientBLed', 'bl1')
     def on(self):
         self.send(b'bl1')
 
-    @prometheus.Registry.register('CTcpClientBLed', 'blS', 'OUT')
-    def state(self):
-        self.send(b'blS')
-        return self.recv(10)
+    @prometheus.Registry.register('CTcpClientBLed', 'bl0')
+    def off(self):
+        self.send(b'bl0')
 
 
 class CTcpClientAObject(prometheus.Prometheus):
@@ -231,6 +216,11 @@ class CTcpClientALed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
+    @prometheus.Registry.register('CTcpClientALed', 'alv', 'OUT')
+    def value(self):
+        self.send(b'alv')
+        return self.recv(10)
+
     @prometheus.Registry.register('CTcpClientALed', 'al0')
     def off(self):
         self.send(b'al0')
@@ -239,15 +229,30 @@ class CTcpClientALed(prometheus.Prometheus):
     def on(self):
         self.send(b'al1')
 
-    @prometheus.Registry.register('CTcpClientALed', 'alS', 'OUT')
-    def state(self):
-        self.send(b'alS')
+
+class CTcpClientCLed(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('CTcpClientCLed', 'clv', 'OUT')
+    def value(self):
+        self.send(b'clv')
         return self.recv(10)
 
+    @prometheus.Registry.register('CTcpClientCLed', 'cl0')
+    def off(self):
+        self.send(b'cl0')
 
-class CTcpClient(prometheus.RemoteTemplate):
+    @prometheus.Registry.register('CTcpClientCLed', 'cl1')
+    def on(self):
+        self.send(b'cl1')
+
+
+class CTcpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host=None, bind_port=9195):
-        prometheus.RemoteTemplate.__init__(self)
+        prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = None  # type: socket.socket
         self.bind_host = bind_host
         self.bind_port = bind_port
@@ -284,7 +289,7 @@ class CTcpClient(prometheus.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:  # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
+        except:
             return None, None
 
     def recv(self, buffersize=10):
@@ -299,3 +304,5 @@ class CTcpClient(prometheus.RemoteTemplate):
     @prometheus.Registry.register('CTcpClient', 'T')
     def toggle(self):
         self.send(b'T')
+
+# endregion

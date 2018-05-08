@@ -1,29 +1,27 @@
 import rover01
-import servers
-import servers.multiserver
-import servers.socketserver.udp
-import servers.socketserver.tcp
-import servers.socketserver.jsonrest
-import prometheus_tftpd
-import prometheus_logging as logging
-import prometheus_gc as gc
+import prometheus.server
+import prometheus.server.multiserver
+import prometheus.server.socketserver.udp
+import prometheus.server.socketserver.tcp
+import prometheus.server.socketserver.jsonrest
+import prometheus.tftpd
+import prometheus.logging as logging
+import prometheus.pgc as gc
 import time
 
-
 gc.collect()
-
 
 ST_STOPPED = 0
 ST_DRIVING = 1
 
 
-class LocalEvents(servers.Server):
+class LocalEvents(prometheus.server.Server):
     def __init__(self, instance):
         """
 
         :type instance: rover01.Rover01
         """
-        servers.Server.__init__(self, instance)
+        prometheus.server.Server.__init__(self, instance)
         self.timer = 0
         self.state = ST_STOPPED
 
@@ -67,23 +65,23 @@ class LocalEvents(servers.Server):
 
 
 def td():
-    prometheus_tftpd.tftpd()
+    prometheus.tftpd.tftpd()
 
 
 node = rover01.Rover01()
-multiserver = servers.multiserver.MultiServer()
+multiserver = prometheus.server.multiserver.MultiServer()
 gc.collect()
 logging.debug('mem_free: %s' % gc.mem_free())
 
-udpserver = servers.socketserver.udp.UdpSocketServer(node)
+udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
 multiserver.add(udpserver)
 gc.collect()
 #
-tcpserver = servers.socketserver.tcp.TcpSocketServer(node)
+tcpserver = prometheus.server.socketserver.tcp.TcpSocketServer(node)
 multiserver.add(tcpserver)
 gc.collect()
 
-jsonrestserver = servers.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
+jsonrestserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
 multiserver.add(jsonrestserver, bind_port=8080)
 gc.collect()
 

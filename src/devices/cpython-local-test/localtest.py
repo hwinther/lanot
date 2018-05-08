@@ -1,11 +1,11 @@
 import prometheus
-import prometheus_esp8266
-import servers.multiserver
-import servers.socketserver.tcp
-import servers.socketserver.udp
-import servers.socketserver.jsonrest
-from servers.socketserver.sslsocket import SslSocket
-import prometheus_logging as logging
+import prometheus.dht11
+import prometheus.server.multiserver
+import prometheus.server.socketserver.tcp
+import prometheus.server.socketserver.udp
+import prometheus.server.socketserver.jsonrest
+from prometheus.server.socketserver.sslsocket import SslSocket
+import prometheus.logging as logging
 import machine
 # import pickle
 # from guppy import hpy
@@ -21,7 +21,7 @@ class LocalTest(prometheus.Prometheus):
         self.red_led = prometheus.Led(machine.Pin(15, machine.Pin.OUT))
         self.register(prefix='r', red_led=self.red_led)
 
-        self.dht11 = prometheus_esp8266.Dht11(machine.Pin(13, machine.Pin.OUT))
+        self.dht11 = prometheus.dht11.Dht11(machine.Pin(13, machine.Pin.OUT))
         self.register(prefix='d', dht11=self.dht11)
 
         self.hygrometer = prometheus.Adc(0)
@@ -31,21 +31,21 @@ class LocalTest(prometheus.Prometheus):
 if __name__ == '__main__':
     node = LocalTest()
 
-    multiserver = servers.multiserver.MultiServer()
+    multiserver = prometheus.server.multiserver.MultiServer()
 
-    udpserver = servers.socketserver.udp.UdpSocketServer(node)
+    udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
     multiserver.add(udpserver)
 
-    tcpserver = servers.socketserver.tcp.TcpSocketServer(node)
+    tcpserver = prometheus.server.socketserver.tcp.TcpSocketServer(node)
     multiserver.add(tcpserver)
 
-    jsonrestserver = servers.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
+    jsonrestserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
     multiserver.add(jsonrestserver, bind_port=8080)
 
     # loop_tick_delay is for cpython, limits cpu cycles
-    jsonrestsslserver = servers.socketserver.jsonrest.JsonRestServer(node,
-                                                                     loop_tick_delay=0.1,
-                                                                     socketwrapper=SslSocket)
+    jsonrestsslserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node,
+                                                                               loop_tick_delay=0.1,
+                                                                               socketwrapper=SslSocket)
     multiserver.add(jsonrestsslserver, bind_port=4443)
 
     # s = pickle.dumps(node)

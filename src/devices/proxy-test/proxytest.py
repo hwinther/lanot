@@ -1,7 +1,7 @@
 import sys
 import random
 import prometheus
-import servers.socketserver.udp
+import prometheus.server.socketserver.udp
 sys.path.append('P:\lanot\build\clients')
 import nodeclient
 
@@ -16,4 +16,4 @@ class ProxyTest(prometheus.Prometheus):
 if __name__ == '__main__':
     proxytest = ProxyTest()
     proxytest.nodeclient.blue_led.on()
-    udpserver = servers.socketserver.udp.UdpSocketServer(proxytest)
+    udpserver = prometheus.server.socketserver.udp.UdpSocketServer(proxytest)

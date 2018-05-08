@@ -1,25 +1,25 @@
 import socket
 import gc
-import servers.socketserver
 import prometheus
-import prometheus_logging as logging
+import prometheus.server.socketserver as socketserver
+import prometheus.logging as logging
 
 gc.collect()
 
 
-class UdpSocketServer(servers.socketserver.SocketServer):
+class UdpSocketServer(socketserver.SocketServer):
     def __init__(self, instance, socketwrapper=None):
-        servers.socketserver.SocketServer.__init__(self, instance, socketwrapper)
+        socketserver.SocketServer.__init__(self, instance, socketwrapper)
         self.socket = self.socketwrapper(socket.AF_INET, socket.SOCK_DGRAM)
         self.split_chars = '\n'
         self.end_chars = '\r'
         self.buffers = dict()  # :type dict(Buffer)
 
     def start(self, bind_host='', bind_port=9195, **kwargs):
-        servers.socketserver.SocketServer.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
+        socketserver.SocketServer.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
     def pre_loop(self, bind_host='', bind_port=9195, **kwargs):
-        servers.socketserver.SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
+        socketserver.SocketServer.pre_loop(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
 
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
@@ -30,7 +30,7 @@ class UdpSocketServer(servers.socketserver.SocketServer):
         logging.success('listening on %s:%d (udp)' % (bind_host, bind_port))
 
     def loop_tick(self, **kwargs):
-        servers.socketserver.SocketServer.loop_tick(self, **kwargs)
+        socketserver.SocketServer.loop_tick(self, **kwargs)
 
         data, addr = None, None
         try:
@@ -38,7 +38,7 @@ class UdpSocketServer(servers.socketserver.SocketServer):
             # should probably bear in mind that the underlying fd buffer on mpy platforms will be limited to around
             #  500 bytes in the first place
             data, addr = self.socket.recvfrom(500)
-        except servers.socketserver.socket_error as e:
+        except socketserver.socket_error as e:
             if prometheus.is_micro:
                 if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
                     logging.error(e)
@@ -82,12 +82,12 @@ class UdpSocketServer(servers.socketserver.SocketServer):
         gc.collect()
 
     def post_loop(self, **kwargs):
-        servers.socketserver.SocketServer.post_loop(self, **kwargs)
+        socketserver.SocketServer.post_loop(self, **kwargs)
 
         self.socket.close()
 
     def reply(self, return_value, source=None, **kwargs):
-        servers.socketserver.SocketServer.reply(self, return_value, **kwargs)
+        socketserver.SocketServer.reply(self, return_value, **kwargs)
 
         if type(return_value) is str:
             return_value = return_value.encode('ascii')

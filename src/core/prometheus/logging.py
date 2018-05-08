@@ -1,6 +1,5 @@
 import prometheus
-# import prometheus_gc as gc
-import gc
+import prometheus.pgc as gc
 
 __version__ = '0.1.1'
 __author__ = 'Hans Christian Winther-Sorensen'

@@ -2,7 +2,6 @@
 <module type="PYTHON_MODULE" version="4">
   <component name="NewModuleRootManager">
     <content url="file://$MODULE_DIR$">
-      <sourceFolder url="file://$MODULE_DIR$/src/core/python" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/mp-esp8266-test" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/wipy-tank" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tools/micropython-mockup" isTestSource="false" />
@@ -20,8 +19,10 @@
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-greenhouse01" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-greenhouse02" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-rover01" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/core" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/test/oled_temp" />
       <excludeFolder url="file://$MODULE_DIR$/test/weartesr" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/MicroPython_ESP32_psRAM_LoBo" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython-esp32" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython-lib" />
@@ -29,7 +30,7 @@
       <excludeFolder url="file://$MODULE_DIR$/tools/tftpy-0.6.2" />
       <excludeFolder url="file://$MODULE_DIR$/tools/webrepl" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 2.7.13 (C:\Python27\python.exe)" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 2.7" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
   </component>
   <component name="TestRunnerService">
