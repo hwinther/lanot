@@ -16,273 +16,316 @@
             return str.indexOf(suffix, str.length - suffix.length) !== -1;
         }
 
-    function update(host, port, _proto, uriprefix)
-    {
-	var baseuri = _proto + '://' + host + ':' + port + uriprefix;
-        // console.log('making query');
-        $.ajax({
-            url: baseuri + '/api?class=true',
-            dataType: 'jsonp',
-            indexValue: host + uriprefix, //.replace('/', '_'),
-            success: function (data) {
-                //console.log(data);
-                var host = this.indexValue;
-                var hostname = host.replace(/\./g, '').replace('/', '_');
-                //console.log(hostname);
-                var uir = $('#uiroot');
-                if (uir.find('#' + hostname + 'container').length === 0)
-                {
-                    uir.html(uir.html() + '<div id="' + hostname + 'container" class="panel panel-default"></div>');
-                }
-                var container = $('#' + hostname + 'container');
-                container.html(container.html() +  '<div class="panel-heading">' + host + '</div>' +
-'<div id="' + hostname + 'panelbody" class="panel-body"><div id="' + hostname + '_infocontainer" class="infocontainer"></div></div>');
-                var panelbody = $('#' + hostname + 'panelbody');
+        function LanotHost(hostname, port, protocol, uriPrefix)
+        {
+            this.hostname = hostname;
+            // this.port = port;
+            this.protocol = protocol;
+            // this.uriPrefix = uriPrefix;
 
-                // get and show version
-                $.ajax({
-                    url: baseuri + '/version',
-                    dataType: 'jsonp',
-                    indexValue: hostname,
-                    success: function (data) {
-                        var infocontainer = $('#' + this.indexValue + '_infocontainer');
-                        infocontainer.html(infocontainer.html() + '<span class="version">' + data['value'] + '</span><br />');
-                    }
-                });
+            // generated properties
+            this.baseUri = protocol + '://' + hostname + ':' + port + uriPrefix;
+            this.name = hostname + uriPrefix;
+            this.identifier = this.name.replace(/\./g, '').replace('/', '_');
+        }
 
-                //window.testdata = data;
-                var sorted_keys = Object.keys(data).sort();
-                //window.keys = sorted_keys;
-                //jQuery.each(data, function(index, value) {
-                jQuery.each(sorted_keys, function(idx, index) {
-                    //console.log(idx);
-                    //console.log(index);
-                    var obj = data[index];
-                    //console.log('obj='+obj);
-                    var name = index.split('_').join(' ');
-                    name = name.charAt(0).toUpperCase() + name.slice(1);
-                    var elemid = hostname + '_' + index.replace('.', '__');
-                    // console.log('elemid: ' + elemid);
-                    if (endsWith(obj.class, 'Led') || endsWith(obj.class, 'Laser'))
-                    {
-                        panelbody.html(panelbody.html() +
-                            '<div class="input-group"><button type="button" class="btn btn-primary btn-sm btnled" data-toggle="button" aria-pressed="false" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri-on="' + obj.methods['on'] + '" data-uri-off="' + obj.methods['off'] + '" id="btn_' + elemid + '">\n' +
-                            name + ' on\n' +
-                            '</button></div>');
-                        var uri = baseuri + obj.methods['value'];
-                        //console.log('uri: ' + uri + ' obj: ' + obj);
-			//window.objtest = obj;
-                        $.ajax({
-                            url: uri,
-                            dataType: 'jsonp',
-                            indexValue: elemid,
-                            success: function (data) {
-                                //console.log('got value: ' + data['value']);
-                                var elem = $('#btn_' + this.indexValue);
-                                var value = data['value'];
-                                if (value === null) {
-                                    console.log('Null received for btn state: ' + name);
-                                }
-				else if (value === false) {
-                                    //console.log('value is false');
-                                }
-                                else if (value === true || value.toLowerCase() === 'true') {
-                                    console.log('switching led state for ' + this.indexValue);
-                                    elem.text(elem.data('name') + ' off');
-                                    elem.addClass('active');
-                                    elem.prop('aria-pressed', 'true');
-                                }
-                            }
-                        });
-                    }
-                    else if (endsWith(obj.class, 'Dht11'))
-                    {
-                        panelbody.html(panelbody.html() +
-                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndht11" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['value'] + '" id="btn_' + elemid + '">\n' +
-                            ' Read DHT: ' + name + '\n' +
-                            '</button><input type="textbox" id="dht11_' + elemid + '" /></div>\n');
-                    }
-                    else if (endsWith(obj.class, 'Dsb') || endsWith(obj.class, 'dsb'))
-                    {
-                        panelbody.html(panelbody.html() +
-                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndsb" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['value'] + '" id="btn_' + elemid + '">\n' +
-                            ' Read ADC: ' + name + '\n' +
-                            '</button><input type="textbox" id="dsb_' + elemid + '" /></div>\n');
-                    }
-                    else if (endsWith(obj.class, 'Adc') || endsWith(obj.class, 'Lightsensor') || endsWith(obj.class, 'Hygrometer'))
-                    {
-                        panelbody.html(panelbody.html() +
-                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnadc" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['read'] + '" id="btn_' + elemid + '">\n' +
-                            ' Read ADC: ' + name + '\n' +
-                            '</button><input type="textbox" id="adc_' + elemid + '" /></div>\n');
-                    }
-                    else if (endsWith(obj.class, 'Digital') || endsWith(obj.class, 'digital'))
-                    {
-                        panelbody.html(panelbody.html() +
-                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndigital" autocomplete="off" data-name="' + name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + obj.methods['value'] + '" id="btn_' + elemid + '">\n' +
-                            ' Read ADC: ' + name + '\n' +
-                            '</button><input type="textbox" id="digital_' + elemid + '" /></div>\n');
-                    }
-                    else
-                    {
-                        console.log('Unhandled class: ' + obj.class + ' from host: ' + host + ' showing methods as buttons.');
-                        jQuery.each(obj.methods, function(method_name, method_uri) {
-                            // console.log('method_name=' + method_name + ' method_uri=' + method_uri);
-                            var method_friendly_name = method_name.split('_').join(' ');
-                            method_friendly_name = method_friendly_name.charAt(0).toUpperCase() + method_friendly_name.slice(1);
-                            panelbody.html(panelbody.html() +
-                                '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnmethod" autocomplete="off" data-name="' + method_friendly_name + '" data-host="' + host + '" data-hostname="' + hostname + '" data-uri="' + method_uri + '" id="btn_' + elemid + '">\n' +
-                                method_friendly_name + '\n</button></div>\n');
-                        });
-                    }
-                });
-                
-                $('.btnled').click(function(){
-                   var toggled = $(this).hasClass('active');
-                   if (toggled)
-                   {
-                       //console.log('turning off');
-                       $(this).text($(this).data('name') + ' on');
-			//$(this).data('host')
-                       var uri = baseuri + $(this).data('uri-off');
-                       //console.log('uri=' + uri);
-                       $.ajax({
-                            url: uri,
-                            dataType: 'jsonp'});
-                   }
-                   else
-                   {
-                       //console.log('turning on');
-                       $(this).text($(this).data('name') + ' off');
-                       var uri = baseuri + $(this).data('uri-on');
-                       //console.log('uri=' + uri);
-                       $.ajax({
-                            url: uri,
-                            dataType: 'jsonp'});
-                   }
-                });
+        LanotHost.prototype.update = function() {
+            console.log('update query: ' + this.baseUri);
+            $.ajax({
+                url: this.baseUri + '/api?class=true',
+                dataType: 'jsonp',
+                indexValue: this,
+                success: updatePost
+            });
+        };
 
-                $('.btnmethod').click(function() {
-                    var uri = baseuri + $(this).data('uri');
-                    $.ajax({
-                            url: uri,
-                            dataType: 'jsonp'});
-                });
+        function LanotHostContainer(lanotHost) {
+            this.lanotHost = lanotHost;
 
-                $('.btndht11').click(function(){
-                       //console.log('read');
-                       var uri = baseuri + $(this).data('uri');
-                       var name = $(this).data('name');
-                       var hostname = $(this).data('hostname');
-                       //console.log('uri=' + uri);
-                       $.ajax({
-                            url: uri,
-                            dataType: 'jsonp',
-                            success: function (data) {
-                                //console.log('got value: ' + data['value']);
-                                var elem = '#dht11_' + hostname + '_' + name.replace('.', '__').toLowerCase();
-                                //console.log('setting to ' + elem);
-                                var value = data['value'];
-                                if (value === null) {
-                                    value = 'No value returned';
-                                }
-                                else {
-                                    value = value.replace('c', 'C ') + '%';
-                                }
-                                $(elem).val(value);
-                            }
-                       });
-                });
-                
-                $('.btndsb').click(function(){
-                       //console.log('read');
-                       var uri = baseuri + $(this).data('uri');
-                       var name = $(this).data('name');
-                       var hostname = $(this).data('hostname');
-                       //console.log('uri=' + uri);
-                       $.ajax({
-                            url: uri,
-                            dataType: 'jsonp',
-                            success: function (data) {
-                                //console.log('got value: ' + data['value']);
-                                var elem = '#dsb_' + hostname + '_' + name.replace('.', '__').toLowerCase();
-                                //console.log('setting to ' + elem);
-                                var value = data['value'];
-                                if (value === null) {
-                                    value = 'No value returned';
-                                } else {
-                                    value = value + 'C';
-                                }
-                                $(elem).val(value);
-                            }
-                       });
-                });
-
-                $('.btnadc').click(function(){
-                       //console.log('read');
-                       var uri = baseuri + $(this).data('uri');
-                       var name = $(this).data('name');
-                       var hostname = $(this).data('hostname');
-                       //console.log('uri=' + uri);
-                       $.ajax({
-                            url: uri,
-                            dataType: 'jsonp',
-                            success: function (data) {
-                                //console.log('got value: ' + data['value']);
-                                var elem = '#adc_' + hostname + '_' + name.replace('.', '__').toLowerCase();
-                                //console.log('setting to ' + elem);
-                                var value = data['value'];
-                                if (value === null) {
-                                    value = 'No value returned';
-                                }
-                                $(elem).val(value);
-                            }
-                       });
-                });
-
-                $('.btndigital').click(function(){
-                       //console.log('read');
-                       var uri = baseuri + $(this).data('uri');
-                       var name = $(this).data('name');
-                       var hostname = $(this).data('hostname');
-                       //console.log('uri=' + uri);
-                       $.ajax({
-                            url: uri,
-                            dataType: 'jsonp',
-                            success: function (data) {
-                                //console.log('got value: ' + data['value']);
-                                var elem = '#digital_' + hostname + '_' + name.replace('.', '__').toLowerCase();
-                                //console.log('setting to ' + elem);
-                                var value = data['value'];
-                                if (value === null) {
-                                    value = 'No value returned';
-                                }
-                                $(elem).val(value);
-                            }
-                       });
-                });
+            var uir = $('#ui_root');
+            if (uir.find('#' + this.lanotHost.identifier + 'container').length === 0)
+            {
+                uir.html(uir.html() + '<div id="' + this.lanotHost.identifier + 'container" class="panel panel-default"></div>');
             }
-        });
-    }
+            this.container = $('#' + this.lanotHost.identifier + 'container');
+            this.container.html(this.container.html() +  '<div class="panel-heading">' + this.lanotHost.name + '</div>' +
+                '<div id="' + this.lanotHost.identifier + 'panelbody" class="panel-body"><div id="' + this.lanotHost.identifier + '_infocontainer" class="infocontainer"></div></div>');
 
-    $(function() {
-        //update('localhost');
-        //update('nodetest');
-        //update('test01');
-        //update('test02');
-        update('serenity.oh.wsh.no', '4443', 'https', '');
-	update('serenity.oh.wsh.no', '443', 'https', '/greenhouse01');
-	update('serenity.oh.wsh.no', '443', 'https', '/greenhouse02');
-        //update('greenhouse01.iot.oh.wsh.no', '8080', 'http', '');
-        //update('greenhouse02.iot.oh.wsh.no', '8080', 'http', '');
-    });
+            this.infoContainer = $('#' + this.lanotHost.identifier + '_infocontainer');
+            this.panelBody = $('#' + this.lanotHost.identifier + 'panelbody');
+        }
+
+        function attachEvents() {
+            $('.btnled').click(function() {
+                this.lanotHost = $(this).data('lanotHost');
+                var toggled = $(this).hasClass('active');
+                if (toggled)
+                {
+                    //console.log('turning off');
+                    $(this).text($(this).data('name') + ' on');
+                    //$(this).data('host')
+                    var uri = this.lanotHost.baseUri + $(this).data('uri-off');
+                    //console.log('uri=' + uri);
+                    $.ajax({
+                        url: uri,
+                        dataType: 'jsonp'});
+                }
+                else
+                {
+                    //console.log('turning on');
+                    $(this).text($(this).data('name') + ' off');
+                    var uri = this.lanotHost.baseUri + $(this).data('uri-on');
+                    //console.log('uri=' + uri);
+                    $.ajax({
+                        url: uri,
+                        dataType: 'jsonp'});
+                }
+            });
+
+            $('.btnmethod').click(function() {
+                this.lanotHost = $(this).data('lanotHost');
+                var uri = this.lanotHost.baseUri + $(this).data('uri');
+                $.ajax({
+                    url: uri,
+                    dataType: 'jsonp'});
+            });
+
+            $('.btndht11').click(function() {
+                this.lanotHost = $(this).data('lanotHost');
+                //console.log('read');
+                var uri = this.lanotHost.baseUri + $(this).data('uri');
+                var name = $(this).data('name');
+                var hostname = $(this).data('hostname');
+                //console.log('uri=' + uri);
+                $.ajax({
+                    url: uri,
+                    dataType: 'jsonp',
+                    success: function (data) {
+                        //console.log('got value: ' + data['value']);
+                        var elem = '#dht11_' + hostname + '_' + name.replace('.', '__').toLowerCase();
+                        //console.log('setting to ' + elem);
+                        var value = data['value'];
+                        if (value === null) {
+                            value = 'No value returned';
+                        }
+                        else {
+                            value = value.replace('c', 'C ') + '%';
+                        }
+                        $(elem).val(value);
+                    }
+                });
+            });
+
+            $('.btndsb').click(function() {
+                this.lanotHost = $(this).data('lanotHost');
+                //console.log('read');
+                var uri = this.lanotHost.baseUri + $(this).data('uri');
+                var name = $(this).data('name');
+                var hostname = $(this).data('hostname');
+                //console.log('uri=' + uri);
+                $.ajax({
+                    url: uri,
+                    dataType: 'jsonp',
+                    success: function (data) {
+                        //console.log('got value: ' + data['value']);
+                        var elem = '#dsb_' + hostname + '_' + name.replace('.', '__').toLowerCase();
+                        //console.log('setting to ' + elem);
+                        var value = data['value'];
+                        if (value === null) {
+                            value = 'No value returned';
+                        } else {
+                            value = value + 'C';
+                        }
+                        $(elem).val(value);
+                    }
+                });
+            });
+
+            $('.btnadc').click(function(){
+                this.lanotHost = $(this).data('lanotHost');
+                //console.log('read');
+                var uri = this.lanotHost.baseUri + $(this).data('uri');
+                var name = $(this).data('name');
+                var hostname = $(this).data('hostname');
+                //console.log('uri=' + uri);
+                $.ajax({
+                    url: uri,
+                    dataType: 'jsonp',
+                    success: function (data) {
+                        //console.log('got value: ' + data['value']);
+                        var elem = '#adc_' + hostname + '_' + name.replace('.', '__').toLowerCase();
+                        //console.log('setting to ' + elem);
+                        var value = data['value'];
+                        if (value === null) {
+                            value = 'No value returned';
+                        }
+                        $(elem).val(value);
+                    }
+                });
+            });
+
+            $('.btndigital').click(function() {
+                this.lanotHost = $(this).data('lanotHost');
+                //console.log('read');
+                var uri = this.lanotHost.baseUri + $(this).data('uri');
+                var name = $(this).data('name');
+                var hostname = $(this).data('hostname');
+                //console.log('uri=' + uri);
+                $.ajax({
+                    url: uri,
+                    dataType: 'jsonp',
+                    success: function (data) {
+                        //console.log('got value: ' + data['value']);
+                        var elem = '#digital_' + hostname + '_' + name.replace('.', '__').toLowerCase();
+                        //console.log('setting to ' + elem);
+                        var value = data['value'];
+                        if (value === null) {
+                            value = 'No value returned';
+                        }
+                        $(elem).val(value);
+                    }
+                });
+            });
+        }
+
+        function updatePost(data) {
+            this.lanotHost = this.indexValue;
+            // console.log('updatePost data: ' + data);
+            // console.log('updatePost identifier: ' + this.lanotHost.identifier);
+            this.lanotHostContainer = new LanotHostContainer(this.lanotHost);
+
+            // get and show version
+            $.ajax({
+                url: this.lanotHost.baseUri + '/version',
+                dataType: 'jsonp',
+                indexValue: this.lanotHostContainer,
+                success: function (data) {
+                    this.indexValue.infoContainer.html(this.indexValue.infoContainer.html() + '<span class="version">' + data['value'] + '</span><br />');
+                }
+            });
+
+            var sorted_keys = Object.keys(data).sort();
+            // TODO: find a better way to accomplish this:
+            var lanotHostInner = this.lanotHost;
+            var lanotHostContainerInner = this.lanotHostContainer;
+            jQuery.each(sorted_keys, function(idx, index) {
+                //console.log(idx);
+                //console.log(index);
+                var obj = data[index];
+                //console.log('obj='+obj);
+                var name = index.split('_').join(' ');
+                name = name.charAt(0).toUpperCase() + name.slice(1);
+                var elemid = lanotHostInner.identifier + '_' + index.replace('.', '__');
+                var btnElementId = 'btn_' + elemid;
+                // console.log('elemid: ' + elemid);
+                if (endsWith(obj.class, 'Led') || endsWith(obj.class, 'Laser'))
+                {
+                    lanotHostContainerInner.panelBody.html(lanotHostContainerInner.panelBody.html() +
+                        '<div class="input-group"><button type="button" class="btn btn-primary btn-sm btnled" data-toggle="button" aria-pressed="false" data-name="' + name + '" data-host="' + lanotHostInner.name + '" data-hostname="' + lanotHostInner.identifier + '" data-uri-on="' + obj.methods['on'] + '" data-uri-off="' + obj.methods['off'] + '" id="' + btnElementId + '">\n' +
+                        name + ' on\n' +
+                        '</button></div>');
+                    $('#' + btnElementId).data('lanotHost', lanotHostInner);
+
+                    var uri = lanotHostInner.baseUri + obj.methods['value'];
+                    //console.log('uri: ' + uri + ' obj: ' + obj);
+                    //window.objtest = obj;
+                    $.ajax({
+                        url: uri,
+                        dataType: 'jsonp',
+                        indexValue: elemid,
+                        success: function (data) {
+                            //console.log('got value: ' + data['value']);
+                            var elem = $('#btn_' + this.indexValue);
+                            var value = data['value'];
+                            if (value === null) {
+                                console.log('Null received for btn state: ' + name);
+                            }
+                            else if (value === false) {
+                                //console.log('value is false');
+                            }
+                            else if (value === true || value.toLowerCase() === 'true') {
+                                console.log('switching led state for ' + this.indexValue);
+                                elem.text(elem.data('name') + ' off');
+                                elem.addClass('active');
+                                elem.prop('aria-pressed', 'true');
+                            }
+                        }
+                    });
+                }
+                else if (endsWith(obj.class, 'Dht11'))
+                {
+                    lanotHostContainerInner.panelBody.html(lanotHostContainerInner.panelBody.html() +
+                        '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndht11" data-name="' + name + '" data-host="' + lanotHostInner.name + '" data-hostname="' + lanotHostInner.identifier + '" data-uri="' + obj.methods['value'] + '" id="' + btnElementId + '">\n' +
+                        ' Read DHT: ' + name + '\n' +
+                        '</button><input type="textbox" id="dht11_' + elemid + '" /></div>\n');
+                    $('#' + btnElementId).data('lanotHost', lanotHostInner);
+                }
+                else if (endsWith(obj.class, 'Dsb') || endsWith(obj.class, 'dsb'))
+                {
+                    lanotHostContainerInner.panelBody.html(lanotHostContainerInner.panelBody.html() +
+                        '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndsb" data-name="' + name + '" data-host="' + lanotHostInner.name + '" data-hostname="' + lanotHostInner.identifier + '" data-uri="' + obj.methods['value'] + '" id="' + btnElementId + '">\n' +
+                        ' Read ADC: ' + name + '\n' +
+                        '</button><input type="textbox" id="dsb_' + elemid + '" /></div>\n');
+                    $('#' + btnElementId).data('lanotHost', lanotHostInner);
+                }
+                else if (endsWith(obj.class, 'Adc') || endsWith(obj.class, 'Lightsensor') || endsWith(obj.class, 'Hygrometer'))
+                {
+                    lanotHostContainerInner.panelBody.html(lanotHostContainerInner.panelBody.html() +
+                        '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnadc" data-name="' + name + '" data-host="' + lanotHostInner.name + '" data-hostname="' + lanotHostInner.identifier + '" data-uri="' + obj.methods['read'] + '" id="' + btnElementId + '">\n' +
+                        ' Read ADC: ' + name + '\n' +
+                        '</button><input type="textbox" id="adc_' + elemid + '" /></div>\n');
+                    $('#' + btnElementId).data('lanotHost', lanotHostInner);
+                    console.log('attaching lanotHost to ' + btnElementId);
+                }
+                else if (endsWith(obj.class, 'Digital') || endsWith(obj.class, 'digital'))
+                {
+                    lanotHostContainerInner.panelBody.html(lanotHostContainerInner.panelBody.html() +
+                        '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btndigital" data-name="' + name + '" data-host="' + lanotHostInner.name + '" data-hostname="' + lanotHostInner.identifier + '" data-uri="' + obj.methods['value'] + '" id="' + btnElementId + '">\n' +
+                        ' Read ADC: ' + name + '\n' +
+                        '</button><input type="textbox" id="digital_' + elemid + '" /></div>\n');
+                    $('#' + btnElementId).data('lanotHost', lanotHostInner);
+                }
+                else
+                {
+                    console.log('Unhandled class: ' + obj.class + ' from host: ' + host + ' showing methods as buttons.');
+                    jQuery.each(obj.methods, function(method_name, method_uri) {
+                        // console.log('method_name=' + method_name + ' method_uri=' + method_uri);
+                        var method_friendly_name = method_name.split('_').join(' ');
+                        method_friendly_name = method_friendly_name.charAt(0).toUpperCase() + method_friendly_name.slice(1);
+                        lanotHostContainerInner.panelBody.html(lanotHostContainerInner.panelBody.html() +
+                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnmethod" data-name="' + method_friendly_name + '" data-host="' + lanotHostInner.name + '" data-hostname="' + lanotHostInner.identifier + '" data-uri="' + method_uri + '" id="' + btnElementId + '">\n' +
+                            method_friendly_name + '\n</button></div>\n');
+                    });
+                }
+            });
+
+            // TODO: if update is called more than once, we will be adding additional events to the existing elements (if not in this particular scope, then the other, non updated containers will get duplicate events
+            // perhaps limit the event attachment to this particular container, and wipe the container as part of the update process
+            attachEvents();
+        }
+
+        $(function() {
+            //update('localhost');
+            //update('nodetest');
+            //update('test01');
+            //update('test02');
+            var serenity = new LanotHost('serenity.oh.wsh.no', '4443', 'https', '');
+            serenity.update();
+
+            var greenhouse01 = new LanotHost('serenity.oh.wsh.no', '443', 'https', '/greenhouse01');
+            greenhouse01.update();
+
+            var greenhouse02 = new LanotHost('serenity.oh.wsh.no', '443', 'https', '/greenhouse02');
+            greenhouse02.update();
+
+            //update('greenhouse01.iot.oh.wsh.no', '8080', 'http', '');
+            //update('greenhouse02.iot.oh.wsh.no', '8080', 'http', '');
+        });
     </script>
 
 </head>
 
 <body>
-
-    <div class="container" id="uiroot"></div>
-
+    <div class="container" id="ui_root"></div>
 </body>
 </html>

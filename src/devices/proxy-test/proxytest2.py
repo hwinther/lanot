@@ -29,8 +29,8 @@ class ProxyTest2(prometheus.Prometheus):
                                                          bind_port=random.randrange(1024, 9000))
         self.register(prefix='nt', nodetest=self.nodetest)
 
-        self.test01 = test01client.Test01UdpClient('test01', remote_port=9195, bind_port=random.randrange(1024, 9000))
-        self.register(prefix='t1', test01=self.test01)
+        # self.test01 = test01client.Test01UdpClient('test01', remote_port=9195, bind_port=random.randrange(1024, 9000))
+        # self.register(prefix='t1', test01=self.test01)
 
         self.test02 = test02client.Test02UdpClient('test02', remote_port=9195, bind_port=random.randrange(1024, 9000))
         self.register(prefix='t2', test02=self.test02)
@@ -65,8 +65,9 @@ if __name__ == '__main__':
     multiserver.add(jsonrestserver, bind_port=8080)
 
     # for cpython, limits cpu cycles
-    jsonrestsslserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1,
-                                                                                     socketwrapper=SslSocket)
+    jsonrestsslserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node,
+                                                                               loop_tick_delay=0.1,
+                                                                               socketwrapper=SslSocket)
     multiserver.add(jsonrestsslserver, bind_port=4443)
 
     logging.boot(udpserver)
