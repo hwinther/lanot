@@ -17,17 +17,35 @@
       <file leaf-file-name="index.html" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/index.html">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="748">
-              <caret line="276" column="74" selection-start-line="276" selection-start-column="60" selection-end-line="276" selection-end-column="74" />
+            <state relative-caret-position="1151">
+              <caret line="394" lean-forward="true" selection-start-line="394" selection-end-line="394" />
               <folding>
+                <element signature="e#436#522#0" />
+                <element signature="e#596#958#0" />
                 <element signature="e#800#871#0" />
-                <element signature="e#1371#1395#0" />
+                <element signature="e#1363#2574#0" />
+                <element signature="e#1362#1386#0" />
+                <element signature="e#3050#3074#0" />
+                <element signature="e#3101#3125#0" />
+                <element signature="e#4505#5418#0" />
+                <element signature="e#7537#7561#0" />
+                <element signature="e#7593#7617#0" />
+                <element signature="e#9382#9406#0" />
+                <element signature="e#9372#9396#0" />
+                <element signature="e#11164#15648#0" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>btnadc</find>
+      <find>html(</find>
+      <find>attaching</find>
+    </findStrings>
   </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
@@ -97,15 +115,15 @@
       <option name="presentableId" value="Default" />
       <updated>1504987997340</updated>
       <workItem from="1504987998792" duration="680000" />
-      <workItem from="1525892678903" duration="6884000" />
+      <workItem from="1525892678903" duration="17352000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="7564000" />
+    <option name="totallyTimeSpent" value="18032000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-8" y="-8" width="3456" height="1416" extended-state="6" />
+    <frame x="-8" y="-8" width="3456" height="1416" extended-state="7" />
     <editor active="true" />
     <layout>
       <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.073255815" />
@@ -133,25 +151,52 @@
   <component name="VcsContentAnnotationSettings">
     <option name="myLimit" value="2678400000" />
   </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <option name="time" value="4" />
+    </breakpoint-manager>
+  </component>
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/index.html">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="1530">
           <caret line="90" column="96" lean-forward="true" selection-start-line="90" selection-start-column="96" selection-end-line="90" selection-end-column="96" />
           <folding>
+            <element signature="e#436#522#0" />
+            <element signature="e#596#958#0" />
             <element signature="e#800#871#0" />
-            <element signature="e#1371#1395#0" />
+            <element signature="e#1363#2574#0" />
+            <element signature="e#1362#1386#0" />
+            <element signature="e#3050#3074#0" />
+            <element signature="e#3101#3125#0" />
+            <element signature="e#4505#5418#0" />
+            <element signature="e#7537#7561#0" />
+            <element signature="e#7593#7617#0" />
+            <element signature="e#9382#9406#0" />
+            <element signature="e#9372#9396#0" />
+            <element signature="e#11164#15648#0" />
           </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/index.html">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="748">
-          <caret line="276" column="74" selection-start-line="276" selection-start-column="60" selection-end-line="276" selection-end-column="74" />
+        <state relative-caret-position="1151">
+          <caret line="394" lean-forward="true" selection-start-line="394" selection-end-line="394" />
           <folding>
+            <element signature="e#436#522#0" />
+            <element signature="e#596#958#0" />
             <element signature="e#800#871#0" />
-            <element signature="e#1371#1395#0" />
+            <element signature="e#1363#2574#0" />
+            <element signature="e#1362#1386#0" />
+            <element signature="e#3050#3074#0" />
+            <element signature="e#3101#3125#0" />
+            <element signature="e#4505#5418#0" />
+            <element signature="e#7537#7561#0" />
+            <element signature="e#7593#7617#0" />
+            <element signature="e#9382#9406#0" />
+            <element signature="e#9372#9396#0" />
+            <element signature="e#11164#15648#0" />
           </folding>
         </state>
       </provider>
