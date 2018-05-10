@@ -15,6 +15,14 @@
         .card-iot {
             /*width: 24rem;*/
         }
+        .version {
+            font-size: 0.9em;
+            color: green;
+        }
+        .uname {
+            font-size: 0.5em;
+            color: orange;
+        }
     </style>
 
     <script>
@@ -145,13 +153,16 @@
         function Led(lanotHostContainer, lanotHost, idPostfix, btnElementId, obj, nodePath, friendlyName) {
             this.lanotHost = lanotHost;
 
-            lanotHostContainer.panelBody.append(
-                '<div class="form-group">' +
-                '  <!--span class="input-group-btn"-->' +
-                '    <button class="btn btn-primary btn-sm form-control btnled" data-toggle="button" aria-pressed="false" data-name="' + friendlyName + '" data-uri-on="' + obj.methods['on'] + '" data-uri-off="' + obj.methods['off'] + '" id="' + btnElementId + '">' +
-                       friendlyName + ' on' +
-                '    </button>' +
-                '  <!--/span-->' +
+            var btnGroupLed = lanotHostContainer.panelBody.find('.btn-group-led');
+            if (btnGroupLed.length === 0) {
+                lanotHostContainer.panelBody.append('<div class="btn-toolbar" role="toolbar" aria-label="Toolbar with button groups"><div class="btn-group mr-2 btn-group-sm btn-group-led btn-group-horizontal" role="group" aria-label="First group"></div></div>');
+                btnGroupLed = lanotHostContainer.panelBody.find('.btn-group-led');
+            }
+
+            btnGroupLed.append(
+                '  <button class="btn btn-primary btn-sm form-control btn-led" data-toggle="button" aria-pressed="false" data-name="' + friendlyName + '" data-uri-on="' + obj.methods['on'] + '" data-uri-off="' + obj.methods['off'] + '" id="' + btnElementId + '">' +
+                     friendlyName + ' on' +
+                '  </button>' +
                 '</div>');
 
             $('#' + btnElementId).data('led', this);
@@ -266,7 +277,7 @@
                 uir.append('<div class="card card-iot" id="' + this.lanotHost.identifier + 'container">' +
                     '  <div class="card-header">' + this.lanotHost.name + '</div>' +
                     '  <div class="card-body">' +
-                    '    <!--h5 class="card-title">' + this.lanotHost.name + '</h5-->' +
+                    '    <h5 class="card-title" id="' + this.lanotHost.identifier + '-card-title"><div id="' + this.lanotHost.identifier + '-title-div" class="input-group"></div></h5>' +
                     '    <div id="' + this.lanotHost.identifier + 'panelbody"><div id="' + this.lanotHost.identifier + '_infocontainer" class="infocontainer"></div>' +
                     '  </div>' +
                     '</div>');
@@ -274,6 +285,8 @@
             this.container = $('#' + this.lanotHost.identifier + 'container');
             //this.container.append('<div class="panel-heading">' + this.lanotHost.name + '</div>' +
             //    '<div id="' + this.lanotHost.identifier + 'panelbody" class="panel-body"><div id="' + this.lanotHost.identifier + '_infocontainer" class="infocontainer"></div></div>');
+            this.cardTitle = $('#' + this.lanotHost.identifier + '-card-title');
+            this.titleDiv = $('#' + this.lanotHost.identifier + '-title-div');
 
             this.infoContainer = $('#' + this.lanotHost.identifier + '_infocontainer');
             this.panelBody = $('#' + this.lanotHost.identifier + 'panelbody');
@@ -298,7 +311,17 @@
                 dataType: 'jsonp',
                 indexValue: this.lanotHostContainer,
                 success: function (data) {
-                    this.indexValue.infoContainer.append('<span class="version">' + data['value'] + '</span><br />');
+                    this.indexValue.titleDiv.append('<label class="form-control version float-left">Version: ' + data['value'] + '</label><br />');
+                }
+            });
+
+            // get and show uname
+            $.ajax({
+                url: this.lanotHost.baseUri + '/uname',
+                dataType: 'jsonp',
+                indexValue: this.lanotHostContainer,
+                success: function (data) {
+                    this.indexValue.titleDiv.append('<label class="form-control uname float-right">' + data['value'] + '</label><br />');
                 }
             });
 
@@ -368,19 +391,29 @@
             //update('localhost');
             //update('nodetest');
             //update('test01');
-            //update('test02');
+
+            var test02 = new LanotHost('test02.iot.oh.wsh.no', '8080', 'http', '');
+            test02.update();
 
             var serenity = new LanotHost('serenity.oh.wsh.no', '4443', 'https', '');
             serenity.update();
 
-            var greenhouse01 = new LanotHost('serenity.oh.wsh.no', '443', 'https', '/greenhouse01');
-            greenhouse01.update();
+            //var greenhouse01 = new LanotHost('serenity.oh.wsh.no', '443', 'https', '/greenhouse01');
+            //greenhouse01.update();
 
-            var greenhouse02 = new LanotHost('serenity.oh.wsh.no', '443', 'https', '/greenhouse02');
-            greenhouse02.update();
+            //var greenhouse02 = new LanotHost('serenity.oh.wsh.no', '443', 'https', '/greenhouse02');
+            //greenhouse02.update();
 
             //update('greenhouse01.iot.oh.wsh.no', '8080', 'http', '');
             //update('greenhouse02.iot.oh.wsh.no', '8080', 'http', '');
+
+            $('#btnCreate').click(function() {
+                var hostnameElement = $('#hostname');
+                var hostname = hostnameElement.val();
+                var newHost = new LanotHost(hostname, '8080', 'http', '');
+                newHost.update();
+                hostnameElement.val('');
+            });
         });
     </script>
 
@@ -389,6 +422,14 @@
 <body>
     <div class="container">
         <div class="card-deck" id="ui_root"></div>
+        <div class="container">
+            <div class="row">
+                <input class="form-control" type="text" id="hostname" placeholder="Hostname">
+            </div>
+            <div class="row">
+                <button class="form-control btn btn-success" id="btnCreate">Add host</button>
+            </div>
+        </div>
     </div>
 </body>
 </html>
