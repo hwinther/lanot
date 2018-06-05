@@ -2,12 +2,10 @@
 # import esp
 # esp.osdebug(None)
 import gc
-import webrepl
 import network
 import machine
 import os
 
-webrepl.start()
 gc.collect()
 
 wlan = network.WLAN(network.STA_IF)
@@ -20,8 +18,7 @@ if not wlan.active():
     wlan.active(True)
 
 if not wlan.isconnected():
-    # wlan.connect('dgn.iot', 'umbFUTyJSvqhxNrQ')
-    wlan.connect('kongsskogen34', 'postboks83')
+    wlan.connect('dgn.iot', 'umbFUTyJSvqhxNrQ')
     while not wlan.isconnected():
         machine.idle()
     cfg = wlan.ifconfig()

@@ -1,7 +1,7 @@
 import prometheus
 import machine
 import gc
-
+import ssd1306
 
 gc.collect()
 
@@ -32,3 +32,10 @@ class Greenhouse02(prometheus.Prometheus):
         self.register(prefix='h4', hygrometer04=self.hygrometer04)
         self.hygrometer04.adc.width(machine.ADC.WIDTH_12BIT)
         self.hygrometer04.adc.atten(machine.ADC.ATTN_11DB)
+
+        self.i2c = machine.I2C(freq=400000, scl=machine.Pin(22, machine.Pin.OUT), sda=machine.Pin(21, machine.Pin.OUT))
+        self.ssd = ssd1306.SSD1306_I2C(width=128, height=64, i2c=self.i2c)
+
+        self.ssd.fill(False)
+        self.ssd.text('init', 0, 0)
+        self.ssd.show()

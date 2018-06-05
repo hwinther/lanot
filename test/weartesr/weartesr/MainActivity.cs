@@ -43,7 +43,7 @@ namespace weartesr
             {
                 AutoCompleteTextView apiUriTextView = new AutoCompleteTextView(this)
                 {
-                    Text = "http://192.168.1.102:8080/api"
+                    Text = "http://greenhouse01.iot.oh.wsh.no:8080/api"
                 };
                 layout.AddView(apiUriTextView);
                 //TODO: add connect button?

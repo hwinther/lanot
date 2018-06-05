@@ -54,26 +54,31 @@ U8G2_SSD1306_128X64_NONAME_F_SW_I2C u8g2(U8G2_R0, /* clock=*/ SCL, /* data=*/ SD
 
 // Data wire is plugged into port 2 on the Arduino
 #define ONE_WIRE_BUS 2
+#define ONE_WIRE_BUS2 14
 
 //#define SERIAL
 
 // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 OneWire oneWire(ONE_WIRE_BUS);
+OneWire oneWire2(ONE_WIRE_BUS2);
 
 // Pass our oneWire reference to Dallas Temperature. 
 DallasTemperature sensors(&oneWire);
+DallasTemperature sensors2(&oneWire2);
 
-byte temp = 0;
+//const char* ssid     = "dgn.iot";
+//const char* password = "umbFUTyJSvqhxNrQ";
 
-const char* ssid     = "dgn";
-const char* password = "pingvin9195";
+const char* ssid     = "Augusta";
+const char* password = "rettoverbondivann";
 
-const char* host = "web01.wsh.no";
+const char* host = "bondivann.wsh.no";
 const char* streamId   = "bondivann";
 const char* privateKey = "bondivann";
 
 int sendCounter = 0;
 float temperature = 0;
+float temperature2 = 0;
 
 void setup(void) {
   #ifdef SERIAL
@@ -84,10 +89,11 @@ void setup(void) {
 
   // Start up the library
   sensors.begin();
+  sensors2.begin();
 
   u8g2.clearBuffer();          // clear the internal memory
   u8g2.setFont(u8g2_font_ncenB14_tr); // choose a suitable font
-  u8g2.drawStr(0,20,"Starting up");  // write something to the internal memory
+  u8g2.drawStr(0, 20, "Starting up");  // write something to the internal memory
   u8g2.sendBuffer();          // transfer internal memory to the display
 
   WiFi.begin(ssid, password);
@@ -107,19 +113,36 @@ void setup(void) {
 
 void loop(void) {
   sensors.requestTemperatures(); // Send the command to get temperatures
+  sensors2.requestTemperatures(); // Send the command to get temperatures
   
   u8g2.clearBuffer();					// clear the internal memory
-  u8g2.setFont(u8g2_font_ncenB12_tr);	// choose a suitable font
-  u8g2.setCursor(0,13);
+  u8g2.setFont(u8g2_font_ncenB08_tr);	// choose a suitable font
+
+  int cursorHeight = 8;
+  int cursorHeightInc = 11;
+  u8g2.setCursor(0, cursorHeight);
   u8g2.print("I:");
   u8g2.print(WiFi.localIP());
-  u8g2.setCursor(0,28);
+
+  cursorHeight += cursorHeightInc;
+  u8g2.setCursor(0, cursorHeight);
   u8g2.print("Temp: ");
   temperature = sensors.getTempCByIndex(0);
   u8g2.print(temperature, DEC);
-  u8g2.setCursor(0,46);
+
+  cursorHeight += cursorHeightInc;
+  u8g2.setCursor(0, cursorHeight);
+  u8g2.print("Temp2: ");
+  temperature2 = sensors2.getTempCByIndex(0);
+  u8g2.print(temperature2, DEC);
+
+  cursorHeight += cursorHeightInc;
+  int wsHeight = cursorHeight;
+  u8g2.setCursor(0, cursorHeight);
   u8g2.print("WS: Idle    ");
-  u8g2.setCursor(0,61);
+
+  cursorHeight += cursorHeightInc;
+  u8g2.setCursor(0, cursorHeight);
   for(int ii = 0; ii < sendCounter; ++ii)
   {
     u8g2.print(".");
@@ -131,16 +154,17 @@ void loop(void) {
       u8g2.print(" ");
     }
   }
+  
   u8g2.sendBuffer();					// transfer internal memory to the display
   ++sendCounter;
-  if (sendCounter == 10) // every minute
-  {   
+  if (sendCounter == 20) // every minute
+  {
     sendCounter = 0;
     // Use WiFiClient class to create TCP connections
     WiFiClient client;
     const int httpPort = 80;
     if (!client.connect(host, httpPort)) {
-      u8g2.setCursor(0,46);
+      u8g2.setCursor(0, wsHeight);
       u8g2.print("WS: Con fail");
       u8g2.sendBuffer();
       #ifdef SERIAL
@@ -156,8 +180,10 @@ void loop(void) {
     url += privateKey;
     url += "&value=";
     url += String(temperature, 4);
+    url += "&value2=";
+    url += String(temperature2, 4);
 
-    u8g2.setCursor(0,46);
+    u8g2.setCursor(0, wsHeight);
     u8g2.print("WS: Sending");
     u8g2.sendBuffer();
     #ifdef SERIAL
@@ -172,7 +198,7 @@ void loop(void) {
     unsigned long timeout = millis();
     while (client.available() == 0) {
       if (millis() - timeout > 5000) {
-        u8g2.setCursor(0,46);
+        u8g2.setCursor(0, wsHeight);
         u8g2.print("WS: Timeout");
         u8g2.sendBuffer();
         #ifdef SERIAL
@@ -185,7 +211,7 @@ void loop(void) {
     
     // Read all the lines of the reply from server and print them to Serial
     while(client.available()){
-      u8g2.setCursor(0,46);
+      u8g2.setCursor(0, wsHeight);
       u8g2.print("WS: Sent    ");
       u8g2.sendBuffer();
       String line = client.readStringUntil('\r');
@@ -194,6 +220,7 @@ void loop(void) {
       #endif
     }
   }
+  
   delay(1000);
 }
 
