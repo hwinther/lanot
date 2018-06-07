@@ -8,7 +8,7 @@ to run:
 set PYTHONPATH=p:\lanot\src\core\python
 '''
 
-# prometheus.tftpd.tftp_client('greenhouse02.iot.oh.wsh.no', 'boot.py')
+prometheus.tftpd.tftp_client('greenhouse02.iot.oh.wsh.no', 'boot.py')
 prometheus.tftpd.tftp_client('greenhouse02.iot.oh.wsh.no', 'main.py')
 prometheus.tftpd.tftp_client('greenhouse02.iot.oh.wsh.no', 'greenhouse02.py')
 

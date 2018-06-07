@@ -25,7 +25,7 @@ class WLAN(object):
     def ifconfig(self, config=None):
         return (1,2,3,4)
 
-    def connect(self, ssid, pw=None, auth=None, timeout=None):
+    def connect(self, ssid, password=None, auth=None, timeout=None, bssid=None):
         pass
 
 

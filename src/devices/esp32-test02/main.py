@@ -10,6 +10,10 @@ import prometheus.logging as logging
 gc.collect()
 
 
+def td():
+    prometheus.tftpd.tftpd()
+
+
 node = test02.Test02()
 gc.collect()
 logging.debug(gc.mem_free())

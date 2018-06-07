@@ -154,3 +154,7 @@ except:
 
 def idle():
     pass
+
+
+def reset():
+    pass

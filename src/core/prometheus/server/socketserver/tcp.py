@@ -116,9 +116,15 @@ class TcpSocketServer(socketserver.SocketServer):
                     #  the initial data burst
                     logging.warn('dupterm %s:0' % repr(addr))
                     del self.buffers[addr]
-                    os.dupterm(self.sockets[addr], 0)
+                    sock = self.sockets[addr]
+                    sock.setblocking(False)
+                    # notify REPL on socket incoming data
+                    sock.setsockopt(socket.SOL_SOCKET, 20, os.dupterm_notify)
+                    os.dupterm(sock, 0)
                     # del self.sockets[addr]
-                    break
+                    raise Exception('Dropping to REPL')
+                    # self.loop_active = False
+                    # break
 
                 logging.notice('Calling handle data')
                 self.handle_data(command, self.sockets[addr])

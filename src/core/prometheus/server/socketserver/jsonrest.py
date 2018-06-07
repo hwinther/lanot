@@ -37,14 +37,14 @@ class JsonRestServer(socketserver.SocketServer):
 
         # TODO: optimize memory usage
         gc.collect()
-        if prometheus.is_micro:
+        if prometheus.server.debug and prometheus.is_micro:
             logging.debug('mem_free before urls: %s' % gc.mem_free())
         self.instance.update_urls()
         if prometheus.data_debug:
             for key in self.instance.cached_urls.keys():
                 logging.info('url: %s' % key)
         gc.collect()
-        if prometheus.is_micro:
+        if prometheus.server.debug and prometheus.is_micro:
             logging.debug('mem_free after urls: %s' % gc.mem_free())
 
     def loop_tick(self, **kwargs):
