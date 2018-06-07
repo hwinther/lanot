@@ -115,6 +115,7 @@ class TcpSocketServer(socketserver.SocketServer):
                 if shell_enabled and command == b'shell':
                     if not prometheus.is_micro:
                         self.reply('Not implemented for this platform', source=self.sockets[addr], **kwargs)
+                        break
 
                     logging.warn('dupterm %s:0' % repr(addr))
                     del self.buffers[addr]
