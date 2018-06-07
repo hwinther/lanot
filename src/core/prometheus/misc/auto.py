@@ -678,44 +678,54 @@ def build_client(cls, output_filename, client_template_instances):
         imports + '\n'.join(code)[:-1])
 
 
-# to "make" lightcontrol and other things from basic sources
-folder_import()
+if __name__ == '__main__':
+    # to "make" lightcontrol and other things from basic sources
+    folder_import()
 
-from tank import Tank
-build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
-from tankproxy import TankProxy
-build_client(TankProxy, 'tankproxyclient.py', [UdpTemplate, TcpTemplate])
-# from proxytest import ProxyTest
-# build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
-from chaintest import A, B, C
-build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
-build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
-build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
+    from tank import Tank
 
+    build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
+    from tankproxy import TankProxy
 
-from sensor01 import Sensor01
-build_client(Sensor01, 'sensor01client.py', [UdpTemplate])
-from sensor02 import Sensor02
-build_client(Sensor02, 'sensor02client.py', [UdpTemplate])
+    build_client(TankProxy, 'tankproxyclient.py', [UdpTemplate, TcpTemplate])
+    # from proxytest import ProxyTest
+    # build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
+    from chaintest import A, B, C
 
-from nodetest import NodeTest
-build_client(NodeTest, 'nodetestclient.py', [UdpTemplate, TcpTemplate])
-from localtest import LocalTest
-build_client(LocalTest, 'localtestclient.py', [UdpTemplate, TcpTemplate])
-from test01 import Test01
-build_client(Test01, 'test01client.py', [UdpTemplate, TcpTemplate])
-from test02 import Test02
-build_client(Test02, 'test02client.py', [UdpTemplate, TcpTemplate])
+    build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
+    build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
+    build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
 
-from proxytest2 import ProxyTest2
-build_client(ProxyTest2, 'proxytest2client.py', [UdpTemplate, TcpTemplate])
-# , RsaUdpTemplate
+    from sensor01 import Sensor01
 
-# u = RsaUdpTemplate('192.168.1.102', bind_port=9191, clientencrypt=False)
-# u.send(b'version')
-# v = u.recv(250)
-# print('version: %s' % v)
+    build_client(Sensor01, 'sensor01client.py', [UdpTemplate])
+    from sensor02 import Sensor02
 
+    build_client(Sensor02, 'sensor02client.py', [UdpTemplate])
 
-from rover01 import Rover01
-build_client(Rover01, 'rover01client.py', [UdpTemplate, TcpTemplate])
+    from nodetest import NodeTest
+
+    build_client(NodeTest, 'nodetestclient.py', [UdpTemplate, TcpTemplate])
+    from localtest import LocalTest
+
+    build_client(LocalTest, 'localtestclient.py', [UdpTemplate, TcpTemplate])
+    from test01 import Test01
+
+    build_client(Test01, 'test01client.py', [UdpTemplate, TcpTemplate])
+    from test02 import Test02
+
+    build_client(Test02, 'test02client.py', [UdpTemplate, TcpTemplate])
+
+    from proxytest2 import ProxyTest2
+
+    build_client(ProxyTest2, 'proxytest2client.py', [UdpTemplate, TcpTemplate])
+    # , RsaUdpTemplate
+
+    # u = RsaUdpTemplate('192.168.1.102', bind_port=9191, clientencrypt=False)
+    # u.send(b'version')
+    # v = u.recv(250)
+    # print('version: %s' % v)
+
+    from rover01 import Rover01
+
+    build_client(Rover01, 'rover01client.py', [UdpTemplate, TcpTemplate])

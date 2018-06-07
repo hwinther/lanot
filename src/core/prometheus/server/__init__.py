@@ -131,11 +131,14 @@ class Server(object):
             self.os_safe_function(os.chdir, command[6:])
         elif command_length > 3 and command[0:3] == 'cd ':
             self.os_safe_function(os.chdir, command[3:])
-        elif command == 'getcwd':
+        elif command == 'getcwd' or command == 'pwd':
             cwd = os.getcwd()
             self.reply(self.os_safe_function(os.getcwd), source=source, **kwargs)
-        elif prometheus.is_micro and (command == 'listdir' or command == 'ls'):
-            self.reply(self.os_safe_function(os.listdir), source=source, **kwargs)
+        elif command == 'listdir' or command == 'ls':
+            if prometheus.is_micro:
+                self.reply(self.os_safe_function(os.listdir), source=source, **kwargs)
+            else:
+                self.reply(self.os_safe_function(os.listdir, '.'), source=source, **kwargs)
         elif command_length > 8 and command[0:8] == 'listdir ':
             self.reply(self.os_safe_function(os.listdir, command[8:]), source=source, **kwargs)
         elif command_length > 3 and command[0:3] == 'ls ':

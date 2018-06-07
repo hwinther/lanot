@@ -6,6 +6,7 @@ import prometheus.server.socketserver as socketserver
 import prometheus.logging as logging
 
 gc.collect()
+shell_enabled = True
 
 
 class TcpSocketServer(socketserver.SocketServer):
@@ -111,9 +112,10 @@ class TcpSocketServer(socketserver.SocketServer):
                     # logging.notice('Breaking command loop')
                     break
 
-                if command == b'shell':
-                    # this is very experimental, and does not seem to work atm - one of the fd's breaks down after
-                    #  the initial data burst
+                if shell_enabled and command == b'shell':
+                    if not prometheus.is_micro:
+                        self.reply('Not implemented for this platform', source=self.sockets[addr], **kwargs)
+
                     logging.warn('dupterm %s:0' % repr(addr))
                     del self.buffers[addr]
                     sock = self.sockets[addr]
@@ -121,10 +123,7 @@ class TcpSocketServer(socketserver.SocketServer):
                     # notify REPL on socket incoming data
                     sock.setsockopt(socket.SOL_SOCKET, 20, os.dupterm_notify)
                     os.dupterm(sock, 0)
-                    # del self.sockets[addr]
                     raise Exception('Dropping to REPL')
-                    # self.loop_active = False
-                    # break
 
                 logging.notice('Calling handle data')
                 self.handle_data(command, self.sockets[addr])
