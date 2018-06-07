@@ -125,6 +125,11 @@ class TcpSocketServer(socketserver.SocketServer):
                     sock.setsockopt(socket.SOL_SOCKET, 20, os.dupterm_notify)
                     os.dupterm(sock, 0)
                     raise Exception('Dropping to REPL')
+                elif command == b'quit':
+                    self.sockets[addr].close()
+                    del self.buffers[addr]
+                    del self.sockets[addr]
+                    break
 
                 logging.notice('Calling handle data')
                 self.handle_data(command, self.sockets[addr])
