@@ -9,3 +9,4 @@ gc.collect()
 
 prometheus.pnetwork.init_network()
 print(os.uname())
+gc.collect()

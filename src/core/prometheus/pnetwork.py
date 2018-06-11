@@ -2,8 +2,14 @@ import os
 import time
 import machine
 import network
+import binascii
 import prometheus
 import prometheus.pgc as gc
+import prometheus.server.socketserver.udp
+import prometheus.logging as logging
+
+__version__ = '0.1.4'
+__author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
 
@@ -13,6 +19,12 @@ ap_if = None
 sta_if = None
 if prometheus.is_micro:
     ap_if = network.WLAN(network.AP_IF)
+    if not ap_if.config('essid').startswith('Prometheus'):
+        essid = b"Prometheus-%s" % binascii.hexlify(ap_if.config("mac")[-3:])
+        # if essid.decode('ansi') is not ap_if.config('essid'):
+        ap_if.config(essid=essid, authmode=network.AUTH_WPA_WPA2_PSK, password=b"forethought")
+        # except Exception as e:
+        #     print('Failed to set ap_if config: %s' % str(e))
     sta_if = network.WLAN(network.STA_IF)
 
 config_filename = 'sta_if.cfg'
@@ -20,13 +32,44 @@ config_filename = 'sta_if.cfg'
 gc.collect()
 
 
+def run_local():
+    # the following will start up a default config udp server to receive configuration instructions
+
+    # dont run if main.py exists
+    if 'main.py' in os.listdir('/'):
+        return
+
+    # temporarily disabled
+    return
+
+    logging.info('Starting default server')
+    node = prometheus.Prometheus()
+    udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
+    # enable configuration commands if necessary
+    if not prometheus.server.config_enabled:
+        prometheus.server.config_enabled = True
+
+    logging.boot(udpserver)
+    try:
+        udpserver.start()
+    except Exception as e:
+        logging.warn('Default udpserver exception: %s' % str(e))
+
+    del udpserver
+    del node
+    gc.collect()
+    logging.info('Cleaned up default server')
+
+
 def init_network():
     ssid, password = load_config()
 
     if ssid is not None and password is not None:
         sta_mode(ssid, password)
+        run_local()
     else:
         ap_mode()
+        run_local()
 
 
 def save_config(ssid, password):
@@ -48,7 +91,7 @@ def load_config():
 
 
 def sta_mode(ssid, password):
-    print('STA mode')
+    logging.info('STA mode')
 
     if ap_if.active():
         ap_if.active(False)
@@ -63,14 +106,14 @@ def sta_mode(ssid, password):
 
         if sta_if.isconnected():
             cfg = sta_if.ifconfig()
-            print('WLAN connected ip {} gateway {}'.format(cfg[0], cfg[2]))
+            logging.notice('WLAN connected ip {} gateway {}'.format(cfg[0], cfg[2]))
         else:
             # switch back to AP mode
             ap_mode()
 
 
 def ap_mode():
-    print('AP mode')
+    logging.info('AP mode')
 
     if not ap_if.active():
         ap_if.active(True)

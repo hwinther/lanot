@@ -7,11 +7,12 @@ import prometheus
 import prometheus.logging as logging
 import prometheus.pnetwork
 
-__version__ = '0.1.7a'
+__version__ = '0.1.8'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
 
+# TODO: have favicon stored as a file that is deployed with the image
 favicon = b'\x00\x00\x01\x00\x01\x00\x10\x10\x10\x00\x01\x00\x04\x00(\x01\x00\x00\x16\x00\x00\x00(\x00\x00\x00\x10' \
           b'\x00\x00\x00 \x00\x00\x00\x01\x00\x04\x00\x00\x00\x00\x00\x80\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' \
           b'\x00\x10\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\xff\x84\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00' \
@@ -28,6 +29,7 @@ favicon = b'\x00\x00\x01\x00\x01\x00\x10\x10\x10\x00\x01\x00\x04\x00(\x01\x00\x0
 debug = False
 os_enabled = True
 reset_enabled = True
+config_enabled = True
 
 
 # noinspection PyMethodMayBeStatic
@@ -99,8 +101,10 @@ class Server(object):
             self.reply(self.version(), source=source, **kwargs)
         elif command == 'sysinfo':
             self.reply(self.sysinfo(), source=source, **kwargs)
-        elif command_length > 10 and command[0:8] == 'connect ':
-            self.reply(self.connect(command[8:]), source=source, **kwargs)
+        elif config_enabled and command_length > 10 and command[0:8] == 'connect ':
+            self.connect(command[8:])
+            # Reply might be part of a bug, will set back if its unrelated
+            # self.reply(self.connect(command[8:]), source=source, **kwargs)
         elif command in self.instance.cached_remap:
             registered_method = self.instance.cached_remap[command]  # type: prometheus.RegisteredMethod
             return_value = registered_method.method_reference()
@@ -116,6 +120,8 @@ class Server(object):
         elif reset_enabled and command == 'reset':
             logging.warn('reset command received')
             machine.reset()
+        elif command == 'tftpd':
+            self.reply(self.tftpd(), source=source, **kwargs)
         else:
             logging.error('invalid cmd: %s' % command)
         if debug:
@@ -164,6 +170,13 @@ class Server(object):
         self.reply(prompt, source=source, **kwargs)
         gc.collect()
         return True
+
+    def tftpd(self):
+        logging.warn('tftpd command received')
+        import prometheus.tftpd
+        prometheus.tftpd.tftpd()
+        gc.collect()
+        return 'tftpd session ended'
 
     def os_safe_function(self, func, *args):
         try:
@@ -220,19 +233,32 @@ class Server(object):
         ssid, password = network_info.split(':', 1)
         logging.notice('Connecting to %s' % ssid)
 
+        if sys.platform == 'esp8266':
+            # HACK: esp8266 seems to crash if both AP and STA are active at once
+            # this might come down to implementation differences, maybe you should use one of them to do both tasks?
+            print('turning off ap')
+            prometheus.pnetwork.ap_if.active(False)
+            machine.idle()
+
         if not prometheus.pnetwork.sta_if.active():
             prometheus.pnetwork.sta_if.active(True)
             prometheus.pnetwork.sta_if.connect(ssid, password)
         time_start = time.time()
-        while not prometheus.pnetwork.sta_if.isconnected() and not (time.time() - time_start) >= 5:
+        while not prometheus.pnetwork.sta_if.isconnected() and not (time.time() - time_start) >= 10:
             machine.idle()
 
         if prometheus.pnetwork.sta_if.isconnected():
             logging.notice('Connected successfully')
             # save config and disable ap
             prometheus.pnetwork.save_config(ssid, password)
-            prometheus.pnetwork.ap_if.active(False)
-            return 'Connected successfully'
+            prometheus.pnetwork.sta_mode(ssid, password)
+            # TODO: return does not seem to work, could be hardware/toolchain related?
+            # (i.e. which dev do we send this from)
+            # return 'Connected successfully'
         else:
             logging.notice('Connection timed out')
-            return 'Connection timed out'
+            if sys.platform == 'esp8266':
+                # followup of previous hack, turning it back on
+                print('turning ap back on')
+                prometheus.pnetwork.ap_if.active(True)
+            # return 'Connection timed out'

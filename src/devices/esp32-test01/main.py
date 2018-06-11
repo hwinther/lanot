@@ -40,6 +40,7 @@ udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
 # gc.collect()
 
 logging.boot(udpserver)
+# udpserver.start()
 # multiserver.start()
 
 x_calibration_forward = 1800
@@ -84,7 +85,10 @@ def jl():
     timer = time.ticks_ms()
     driving = False
     host = 'rover01.iot.oh.wsh.no'
-    ip = socket.getaddrinfo(host, 9195)[-1][-1][0]
+    ip = socket.getaddrinfo(host, 9195)
+    if ip is []:
+        return
+    ip = ip[-1][-1][0]
     udp = rover01client.Rover01UdpClient(ip, remote_port=9195, bind_port=9191)
 
     while True:

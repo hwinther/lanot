@@ -18,6 +18,7 @@ const char* password = "umbFUTyJSvqhxNrQ";
 ESP8266WebServer server(80);
 const int led = 16;
 
+// const int dataPin, const int clkPin, const int csPin
 LedControl lc = LedControl(13, 12, 14, num_devices);
 FrameDisplay fd = FrameDisplay();
 

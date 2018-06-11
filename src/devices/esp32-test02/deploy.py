@@ -13,6 +13,9 @@ import prometheus.tftpd
 prometheus.tftpd.tftpd()
 '''
 
-prometheus.tftpd.tftp_client('10.20.2.116', 'boot.py')
-prometheus.tftpd.tftp_client('10.20.2.116', 'main.py')
-prometheus.tftpd.tftp_client('10.20.2.116', 'test02.py')
+files = [
+    'boot.py',
+    'main.py',
+    'test02.py'
+]
+prometheus.tftpd.tftp_client('10.20.2.116', *files)
