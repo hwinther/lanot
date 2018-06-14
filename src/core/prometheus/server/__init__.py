@@ -7,7 +7,7 @@ import prometheus
 import prometheus.logging as logging
 import prometheus.pnetwork
 
-__version__ = '0.1.8'
+__version__ = '0.1.8a'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -89,6 +89,7 @@ class Server(object):
 
         command_length = len(command)
 
+        # TODO: find a way to implement a custom command extension in the Prometheus inheritors
         if command == 'cap':
             # capability
             return_value = ''
@@ -102,7 +103,8 @@ class Server(object):
         elif command == 'sysinfo':
             self.reply(self.sysinfo(), source=source, **kwargs)
         elif config_enabled and command_length > 10 and command[0:8] == 'connect ':
-            self.connect(command[8:])
+            prometheus.pnetwork.connect(command[8:])
+            # self.connect(command[8:])
             # Reply might be part of a bug, will set back if its unrelated
             # self.reply(self.connect(command[8:]), source=source, **kwargs)
         elif command in self.instance.cached_remap:
@@ -222,43 +224,3 @@ class Server(object):
             return '%.2fMB vfs free, %.2fKB mem free' % (freespace, gc.mem_free()/1024)
         else:
             return 'Not implemented for this platform'
-
-    def connect(self, network_info):
-        if network_info.find(':') is -1:
-            return 'Missing : between ssid and password'
-
-        if not prometheus.is_micro:
-            return 'Not implemented for this platform'
-
-        ssid, password = network_info.split(':', 1)
-        logging.notice('Connecting to %s' % ssid)
-
-        if sys.platform == 'esp8266':
-            # HACK: esp8266 seems to crash if both AP and STA are active at once
-            # this might come down to implementation differences, maybe you should use one of them to do both tasks?
-            print('turning off ap')
-            prometheus.pnetwork.ap_if.active(False)
-            machine.idle()
-
-        if not prometheus.pnetwork.sta_if.active():
-            prometheus.pnetwork.sta_if.active(True)
-            prometheus.pnetwork.sta_if.connect(ssid, password)
-        time_start = time.time()
-        while not prometheus.pnetwork.sta_if.isconnected() and not (time.time() - time_start) >= 10:
-            machine.idle()
-
-        if prometheus.pnetwork.sta_if.isconnected():
-            logging.notice('Connected successfully')
-            # save config and disable ap
-            prometheus.pnetwork.save_config(ssid, password)
-            prometheus.pnetwork.sta_mode(ssid, password)
-            # TODO: return does not seem to work, could be hardware/toolchain related?
-            # (i.e. which dev do we send this from)
-            # return 'Connected successfully'
-        else:
-            logging.notice('Connection timed out')
-            if sys.platform == 'esp8266':
-                # followup of previous hack, turning it back on
-                print('turning ap back on')
-                prometheus.pnetwork.ap_if.active(True)
-            # return 'Connection timed out'

@@ -1,7 +1,7 @@
 import socket
 import gc
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -33,9 +33,9 @@ def tftpd():
         # print(repr(data))
         if data.find(b'\00\01\02\03') != -1:
             name, content = data.split(b'\00\01\02\03', 1)
-            if name.find('/') is -1:
+            if name.find(b'/') == -1:
                 # make it an explicit path in case current working dir is not / (that used to be the assumption)
-                name = '/' + name
+                name = b'/' + name
             print('name: %s len: %d' % (repr(name), len(content)))
             f = open(name, 'w')
             f.write(content)

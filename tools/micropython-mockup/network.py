@@ -1,5 +1,6 @@
 STA_IF = 0
 AP_IF = 0
+AUTH_WPA_WPA2_PSK = 0
 
 # TODO: there are a lot of holes here, and i have not checked which parameters are required
 
@@ -27,6 +28,10 @@ class WLAN(object):
 
     def connect(self, ssid, password=None, auth=None, timeout=None, bssid=None):
         pass
+
+    def config(self, name=None, essid=None, password=None, authmode=None):
+        if name is not None:
+            return name
 
 
 class Server(object):

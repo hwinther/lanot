@@ -1,4 +1,5 @@
 import os
+import sys
 import time
 import machine
 import network
@@ -8,7 +9,7 @@ import prometheus.pgc as gc
 import prometheus.server.socketserver.udp
 import prometheus.logging as logging
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -20,14 +21,16 @@ sta_if = None
 if prometheus.is_micro:
     ap_if = network.WLAN(network.AP_IF)
     if not ap_if.config('essid').startswith('Prometheus'):
-        essid = b"Prometheus-%s" % binascii.hexlify(ap_if.config("mac")[-3:])
+        essid = b'Prometheus-%s' % binascii.hexlify(ap_if.config('mac')[-3:])
         # if essid.decode('ansi') is not ap_if.config('essid'):
-        ap_if.config(essid=essid, authmode=network.AUTH_WPA_WPA2_PSK, password=b"forethought")
+        ap_if.config(essid=essid, authmode=network.AUTH_WPA_WPA2_PSK, password=b'forethought')
         # except Exception as e:
         #     print('Failed to set ap_if config: %s' % str(e))
     sta_if = network.WLAN(network.STA_IF)
 
 config_filename = 'sta_if.cfg'
+is_esp8266 = sys.platform == 'esp8266'
+debug = False
 
 gc.collect()
 
@@ -39,12 +42,10 @@ def run_local():
     if 'main.py' in os.listdir('/'):
         return
 
-    # temporarily disabled
-    return
-
     logging.info('Starting default server')
     node = prometheus.Prometheus()
     udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
+
     # enable configuration commands if necessary
     if not prometheus.server.config_enabled:
         prometheus.server.config_enabled = True
@@ -58,7 +59,8 @@ def run_local():
     del udpserver
     del node
     gc.collect()
-    logging.info('Cleaned up default server')
+    if debug:
+        logging.info('Cleaned up default server')
 
 
 def init_network():
@@ -101,8 +103,16 @@ def sta_mode(ssid, password):
     if not sta_if.isconnected():
         sta_if.connect(ssid, password)
         time_start = time.time()
+        i = 0
         while not sta_if.isconnected() and not (time.time() - time_start) >= 30:
-            machine.idle()
+            # esp8266 crashes when machine.idle is used in this context, thus the incrementing
+            if is_esp8266:
+                i += 1
+            else:
+                machine.idle()
+
+        if is_esp8266 and debug:
+            print('esp8266 - spent %d iterations' % i)
 
         if sta_if.isconnected():
             cfg = sta_if.ifconfig()
@@ -119,3 +129,62 @@ def ap_mode():
         ap_if.active(True)
     if sta_if.active():
         sta_if.active(False)
+
+
+def connect(network_info):
+    if network_info.find(':') is -1:
+        return 'Missing : between ssid and password'
+
+    if not prometheus.is_micro:
+        return 'Not implemented for this platform'
+
+    ssid, password = network_info.split(':', 1)
+    logging.notice('Connecting to %s' % ssid)
+    gc.collect()
+
+    # if is_esp8266:
+    #     # HACK: esp8266 seems to crash if both AP and STA are active at once
+    #     # this might come down to implementation differences, maybe you should use one of them to do both tasks?
+    #     print('turning off ap')
+    #     ap_if.active(False)
+    #     machine.idle()
+
+    if not sta_if.active():
+        sta_if.active(True)
+
+    if not sta_if.isconnected():
+        if debug:
+            print('ssid: %s' % repr(ssid))
+            print('password: %s' % repr(password))
+        sta_if.connect(ssid, password)
+
+        time_start = time.time()
+        i = 0
+        while not sta_if.isconnected() and not (time.time() - time_start) >= 30:
+            # esp8266 crashes when machine.idle is used in this context, thus the incrementing
+            if is_esp8266:
+                i += 1
+            else:
+                machine.idle()
+
+        if is_esp8266 and debug:
+            print('esp8266 - spent %d iterations' % i)
+
+    if sta_if.isconnected():
+        logging.notice('Connected successfully')
+        # save config and disable ap
+        save_config(ssid, password)
+        gc.collect()
+        sta_mode(ssid, password)
+        # TODO: return does not seem to work, could be hardware/toolchain related?
+        # (i.e. which dev do we send this from)
+        # return 'Connected successfully'
+    else:
+        logging.notice('Connection timed out')
+        # if is_esp8266:
+        #     # followup of previous hack, turning it back on
+        #     print('turning ap back on')
+        #     ap_if.active(True)
+        # return 'Connection timed out'
+
+    gc.collect()

@@ -11,8 +11,8 @@
 //#include <ESP8266mDNS.h>
 //#include <ArduinoJson.h>
 
-//const char* ssid = "dniHQ";
-//const char* password = "dotnetinternals145";
+//const char* ssid = "dniHQ.iot";
+//const char* password = "P9wffBw4qZBypUSy";
 const char* ssid = "dgn.iot";
 const char* password = "umbFUTyJSvqhxNrQ";
 ESP8266WebServer server(80);
