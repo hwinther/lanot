@@ -22,10 +22,7 @@ if prometheus.is_micro:
     ap_if = network.WLAN(network.AP_IF)
     if not ap_if.config('essid').startswith('Prometheus'):
         essid = b'Prometheus-%s' % binascii.hexlify(ap_if.config('mac')[-3:])
-        # if essid.decode('ansi') is not ap_if.config('essid'):
         ap_if.config(essid=essid, authmode=network.AUTH_WPA_WPA2_PSK, password=b'forethought')
-        # except Exception as e:
-        #     print('Failed to set ap_if config: %s' % str(e))
     sta_if = network.WLAN(network.STA_IF)
 
 config_filename = 'sta_if.cfg'
