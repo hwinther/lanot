@@ -6,10 +6,12 @@ import network
 import binascii
 import prometheus
 import prometheus.pgc as gc
+import prometheus.server.multiserver
 import prometheus.server.socketserver.udp
+import prometheus.server.socketserver.tcp
 import prometheus.logging as logging
 
-__version__ = '0.1.5'
+__version__ = '0.1.5a'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -40,20 +42,32 @@ def run_local():
         return
 
     logging.info('Starting default server')
+
     node = prometheus.Prometheus()
+    multiserver = prometheus.server.multiserver.MultiServer()
+
     udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
+    multiserver.add(udpserver)
+    gc.collect()
+
+    tcpserver = prometheus.server.socketserver.tcp.TcpSocketServer(node)
+    multiserver.add(tcpserver)
+    gc.collect()
 
     # enable configuration commands if necessary
     if not prometheus.server.config_enabled:
         prometheus.server.config_enabled = True
 
     logging.boot(udpserver)
-    try:
-        udpserver.start()
-    except Exception as e:
-        logging.warn('Default udpserver exception: %s' % str(e))
 
+    try:
+        multiserver.start()
+    except Exception as e:
+        logging.warn('Default server exception: %s' % str(e))
+
+    del tcpserver
     del udpserver
+    del multiserver
     del node
     gc.collect()
     if debug:
