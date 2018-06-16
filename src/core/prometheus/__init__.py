@@ -175,10 +175,10 @@ class Prometheus(object):
             return self.cached_remap
 
         self.cached_remap = self.data_commands()
-        prometheus_attributes = self.recursive_attributes()  # type: list(PrometheusAttribute)
+        prometheus_attributes = self.recursive_attributes()
 
         self.prefix_cache = dict()
-        for prometheus_attribute in prometheus_attributes:
+        for prometheus_attribute in prometheus_attributes:  # type: PrometheusAttribute
             # logging.notice('prometheus_attribute=%s' % str(prometheus_attribute))
             prefix = prometheus_attribute.prefix
             # logging.notice('debug, prefix=%s' % repr(prefix))
@@ -295,6 +295,7 @@ class Led(Prometheus):
 
     @Registry.register('Led', 'v', 'OUT')
     def value(self):
+        # the equal/not equal operators have to be used to get truthyness ('1 is not True' will not work)
         if self.inverted:
             return self.pin.value() != True
         else:

@@ -1,4 +1,5 @@
 import time
+import prometheus.logging as logging
 
 
 class UART(object):
@@ -48,10 +49,10 @@ class Pin(object):
 
     def value(self, value_parameter=None):
         if value_parameter is None:
-            print('Pin %s returning value %s' % (self.pin, self.state_value))
+            logging.debug('Pin %s returning value %s' % (self.pin, self.state_value))
             return self.state_value
 
-        print('Pin %s value set to %s' %(self.pin, value_parameter))
+        logging.debug('Pin %s value set to %s' %(self.pin, value_parameter))
         self.state_value = value_parameter
         return None
 
@@ -145,9 +146,10 @@ class TouchPad(object):
 def sleep_ms(ms):
     time.sleep(ms / 1000.0)
 
+
 try:
     getattr(time, 'sleep_ms')
-except:
+except AttributeError:
     time.sleep_ms = sleep_ms
 
 

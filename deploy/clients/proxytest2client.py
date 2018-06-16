@@ -1,11 +1,12 @@
-# generated at 2018-05-08 23:40:46
+# generated at 2018-06-16 23:51:15
 import prometheus
 import socket
-import machine
 import time
 import gc
 import prometheus.crypto
 import prometheus.misc
+import prometheus.psocket
+import prometheus.logging as logging
 
 gc.collect()
 
@@ -288,304 +289,12 @@ class ProxyTest2UdpClientDht11(prometheus.Prometheus):
         return self.recv(10)
 
 
-class ProxyTest2UdpClientTest01(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-        
-        self.integrated_led = ProxyTest2UdpClientIntegratedLed(self.send, self.recv)
-        self.register(integrated_led=self.integrated_led)
-        self.joystickswitch = ProxyTest2UdpClientJoystickswitch(self.send, self.recv)
-        self.register(joystickswitch=self.joystickswitch)
-        self.joystickx = ProxyTest2UdpClientJoystickx(self.send, self.recv)
-        self.register(joystickx=self.joystickx)
-        self.joysticky = ProxyTest2UdpClientJoysticky(self.send, self.recv)
-        self.register(joysticky=self.joysticky)
-        self.laser = ProxyTest2UdpClientLaser(self.send, self.recv)
-        self.register(laser=self.laser)
-        self.switch = ProxyTest2UdpClientSwitch(self.send, self.recv)
-        self.register(switch=self.switch)
-        self.window01digital = ProxyTest2UdpClientWindow01digital(self.send, self.recv)
-        self.register(window01digital=self.window01digital)
-        self.window02digital = ProxyTest2UdpClientWindow02digital(self.send, self.recv)
-        self.register(window02digital=self.window02digital)
-
-
-
-class ProxyTest2UdpClientIntegratedLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientLaser(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientLaser', 'lv', 'OUT')
-    def value(self):
-        self.send(b'lv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2UdpClientLaser', 'l0')
-    def off(self):
-        self.send(b'l0')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientLaser', 'l1')
-    def on(self):
-        self.send(b'l1')
-
-
-class ProxyTest2UdpClientJoysticky(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientJoysticky', 'yr', 'OUT')
-    def read(self):
-        self.send(b'yr')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientJoystickx(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientJoystickx', 'xr', 'OUT')
-    def read(self):
-        self.send(b'xr')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientSwitch(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientSwitch', 'sv', 'OUT')
-    def value(self):
-        self.send(b'sv')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientJoystickswitch(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientJoystickswitch', 'jv', 'OUT')
-    def value(self):
-        self.send(b'jv')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientWindow01digital(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientWindow01digital', 'w1v', 'OUT')
-    def value(self):
-        self.send(b'w1v')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientWindow02digital(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientWindow02digital', 'w2v', 'OUT')
-    def value(self):
-        self.send(b'w2v')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientTest02(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-        
-        self.blue_led = ProxyTest2UdpClientBlueLed(self.send, self.recv)
-        self.register(blue_led=self.blue_led)
-        self.green_led = ProxyTest2UdpClientGreenLed(self.send, self.recv)
-        self.register(green_led=self.green_led)
-        self.integrated_led = ProxyTest2UdpClientIntegratedLed(self.send, self.recv)
-        self.register(integrated_led=self.integrated_led)
-        self.lightsensor = ProxyTest2UdpClientLightsensor(self.send, self.recv)
-        self.register(lightsensor=self.lightsensor)
-        self.red_led = ProxyTest2UdpClientRedLed(self.send, self.recv)
-        self.register(red_led=self.red_led)
-        self.uw_led = ProxyTest2UdpClientUwLed(self.send, self.recv)
-        self.register(uw_led=self.uw_led)
-        self.yellow_led = ProxyTest2UdpClientYellowLed(self.send, self.recv)
-        self.register(yellow_led=self.yellow_led)
-
-
-
-class ProxyTest2UdpClientBlueLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientBlueLed', 'bv', 'OUT')
-    def value(self):
-        self.send(b'bv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2UdpClientBlueLed', 'b0')
-    def off(self):
-        self.send(b'b0')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientBlueLed', 'b1')
-    def on(self):
-        self.send(b'b1')
-
-
-class ProxyTest2UdpClientIntegratedLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientYellowLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientYellowLed', 'y1')
-    def on(self):
-        self.send(b'y1')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientYellowLed', 'y0')
-    def off(self):
-        self.send(b'y0')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientYellowLed', 'yv', 'OUT')
-    def value(self):
-        self.send(b'yv')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientRedLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientRedLed', 'rv', 'OUT')
-    def value(self):
-        self.send(b'rv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2UdpClientRedLed', 'r0')
-    def off(self):
-        self.send(b'r0')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientRedLed', 'r1')
-    def on(self):
-        self.send(b'r1')
-
-
-class ProxyTest2UdpClientUwLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientUwLed', 'uv', 'OUT')
-    def value(self):
-        self.send(b'uv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2UdpClientUwLed', 'u1')
-    def on(self):
-        self.send(b'u1')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientUwLed', 'u0')
-    def off(self):
-        self.send(b'u0')
-
-
-class ProxyTest2UdpClientLightsensor(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientLightsensor', 'sr', 'OUT')
-    def read(self):
-        self.send(b'sr')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientGreenLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientGreenLed', 'gv', 'OUT')
-    def value(self):
-        self.send(b'gv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2UdpClientGreenLed', 'g1')
-    def on(self):
-        self.send(b'g1')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientGreenLed', 'g0')
-    def off(self):
-        self.send(b'g0')
-
-
 class ProxyTest2UdpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
         prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
-        print('listening on %s:%d' % (bind_host, bind_port))
+        logging.info('listening on %s:%d' % (bind_host, bind_port))
         self.socket.settimeout(0)
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
@@ -598,10 +307,6 @@ class ProxyTest2UdpClient(prometheus.misc.RemoteTemplate):
         self.register(sensor01=self.sensor01)
         self.sensor02 = ProxyTest2UdpClientSensor02(self.send, self.recv)
         self.register(sensor02=self.sensor02)
-        self.test01 = ProxyTest2UdpClientTest01(self.send, self.recv)
-        self.register(test01=self.test01)
-        self.test02 = ProxyTest2UdpClientTest02(self.send, self.recv)
-        self.register(test02=self.test02)
 
     def send(self, data):
         self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
@@ -609,7 +314,7 @@ class ProxyTest2UdpClient(prometheus.misc.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:
+        except prometheus.psocket.socket_error:
             return None, None
 
     def recv_once(self, buffersize=10):
@@ -919,298 +624,6 @@ class ProxyTest2TcpClientDht11(prometheus.Prometheus):
         return self.recv(10)
 
 
-class ProxyTest2TcpClientTest01(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-        
-        self.integrated_led = ProxyTest2TcpClientIntegratedLed(self.send, self.recv)
-        self.register(integrated_led=self.integrated_led)
-        self.joystickswitch = ProxyTest2TcpClientJoystickswitch(self.send, self.recv)
-        self.register(joystickswitch=self.joystickswitch)
-        self.joystickx = ProxyTest2TcpClientJoystickx(self.send, self.recv)
-        self.register(joystickx=self.joystickx)
-        self.joysticky = ProxyTest2TcpClientJoysticky(self.send, self.recv)
-        self.register(joysticky=self.joysticky)
-        self.laser = ProxyTest2TcpClientLaser(self.send, self.recv)
-        self.register(laser=self.laser)
-        self.switch = ProxyTest2TcpClientSwitch(self.send, self.recv)
-        self.register(switch=self.switch)
-        self.window01digital = ProxyTest2TcpClientWindow01digital(self.send, self.recv)
-        self.register(window01digital=self.window01digital)
-        self.window02digital = ProxyTest2TcpClientWindow02digital(self.send, self.recv)
-        self.register(window02digital=self.window02digital)
-
-
-
-class ProxyTest2TcpClientIntegratedLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientLaser(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientLaser', 'lv', 'OUT')
-    def value(self):
-        self.send(b'lv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2TcpClientLaser', 'l0')
-    def off(self):
-        self.send(b'l0')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientLaser', 'l1')
-    def on(self):
-        self.send(b'l1')
-
-
-class ProxyTest2TcpClientJoysticky(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientJoysticky', 'yr', 'OUT')
-    def read(self):
-        self.send(b'yr')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientJoystickx(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientJoystickx', 'xr', 'OUT')
-    def read(self):
-        self.send(b'xr')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientSwitch(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientSwitch', 'sv', 'OUT')
-    def value(self):
-        self.send(b'sv')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientJoystickswitch(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientJoystickswitch', 'jv', 'OUT')
-    def value(self):
-        self.send(b'jv')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientWindow01digital(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientWindow01digital', 'w1v', 'OUT')
-    def value(self):
-        self.send(b'w1v')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientWindow02digital(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientWindow02digital', 'w2v', 'OUT')
-    def value(self):
-        self.send(b'w2v')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientTest02(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-        
-        self.blue_led = ProxyTest2TcpClientBlueLed(self.send, self.recv)
-        self.register(blue_led=self.blue_led)
-        self.green_led = ProxyTest2TcpClientGreenLed(self.send, self.recv)
-        self.register(green_led=self.green_led)
-        self.integrated_led = ProxyTest2TcpClientIntegratedLed(self.send, self.recv)
-        self.register(integrated_led=self.integrated_led)
-        self.lightsensor = ProxyTest2TcpClientLightsensor(self.send, self.recv)
-        self.register(lightsensor=self.lightsensor)
-        self.red_led = ProxyTest2TcpClientRedLed(self.send, self.recv)
-        self.register(red_led=self.red_led)
-        self.uw_led = ProxyTest2TcpClientUwLed(self.send, self.recv)
-        self.register(uw_led=self.uw_led)
-        self.yellow_led = ProxyTest2TcpClientYellowLed(self.send, self.recv)
-        self.register(yellow_led=self.yellow_led)
-
-
-
-class ProxyTest2TcpClientBlueLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientBlueLed', 'bv', 'OUT')
-    def value(self):
-        self.send(b'bv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2TcpClientBlueLed', 'b0')
-    def off(self):
-        self.send(b'b0')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientBlueLed', 'b1')
-    def on(self):
-        self.send(b'b1')
-
-
-class ProxyTest2TcpClientIntegratedLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientYellowLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientYellowLed', 'y1')
-    def on(self):
-        self.send(b'y1')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientYellowLed', 'y0')
-    def off(self):
-        self.send(b'y0')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientYellowLed', 'yv', 'OUT')
-    def value(self):
-        self.send(b'yv')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientRedLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientRedLed', 'rv', 'OUT')
-    def value(self):
-        self.send(b'rv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2TcpClientRedLed', 'r0')
-    def off(self):
-        self.send(b'r0')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientRedLed', 'r1')
-    def on(self):
-        self.send(b'r1')
-
-
-class ProxyTest2TcpClientUwLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientUwLed', 'uv', 'OUT')
-    def value(self):
-        self.send(b'uv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2TcpClientUwLed', 'u1')
-    def on(self):
-        self.send(b'u1')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientUwLed', 'u0')
-    def off(self):
-        self.send(b'u0')
-
-
-class ProxyTest2TcpClientLightsensor(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientLightsensor', 'sr', 'OUT')
-    def read(self):
-        self.send(b'sr')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientGreenLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientGreenLed', 'gv', 'OUT')
-    def value(self):
-        self.send(b'gv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2TcpClientGreenLed', 'g1')
-    def on(self):
-        self.send(b'g1')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientGreenLed', 'g0')
-    def off(self):
-        self.send(b'g0')
-
-
 class ProxyTest2TcpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host=None, bind_port=9195):
         prometheus.misc.RemoteTemplate.__init__(self)
@@ -1228,19 +641,15 @@ class ProxyTest2TcpClient(prometheus.misc.RemoteTemplate):
         self.register(sensor01=self.sensor01)
         self.sensor02 = ProxyTest2TcpClientSensor02(self.send, self.recv)
         self.register(sensor02=self.sensor02)
-        self.test01 = ProxyTest2TcpClientTest01(self.send, self.recv)
-        self.register(test01=self.test01)
-        self.test02 = ProxyTest2TcpClientTest02(self.send, self.recv)
-        self.register(test02=self.test02)
 
     def create_socket(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if self.bind_host is not None:
-            print('bound to %s:%d' % (self.bind_host, self.bind_port))
+            logging.notice('bound to %s:%d' % (self.bind_host, self.bind_port))
             self.socket.bind((self.bind_host, self.bind_port))
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.settimeout(5)
-        print('Connecting to %s' % repr(self.remote_addr))
+        logging.info('Connecting to %s' % repr(self.remote_addr))
         self.socket.connect(self.remote_addr)
 
     def send_once(self, data):
@@ -1249,14 +658,14 @@ class ProxyTest2TcpClient(prometheus.misc.RemoteTemplate):
     def send(self, data):
         try:
             self.send_once(data)
-        except:
+        except prometheus.psocket.socket_error:
             self.create_socket()
             self.send_once(data)
 
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:
+        except prometheus.psocket.socket_error:
             return None, None
 
     def recv(self, buffersize=10):

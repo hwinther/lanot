@@ -1,6 +1,7 @@
 import os
 import sys
 import re
+import gc
 import inspect
 import machine
 import socket
@@ -9,9 +10,17 @@ import time
 import prometheus
 import prometheus.crypto
 import prometheus.misc
+import prometheus.psocket
+import prometheus.logging as logging
+
+__version__ = '0.1.8d'
+__author__ = 'Hans Christian Winther-Sorensen'
 
 # TODO: move these template classes to another python file? perhaps one for each via python modules
 # TODO: none of the inheritors of prometheus.misc.RemoteTemplate call super outside of init
+# TODO: in general just rewrite this so that it can be reused
+
+gc.collect()
 
 
 class SerialTemplate(prometheus.misc.RemoteTemplate):
@@ -57,7 +66,7 @@ class UdpTemplate(prometheus.misc.RemoteTemplate):
         prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
-        print('listening on %s:%d' % (bind_host, bind_port))
+        logging.info('listening on %s:%d' % (bind_host, bind_port))
         self.socket.settimeout(0)
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
@@ -71,7 +80,7 @@ class UdpTemplate(prometheus.misc.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:
+        except prometheus.psocket.socket_error:
             # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
             return None, None
 
@@ -95,7 +104,7 @@ class UdpTemplate(prometheus.misc.RemoteTemplate):
         """
         timestamp = time.time()
         while (time.time() - timestamp) < timeout:
-            # print('try recv: %s' % time.time())
+            # logging.debug('try recv: %s' % time.time())
             data = self.recv_once(buffersize)
             if data is not None:
                 return data
@@ -130,11 +139,11 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
     def create_socket(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         if self.bind_host is not None:
-            print('bound to %s:%d' % (self.bind_host, self.bind_port))
+            logging.notice('bound to %s:%d' % (self.bind_host, self.bind_port))
             self.socket.bind((self.bind_host, self.bind_port))
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.socket.settimeout(5)
-        print('Connecting to %s' % repr(self.remote_addr))
+        logging.info('Connecting to %s' % repr(self.remote_addr))
         self.socket.connect(self.remote_addr)
 
     def send_once(self, data):
@@ -143,14 +152,14 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
     def send(self, data):
         try:
             self.send_once(data)
-        except:
+        except prometheus.psocket.socket_error:
             self.create_socket()
             self.send_once(data)
 
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:
+        except prometheus.psocket.socket_error:
             # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
             return None, None
 
@@ -182,7 +191,7 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
         prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
-        print('listening on %s:%d' % (bind_host, bind_port))
+        logging.info('listening on %s:%d' % (bind_host, bind_port))
         self.socket.settimeout(0)
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
@@ -199,15 +208,15 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
         d = prometheus.crypto.get_local_key_registry()
         if self.remote_addr[0] in d.keys() and revalidate is False:
             # got key already
-            print('found cached pubkey for %s' % self.remote_addr[0])
+            logging.notice('found cached pubkey for %s' % self.remote_addr[0])
             self.remote_key = d[self.remote_addr[0]]
             self.negotiated = True
         else:
             # request key from remote end
-            print('requesting pubkey')
+            logging.notice('requesting pubkey')
             self.send_raw(b'pubkey')
             data = self.recv_timeout(250, 1)
-            print('pubkey recv: %s' % repr(data))
+            logging.notice('pubkey recv: %s' % repr(data))
 
             self.remote_key = data.split(b'\t')
             self.remote_key = (int(self.remote_key[0]), int(self.remote_key[1]))
@@ -215,11 +224,11 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
             if self.remote_addr[0] in d.keys():
                 # verify that its the same one we got before
                 if d[self.remote_addr[0]][0] != self.remote_key[0] or d[self.remote_addr[0]][1] != self.remote_key[1]:
-                    print('! alert - public key does not match')
-                    print('%s and %s' % (d[self.remote_addr[0]][0], self.remote_key[0]))
-                    print('%s and %s' % (d[self.remote_addr[0]][1], self.remote_key[1]))
+                    logging.warn('! alert - public key does not match')
+                    logging.warn('%s and %s' % (d[self.remote_addr[0]][0], self.remote_key[0]))
+                    logging.warn('%s and %s' % (d[self.remote_addr[0]][1], self.remote_key[1]))
                 else:
-                    print('valid pubkey for %s' % self.remote_addr[0])
+                    logging.success('valid pubkey for %s' % self.remote_addr[0])
                     update = False
             if update:
                 d[self.remote_addr[0]] = self.remote_key
@@ -227,17 +236,17 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
 
         if self.clientencrypt:
             if self.private_key is None:
-                print('generating new keys')
+                logging.info('generating new keys')
                 self.public_key, self.private_key = prometheus.crypto.get_or_create_local_keys()
 
             # send version command to get pubkey request in return?
-            print('sending version')
+            logging.notice('sending version')
             self.send_raw(b'version')
             reply = self.recv()
-            print('repr(reply)=%s' % repr(reply))
+            logging.debug('repr(reply)=%s' % repr(reply))
 
             msg = b'%d\t\t\t%d' % (self.public_key[0], self.public_key[1])
-            print('returning public key')
+            logging.notice('returning public key')
             self.send_raw(msg)
 
         self.negotiated = True
@@ -246,7 +255,7 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
         self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
 
     def send_crypted(self, data):
-        print('send_crypted: cleartext is %d bytes' % len(data))
+        logging.notice('send_crypted: cleartext is %d bytes' % len(data))
         if self.clientencrypt:
             data = prometheus.crypto.encrypt_packet(data, self.remote_key, self.private_key)
         else:
@@ -261,7 +270,7 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:
+        except prometheus.psocket.socket_error:
             # they said i could use OSError here, they lied (cpython/micropython issue, solve it later if necessary)
             return None, None
 
@@ -291,7 +300,7 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
         """
         timestamp = time.time()
         while (time.time() - timestamp) < timeout:
-            # print('try recv: %s' % time.time())
+            # logging.debug('try recv: %s' % time.time())
             data = self.recv_once(buffersize)
             if data is not None:
                 return data
@@ -330,7 +339,7 @@ class CodeValue(object):
         lines, count = inspect.getsourcelines(getattr(template_class, replace_name))
         template = list()
         for line in lines:
-            # print('line',line,line.find(replace_name))
+            # logging.debug('line',line,line.find(replace_name))
             if line.find(replace_name) != -1:
                 template.append(line.replace(replace_name, self.name).replace('CLASS_NAME', generated_class_name))
             elif line.find('VALUE') != -1:
@@ -381,7 +390,7 @@ class CodeFile(object):
 
         for groups in self.parse_ex.findall(data):
             capture = groups[1]
-            # print('group: %s' % capture)
+            # logging.debug('group: %s' % capture)
             if capture.find('\n') == -1 and capture.find('=') != -1:
                 name, value = capture.split('=', 1)
                 out = None
@@ -389,15 +398,15 @@ class CodeFile(object):
                     name = name.replace('out|', '')
                     out = True
                 codevalue = CodeValue(name, value, out)
-                # print(codevalue)
-                # print(codevalue.method_template())
+                # logging.debug(codevalue)
+                # logging.debug(codevalue.method_template())
                 self.codevalues.append(codevalue)
                 if name == 'classname':
                     self.class_name = value
             elif capture.find('\n') != -1:
                 name, value = capture.split('\n', 1)
                 codeblock = CodeBlock(name, value)
-                # print(codeblock)
+                # logging.debug(codeblock)
                 self.codeblocks.append(codeblock)
                 if name.replace('\r', '') == 'name':
                     matches = re.findall(r'"([^"]*)"', value)
@@ -411,7 +420,7 @@ class CodeFile(object):
         lines, count = inspect.getsourcelines(template_class)
         template = list()
         for line in lines:
-            # print('line',line,line.find('NAME'))
+            # logging.debug('line',line,line.find('NAME'))
             if line.find('cut') != -1:
                 break
             elif line.find(template_class_name) != -1:
@@ -474,7 +483,7 @@ class PrometheusTemplate(object):
                 elif data_value_prefix:
                     command_key = data_value_prefix + command_key
                 if command_key in template_commands.keys():
-                    print('Warning: overwriting reference for data_value %s' % command_key)
+                    logging.warn('Warning: overwriting reference for data_value %s' % command_key)
 
                 context_key = value.method_name
                 code_value = CodeValue(name=context_key, value=command_key, out=value.return_type)
@@ -503,7 +512,7 @@ class PrometheusTemplate(object):
         lines, count = inspect.getsourcelines(template_class)
         template = list()
         for line in lines:
-            # print('line',line,line.find('NAME'))
+            # logging.debug('line',line,line.find('NAME'))
             if line.find('cut') != -1:
                 break
             elif line.find(template_class_name) != -1:
@@ -541,31 +550,36 @@ def parse_folder(path):
 
         code_file = CodeFile('%s%s%s' % (path, os.path.sep, filename))
         if code_file.parse():
-            print('adding %s' % code_file)
+            logging.info('adding %s' % code_file)
             code_files.append(code_file)
     return code_files
 
 
 def folder_import():
-    path = os.path.join('..', '..', '..', 'devices')
+    path = os.path.join('..', 'devices')
     all_code = list()
     for folder in os.listdir(path):
         folder_path = os.path.join(path, folder)
         folder_code = parse_folder(folder_path)
-        # print('files detected under %s: %d' % (folder_path, len(folder_code)))
+        # logging.debug('files detected under %s: %d' % (folder_path, len(folder_code)))
         all_code.extend(folder_code)
 
     item = all_code[0]
     template = item.generate_template('SerialTemplate')
-    output_folder = os.path.join('..', '..', '..', '..', 'deploy', 'clients')
+    output_folder = os.path.join('..', '..', 'deploy', 'clients')
     outfile = os.path.join(output_folder, item.class_name + '.py')
-    # print(template)
-    print('writing to %s' % outfile)
-    open(outfile, 'w').write('# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +
-                             'import prometheus\nimport socket\nimport machine\nimport time\nimport gc\n' +
-                             'import prometheus.crypto\nimport prometheus.misc\n' +
-                             '\ngc.collect()\n\n\n'
-                             + template)
+    # logging.debug(template)
+    logging.info('writing to %s' % outfile)
+    import_socket, import_machine = '', ''
+    if template.find('socket.') != -1:
+        import_socket = 'import socket\n'
+    if template.find('machine.') != -1:
+        import_machine = 'import machine\n'
+    header = '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +\
+        '''import prometheus\n%s%simport time\nimport gc\nimport prometheus.crypto
+import prometheus.misc\nimport prometheus.psocket\nimport prometheus.logging as logging
+\ngc.collect()\n\n\n''' % (import_socket, import_machine)
+    open(outfile, 'w').write(header + template)
     # '\n\n' + ''.join(inspect.getsourcelines(prometheus.Prometheus)[0])
     # ''.join(inspect.getsourcelines(prometheus.Registry)[0]) + '\n\n'
     # SerialTemplate.NAME()
@@ -626,14 +640,14 @@ def generate_python_template(source_class, template_class, generated_class_name,
         if not isinstance(prometheus_template, PrometheusTemplate):
             raise Exception('Object is not of type PrometheusTemplate')
 
-        # print(prometheus_template.name, prometheus_template.instance)
+        # logging.debug(prometheus_template.name, prometheus_template.instance)
         if prometheus_template.name == 'self':
             mainclass_template = prometheus_template.generate(template_class,
                                                               generated_class_name,
                                                               generated_class_name)
         else:
             # data_value_prefix = chr(remap_counter.next())
-            # print('prefix=%s for %s' % (data_value_prefix, prometheus_template.name))
+            # logging.debug('prefix=%s for %s' % (data_value_prefix, prometheus_template.name))
             supportclass_template = prometheus_template.generate(prometheus.misc.InputOutputProxy,
                                                                  generated_class_name,
                                                                  generate_class_name(prometheus_template.name),
@@ -656,26 +670,35 @@ def build_client(cls, output_filename, client_template_instances):
     :return: None
     """
     # TODO: dynamically determine imports necesary for this specific module?
-    imports = 'import prometheus\nimport socket\nimport machine\nimport time\nimport gc\n' +\
-              'import prometheus.crypto\nimport prometheus.misc\n' +\
+
+    imports = 'import prometheus\n%s%simport time\nimport gc\n' +\
+              'import prometheus.crypto\nimport prometheus.misc\nimport prometheus.psocket\n' \
+              'import prometheus.logging as logging\n' +\
               '\ngc.collect()\n\n\n'
     code = list()
     subclasses = True  # only for the first instance
     classes = list()
     for client_template_instance in client_template_instances:
         generated_class_name = cls.__name__ + client_template_instance.__name__.replace('Template', '') + 'Client'
-        # print('Generating class: %s' % generated_class_name)
+        # logging.debug('Generating class: %s' % generated_class_name)
         classes.append(generated_class_name)
         code.append('# region ' + generated_class_name + '\n' +
                     generate_python_template(source_class=cls, template_class=client_template_instance,
                                              generated_class_name=generated_class_name, subclasses=subclasses) +
                     '\n# endregion\n\n')
         subclasses = False
-    output_path = os.path.join('..', '..', '..', '..', 'deploy', 'clients', output_filename)
-    print('Writing to %s, classes: %s' % (output_path, ', '.join(classes)))
+    output_path = os.path.join('..', '..', 'deploy', 'clients', output_filename)
+    logging.info('Writing to %s, classes: %s' % (output_path, ', '.join(classes)))
+    all_code = '\n'.join(code)[:-1]
+    import_socket, import_machine = '', ''
+    if all_code.find('socket.') != -1:
+        import_socket = 'import socket\n'
+    if all_code.find('machine.') != -1:
+        import_machine = 'import machine\n'
+    imports = imports % (import_socket, import_machine)
     open(output_path, 'w').write(
         '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +
-        imports + '\n'.join(code)[:-1])
+        imports + all_code)
 
 
 if __name__ == '__main__':
@@ -724,7 +747,7 @@ if __name__ == '__main__':
     # u = RsaUdpTemplate('192.168.1.102', bind_port=9191, clientencrypt=False)
     # u.send(b'version')
     # v = u.recv(250)
-    # print('version: %s' % v)
+    # logging.info('version: %s' % v)
 
     from rover01 import Rover01
 

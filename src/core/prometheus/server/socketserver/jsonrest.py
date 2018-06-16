@@ -6,6 +6,7 @@ import prometheus
 import prometheus.server
 import prometheus.server.socketserver as socketserver
 import prometheus.logging as logging
+import prometheus.psocket
 
 gc.collect()
 
@@ -26,7 +27,7 @@ class JsonRestServer(socketserver.SocketServer):
 
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        except:
+        except prometheus.psocket.socket_error:
             logging.warn('could not bind with reuse flag')  # TODO: look into this
         self.socket.bind((bind_host, bind_port))
         self.socket.listen(4)
@@ -56,7 +57,7 @@ class JsonRestServer(socketserver.SocketServer):
         try:
             # TODO: put this pair in a wrapper class
             sock, addr = self.socket.accept()
-        except socketserver.socket_error as e:
+        except prometheus.psocket.socket_error as e:
             if prometheus.is_micro:
                 if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
                     logging.error(e)
@@ -72,7 +73,7 @@ class JsonRestServer(socketserver.SocketServer):
             data = None
             try:
                 data = sock.recv(1024)
-            except socketserver.socket_error as e:
+            except prometheus.psocket.socket_error as e:
                 if prometheus.is_micro:
                     if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
                         logging.error(e)

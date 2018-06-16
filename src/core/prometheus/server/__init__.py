@@ -5,7 +5,7 @@ import prometheus.pgc as gc
 import prometheus
 import prometheus.logging as logging
 
-__version__ = '0.1.8b'
+__version__ = '0.1.8c'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()

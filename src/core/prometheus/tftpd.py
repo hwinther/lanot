@@ -1,5 +1,6 @@
 import socket
 import gc
+import prometheus.psocket
 
 __version__ = '0.1.4'
 __author__ = 'Hans Christian Winther-Sorensen'
@@ -27,7 +28,7 @@ def tftpd():
                 data = data + line
                 del line
                 gc.collect()
-            except:
+            except prometheus.psocket.socket_error:
                 # TODO: find out what this is and handle it better
                 break
         # print(repr(data))

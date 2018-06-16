@@ -1,11 +1,12 @@
-# generated at 2018-05-08 23:40:45
+# generated at 2018-06-16 23:51:13
 import prometheus
-import socket
 import machine
 import time
 import gc
 import prometheus.crypto
 import prometheus.misc
+import prometheus.psocket
+import prometheus.logging as logging
 
 gc.collect()
 

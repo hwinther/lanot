@@ -1,11 +1,12 @@
-# generated at 2018-05-08 23:40:45
+# generated at 2018-06-16 23:51:14
 import prometheus
 import socket
-import machine
 import time
 import gc
 import prometheus.crypto
 import prometheus.misc
+import prometheus.psocket
+import prometheus.logging as logging
 
 gc.collect()
 
@@ -86,7 +87,7 @@ class Sensor02UdpClient(prometheus.misc.RemoteTemplate):
         prometheus.misc.RemoteTemplate.__init__(self)
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
         self.socket.bind((bind_host, bind_port))
-        print('listening on %s:%d' % (bind_host, bind_port))
+        logging.info('listening on %s:%d' % (bind_host, bind_port))
         self.socket.settimeout(0)
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
@@ -108,7 +109,7 @@ class Sensor02UdpClient(prometheus.misc.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except:
+        except prometheus.psocket.socket_error:
             return None, None
 
     def recv_once(self, buffersize=10):

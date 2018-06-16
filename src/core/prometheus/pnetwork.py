@@ -11,7 +11,7 @@ import prometheus.server.socketserver.udp
 import prometheus.server.socketserver.tcp
 import prometheus.logging as logging
 
-__version__ = '0.1.5a'
+__version__ = '0.1.5b'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -62,6 +62,8 @@ def run_local():
 
     try:
         multiserver.start()
+    except KeyboardInterrupt:
+        logging.info('Shutting down default server')
     except Exception as e:
         logging.warn('Default server exception: %s' % str(e))
 

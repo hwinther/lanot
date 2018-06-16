@@ -1,3 +1,6 @@
+import prometheus.logging as logging
+
+
 # noinspection PyPep8Naming,PyMethodMayBeStatic,PyUnusedLocal
 class SSD1306_I2C(object):
     def __init__(self, width, height, i2c):
@@ -6,28 +9,28 @@ class SSD1306_I2C(object):
         self.i2c = i2c
 
     def text(self, txt, x, y):
-        print('Setting text %s at %d,%d' % (txt, x, y))
+        logging.debug('Setting text %s at %d,%d' % (txt, x, y))
 
     def show(self):
-        print('Showing on lcd')
+        logging.debug('Showing on lcd')
 
     def fill(self, value):
-        print('Fill with %s' % value)
+        logging.debug('Fill with %s' % value)
 
     def invert(self, invert):
-        print('Inverting pixels')
+        logging.debug('Inverting pixels')
 
     def contrast(self, contrast):
-        print('Setting contrast')
+        logging.debug('Setting contrast')
 
     def pixel(self, x, y, col):
-        print('Setting pixel at %d.%d' % (x, y))
+        logging.debug('Setting pixel at %d.%d' % (x, y))
 
     def scroll(self, dx, dy):
-        print('Scrolling')
+        logging.debug('Scrolling')
 
     def poweroff(self):
-        print('Poweroff display')
+        logging.debug('Poweroff display')
 
     def init_display(self):
-        print('init_display')
+        logging.debug('init_display')

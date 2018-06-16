@@ -3,6 +3,7 @@ import gc
 import prometheus
 import prometheus.server.socketserver as socketserver
 import prometheus.logging as logging
+import prometheus.psocket
 
 gc.collect()
 
@@ -23,7 +24,7 @@ class UdpSocketServer(socketserver.SocketServer):
 
         try:
             self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        except:
+        except prometheus.psocket.socket_error:
             logging.warn('could not bind with reuse flag')  # TODO: look into this
         self.socket.bind((bind_host, bind_port))
         self.socket.settimeout(0)
@@ -38,7 +39,7 @@ class UdpSocketServer(socketserver.SocketServer):
             # should probably bear in mind that the underlying fd buffer on mpy platforms will be limited to around
             #  500 bytes in the first place
             data, addr = self.socket.recvfrom(500)
-        except socketserver.socket_error as e:
+        except prometheus.psocket.socket_error as e:
             if prometheus.is_micro:
                 if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
                     logging.error(e)
