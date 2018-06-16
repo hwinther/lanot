@@ -10,9 +10,9 @@ import prometheus.logging as logging
 import deploy.clients.sensor01client as sensor01client
 import deploy.clients.sensor02client as sensor02client
 import deploy.clients.nodetestclient as nodetestclient
-import deploy.clients.test01client as test01client
-import deploy.clients.test02client as test02client
-import deploy.clients.tankclient as tankclient
+# import deploy.clients.test01client as test01client
+# import deploy.clients.test02client as test02client
+# import deploy.clients.tankclient as tankclient
 
 
 class ProxyTest2(prometheus.Prometheus):
@@ -32,8 +32,8 @@ class ProxyTest2(prometheus.Prometheus):
         # self.test01 = test01client.Test01UdpClient('test01', remote_port=9195, bind_port=random.randrange(1024, 9000))
         # self.register(prefix='t1', test01=self.test01)
 
-        self.test02 = test02client.Test02UdpClient('test02', remote_port=9195, bind_port=random.randrange(1024, 9000))
-        self.register(prefix='t2', test02=self.test02)
+        # self.test02 = test02client.Test02UdpClient('test02', remote_port=9195, bind_port=random.randrange(1024, 9000))
+        # self.register(prefix='t2', test02=self.test02)
 
         # self.tankclient = tankclient.TankUdpClient('192.168.1.250', bind_port=random.randrange(1024, 9000))
         # self.register(prefix='tc', tankclient=self.tankclient)

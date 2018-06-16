@@ -1,13 +1,11 @@
 import sys
 import os
 import machine
-import time
 import prometheus.pgc as gc
 import prometheus
 import prometheus.logging as logging
-import prometheus.pnetwork
 
-__version__ = '0.1.8a'
+__version__ = '0.1.8b'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -35,11 +33,11 @@ config_enabled = True
 # noinspection PyMethodMayBeStatic
 class Server(object):
     # :type data_commands: dict
-    # :type instance: Prometheus
+    # :type instance: prometheus.Prometheus
     # :type loopActive: bool
     def __init__(self, instance):
         """
-        :type instance: Prometheus
+        :type instance: prometheus.Prometheus
         :param instance: Instance of Prometheus
         """
         self.instance = instance
@@ -103,10 +101,10 @@ class Server(object):
         elif command == 'sysinfo':
             self.reply(self.sysinfo(), source=source, **kwargs)
         elif config_enabled and command_length > 10 and command[0:8] == 'connect ':
-            prometheus.pnetwork.connect(command[8:])
-            # self.connect(command[8:])
-            # Reply might be part of a bug, will set back if its unrelated
-            # self.reply(self.connect(command[8:]), source=source, **kwargs)
+            import prometheus.pnetwork
+            gc.collect()
+            self.reply(prometheus.pnetwork.connect(command[8:]), source=source, **kwargs)
+            gc.collect()
         elif command in self.instance.cached_remap:
             registered_method = self.instance.cached_remap[command]  # type: prometheus.RegisteredMethod
             return_value = registered_method.method_reference()
@@ -124,6 +122,8 @@ class Server(object):
             machine.reset()
         elif command == 'tftpd':
             self.reply(self.tftpd(), source=source, **kwargs)
+        elif self.instance.custom_command(self.reply, source=source, **kwargs):
+            pass
         else:
             logging.error('invalid cmd: %s' % command)
         if debug:
