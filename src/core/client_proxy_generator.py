@@ -150,6 +150,8 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
         self.socket.send(data + self.endChars + self.splitChars)
 
     def send(self, data):
+        if self.socket is None:
+            self.create_socket()
         try:
             self.send_once(data)
         except prometheus.psocket.socket_error:

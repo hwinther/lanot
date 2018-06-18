@@ -1,19 +1,16 @@
 import prometheus.tftpd
 
 '''
-import prometheus.tftpd
-prometheus.tftpd.tftpd()
+prime the device with:
+nc64 -c 192.168.4.1 9195
+connect ssid:password
 
 to run:
-set PYTHONPATH=p:\lanot\src\core\python
+set PYTHONPATH=p:\lanot\src\core
 '''
 
 files = [
-    'boot.py',
     'main.py',
-    'nodetest.py',
-    # 'cacert.pem',
-    # 'cert.pem',
-    # 'key.pem'
+    # 'nodetest.py',
 ]
 prometheus.tftpd.tftp_client('nodetest.iot.oh.wsh.no', *files)

@@ -388,17 +388,28 @@
         }
 
         $(function() {
+            /*
+            var test01 = new LanotHost('test01.iot.oh.wsh.no', '8080', 'http', '');
+            test01.update();
+
             var test02 = new LanotHost('test02.iot.oh.wsh.no', '8080', 'http', '');
             test02.update();
 
+            var nodetest = new LanotHost('nodetest.oh.wsh.no', '8080', 'http', '');
+            nodetest.update();
+            */
             var serenity = new LanotHost('serenity.oh.wsh.no', '4443', 'https', '');
             serenity.update();
-
+            /*
             var greenhouse01 = new LanotHost('serenity.oh.wsh.no', '443', 'https', '/greenhouse01');
             greenhouse01.update();
 
             var greenhouse02 = new LanotHost('serenity.oh.wsh.no', '443', 'https', '/greenhouse02');
             greenhouse02.update();
+            */
+            var localtest = new LanotHost('127.0.0.1', '8080', 'http', '');
+            localtest.update();
+
 
             $('#btnCreate').click(function() {
                 var hostnameElement = $('#hostname');

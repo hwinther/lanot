@@ -24,7 +24,7 @@ def tftpd(timeout=None):
             diff = time.time() - start_time
             if diff >= timeout:
                 break
-        
+
         try:
             client, addr = sock.accept()
         except prometheus.psocket.socket_error:

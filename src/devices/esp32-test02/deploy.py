@@ -2,19 +2,14 @@ import prometheus.tftpd
 
 '''
 prime the device with:
+nc64 -c 192.168.4.1 9195
+connect ssid:password
 
-import network
-import machine
-gc.collect()
-wlan = network.WLAN(network.STA_IF)
-wlan.active(True)
-wlan.connect('dgn.iot', 'umbFUTyJSvqhxNrQ')
-import prometheus.tftpd
-prometheus.tftpd.tftpd()
+to run:
+set PYTHONPATH=p:\lanot\src\core
 '''
 
 files = [
-    'boot.py',
     'main.py',
     'test02.py'
 ]

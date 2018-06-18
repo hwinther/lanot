@@ -1,11 +1,12 @@
 import sys
 import os
 import machine
+import time
 import prometheus.pgc as gc
 import prometheus
 import prometheus.logging as logging
 
-__version__ = '0.1.8d'
+__version__ = '0.1.8e'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -100,6 +101,8 @@ class Server(object):
             self.reply(self.version(), source=source, **kwargs)
         elif command == 'sysinfo':
             self.reply(self.sysinfo(), source=source, **kwargs)
+        elif command == 'uptime':
+            self.reply(self.uptime(), source=source, **kwargs)
         elif config_enabled and command_length > 10 and command[0:8] == 'connect ':
             import prometheus.pnetwork
             gc.collect()
@@ -199,6 +202,12 @@ class Server(object):
             un = platform.uname()
             return '%s-%s %s@%s %s %s %s CPython' % (un[0], un[2], hostname, un[1], un[3],
                                                      str(sys.version).split(' ')[0], un[4])
+
+    def uptime(self):
+        if prometheus.is_micro:
+            return '%d seconds' % time.time()
+        else:
+            return 'Not implemented on this platform'
 
     def version(self):
         return '%s/%s' % (__version__, prometheus.__version__)

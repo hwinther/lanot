@@ -117,9 +117,11 @@ class JsonRestServer(socketserver.SocketServer):
                                     d[logical_key] = {'methods': dict(), 'class': value.class_name,
                                                       'path': value.logical_path}
                                 d[logical_key]['methods'][value.method_name] = key.decode('utf-8')
-                            # logging.notice('before: %s' % str(gc.mem_free()))
+                            if prometheus.server.debug:
+                                logging.debug('before api: %s' % str(gc.mem_free()))
                             gc.collect()
-                            # logging.notice('after: %s' % str(gc.mem_free()))
+                            if prometheus.server.debug:
+                                logging.debug('after api: %s' % str(gc.mem_free()))
                             self.reply(return_value=d, source=sock, query=query)
                             found = True
                         elif path == b'/api':
