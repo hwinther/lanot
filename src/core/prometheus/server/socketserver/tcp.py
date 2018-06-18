@@ -55,7 +55,8 @@ class TcpSocketServer(socketserver.SocketServer):
             logging.success('Accepted connection from %s' % repr(addr))
             sock.settimeout(0)
             # if addr not in buffers.keys():
-            logging.notice('Creating new buffer context')
+            if prometheus.server.debug:
+                logging.debug('Creating new buffer context')
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
             self.sockets[addr] = sock
 
@@ -68,7 +69,8 @@ class TcpSocketServer(socketserver.SocketServer):
             except prometheus.psocket.socket_error as e:
                 if prometheus.is_micro:
                     if e.args[0] == 104:
-                        logging.notice('disconnected')
+                        if prometheus.server.debug:
+                            logging.debug('disconnected')
                         del self.buffers[addr]
                         del self.sockets[addr]
                         continue
@@ -79,7 +81,8 @@ class TcpSocketServer(socketserver.SocketServer):
                     #     logging.debug(e)
                 else:
                     if e.errno == 104:
-                        logging.notice('disconnected')
+                        if prometheus.server.debug:
+                            logging.debug('disconnected')
                         del self.buffers[addr]
                         del self.sockets[addr]
                         continue
@@ -90,7 +93,8 @@ class TcpSocketServer(socketserver.SocketServer):
                     #     logging.debug(e)
 
             if data == b'':
-                logging.notice('disconnected (empty data)')
+                if prometheus.server.debug:
+                    logging.debug('disconnected (empty data)')
                 del self.buffers[addr]
                 del self.sockets[addr]
                 continue
@@ -132,7 +136,8 @@ class TcpSocketServer(socketserver.SocketServer):
                     del self.sockets[addr]
                     break
 
-                logging.notice('Calling handle data')
+                if prometheus.server.debug:
+                    logging.debug('Calling handle data')
                 self.handle_data(command, self.sockets[addr])
 
     def post_loop(self, **kwargs):

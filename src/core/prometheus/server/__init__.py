@@ -5,7 +5,7 @@ import prometheus.pgc as gc
 import prometheus
 import prometheus.logging as logging
 
-__version__ = '0.1.8c'
+__version__ = '0.1.8d'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -176,7 +176,7 @@ class Server(object):
     def tftpd(self):
         logging.warn('tftpd command received')
         import prometheus.tftpd
-        prometheus.tftpd.tftpd()
+        prometheus.tftpd.tftpd(timeout=10)
         gc.collect()
         return 'tftpd session ended'
 

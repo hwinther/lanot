@@ -55,11 +55,13 @@ class UdpSocketServer(socketserver.SocketServer):
         logging.notice('recv %s from %s' % (repr(data), repr(addr)))
 
         if addr not in self.buffers.keys():
-            logging.notice('Creating new buffer context')
+            if prometheus.server.debug:
+                logging.debug('Creating new buffer context')
             # TODO: clean up buffer contexts over time!
             # TODO: this must be done in Tcp implementation also
             if len(self.buffers) > 2:
-                logging.notice('Cleaning up old buffers')
+                if prometheus.server.debug:
+                    logging.debug('Cleaning up old buffers')
                 del self.buffers
                 self.buffers = dict()
                 gc.collect()
@@ -77,7 +79,8 @@ class UdpSocketServer(socketserver.SocketServer):
                 break
             if type(command) is bytes:
                 command = command.decode('ascii')
-            logging.notice('Calling handle data')
+            if prometheus.server.debug:
+                logging.debug('Calling handle data')
             self.handle_data(command, addr)
 
         gc.collect()
