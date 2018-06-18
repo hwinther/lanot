@@ -1,4 +1,4 @@
-# generated at 2018-06-16 23:51:14
+# generated at 2018-06-18 21:29:49
 import prometheus
 import socket
 import time
@@ -137,6 +137,8 @@ class ATcpClient(prometheus.misc.RemoteTemplate):
         self.socket.send(data + self.endChars + self.splitChars)
 
     def send(self, data):
+        if self.socket is None:
+            self.create_socket()
         try:
             self.send_once(data)
         except prometheus.psocket.socket_error:
