@@ -54,7 +54,6 @@ class Pin(object):
 
         logging.debug('Pin %s value set to %s' %(self.pin, value_parameter))
         self.state_value = value_parameter
-        return None
 
     def toggle(self):
         self.state_value = not self.state_value

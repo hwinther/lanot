@@ -21,6 +21,7 @@
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-rover01" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/core" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-test03" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/deploy/clients" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/deploy/clients/archive" />
       <excludeFolder url="file://$MODULE_DIR$/test/oled_temp" />
       <excludeFolder url="file://$MODULE_DIR$/test/weartesr" />
