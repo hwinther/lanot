@@ -68,7 +68,8 @@ class TcpSocketServer(socketserver.SocketServer):
                 data = self.sockets[addr].recv(100)
             except prometheus.psocket.socket_error as e:
                 if prometheus.is_micro:
-                    if e.args[0] == 104:
+                    # 104 connect reset by peer, 113 no route to host, might want to make this 100-113
+                    if e.args[0] == 104 or e.args[0] == 113:
                         if prometheus.server.debug:
                             logging.debug('disconnected')
                         del self.buffers[addr]

@@ -6,7 +6,7 @@ import prometheus.pgc as gc
 import prometheus
 import prometheus.logging as logging
 
-__version__ = '0.1.8f'
+__version__ = '0.1.8g'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -106,7 +106,13 @@ class Server(object):
         elif config_enabled and command_length > 10 and command[0:8] == 'connect ':
             import prometheus.pnetwork
             gc.collect()
-            self.reply(prometheus.pnetwork.connect(command[8:]), source=source, **kwargs)
+            connect_result = prometheus.pnetwork.connect(command[8:])
+            # will not reply to this command, as we presently offline the AP after successful connection
+            if connect_result is not None:
+                # if not none, then we are probably not connected and we're returning an error message that the client
+                #  would like to get
+                self.reply(connect_result, source=source, **kwargs)
+            del connect_result
             gc.collect()
         elif command in self.instance.cached_remap:
             registered_method = self.instance.cached_remap[command]  # type: prometheus.RegisteredMethod

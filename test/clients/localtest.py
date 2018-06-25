@@ -3,6 +3,7 @@ from deploy.clients import nodetestclient
 from deploy.clients import sensor01client
 from deploy.clients import sensor02client
 from deploy.clients import test02client
+from deploy.clients import proxytest2client
 import time
 
 
@@ -34,6 +35,8 @@ nu = nodetestclient.NodeTestUdpClient('nodetest', bind_port=9191)
 s1u = sensor01client.Sensor01UdpClient('sensor01', bind_port=9192)
 s2u = sensor02client.Sensor02UdpClient('sensor02', bind_port=9193)
 t2u = test02client.Test02UdpClient('test02', bind_port=9194)
+ptu = proxytest2client.ProxyTest2UdpClient('serenity.oh.wsh.no', bind_port=9196)
+ptul = localtestclient.LocalTestUdpClient('serenity.oh.wsh.no', bind_port=9197)
 
 print('udp: %s' % udp.version())
 print('nu: %s' % nu.version())
@@ -44,21 +47,31 @@ su = StressTester(nu.integrated_led.value)
 s1u = StressTester(s1u.integrated_led.value)
 s2u = StressTester(s2u.integrated_led.value)
 t2u = StressTester(t2u.integrated_led.value)
+pst = StressTester(ptu.version)
+pstl = StressTester(ptul.blue_led.value)
 
 # print(st.run_once())
 # st.run_multiple(4)
 
+num = 10
+
 print('\n==LocalTest==')
-st.run_multiple(10)
+st.run_multiple(num)
 
 print('\n==NodeTest==')
-su.run_multiple(10)
-
+su.run_multiple(num)
+"""
 print('\n==Sensor01==')
-s1u.run_multiple(10)
+s1u.run_multiple(num)
 
 print('\n==Sensor02==')
-s2u.run_multiple(10)
+s2u.run_multiple(num)
 
 print('\n==Test02==')
-t2u.run_multiple(10)
+t2u.run_multiple(num)
+"""
+# print('\n==Proxytest==')
+# pst.run_multiple(num)
+
+print('\n==Serenity localtest==')
+pstl.run_multiple(num)

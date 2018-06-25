@@ -11,6 +11,6 @@ set PYTHONPATH=p:\lanot\src\core
 
 files = [
     'main.py',
-    # 'nodetest.py',
+    'nodetest.py',
 ]
 prometheus.tftpd.tftp_client('nodetest.iot.oh.wsh.no', *files)

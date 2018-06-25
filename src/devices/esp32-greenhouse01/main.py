@@ -19,7 +19,7 @@ class LocalEvents(prometheus.server.Server):
     def __init__(self, instance):
         """
 
-        :type instance: rover01.Rover01
+        :type instance: greenhouse01.GreenHouse01
         """
         prometheus.server.Server.__init__(self, instance)
         self.timer = 0

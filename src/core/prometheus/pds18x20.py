@@ -5,20 +5,27 @@ import ds18x20
 import time
 import gc
 
-__version__ = '0.1.2b'
+__version__ = '0.1.3'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
 
 
 class Ds18x20(prometheus.Prometheus):
-    def __init__(self, pin):
+    def __init__(self, pin=None, ow=None):
         """
         :type pin: machine.Pin
         """
         prometheus.Prometheus.__init__(self)
-        self.pin = pin
-        self.ds = ds18x20.DS18X20(onewire.OneWire(pin))
+        if pin is None and ow is None:
+            raise Exception('Missing pin or onewire')
+
+        if ow is None:
+            self.onewire = onewire.OneWire(pin)
+        else:
+            self.onewire = ow
+
+        self.ds = ds18x20.DS18X20(self.onewire)
         self.roms = list()
         self.scan()
 
