@@ -38,6 +38,7 @@ t2u = test02client.Test02UdpClient('test02', bind_port=9194)
 ptu = proxytest2client.ProxyTest2UdpClient('serenity.oh.wsh.no', bind_port=9196)
 ptul = localtestclient.LocalTestUdpClient('serenity.oh.wsh.no', bind_port=9197)
 
+"""
 print('udp: %s' % udp.version())
 print('nu: %s' % nu.version())
 # print('tcp: %s' % tcp.version())
@@ -60,7 +61,7 @@ st.run_multiple(num)
 
 print('\n==NodeTest==')
 su.run_multiple(num)
-"""
+""
 print('\n==Sensor01==')
 s1u.run_multiple(num)
 
@@ -69,9 +70,10 @@ s2u.run_multiple(num)
 
 print('\n==Test02==')
 t2u.run_multiple(num)
-"""
+""
 # print('\n==Proxytest==')
 # pst.run_multiple(num)
 
 print('\n==Serenity localtest==')
 pstl.run_multiple(num)
+"""

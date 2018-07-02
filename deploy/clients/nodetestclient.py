@@ -1,4 +1,4 @@
-# generated at 2018-06-18 21:29:50
+# generated at 2018-07-03 00:00:30
 import prometheus
 import socket
 import time
@@ -12,44 +12,24 @@ gc.collect()
 
 
 # region NodeTestUdpClient
-class NodeTestUdpClientRedLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('NodeTestUdpClientRedLed', 'rv', 'OUT')
-    def value(self):
-        self.send(b'rv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('NodeTestUdpClientRedLed', 'r0')
-    def off(self):
-        self.send(b'r0')
-
-    @prometheus.Registry.register('NodeTestUdpClientRedLed', 'r1')
-    def on(self):
-        self.send(b'r1')
-
-
 class NodeTestUdpClientBlueLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('NodeTestUdpClientBlueLed', 'bv', 'OUT')
+    @prometheus.Registry.register('NodeTestUdpClientBlueLed', 'gv', 'OUT')
     def value(self):
-        self.send(b'bv')
+        self.send(b'gv')
         return self.recv(10)
 
-    @prometheus.Registry.register('NodeTestUdpClientBlueLed', 'b0')
-    def off(self):
-        self.send(b'b0')
-
-    @prometheus.Registry.register('NodeTestUdpClientBlueLed', 'b1')
+    @prometheus.Registry.register('NodeTestUdpClientBlueLed', 'g1')
     def on(self):
-        self.send(b'b1')
+        self.send(b'g1')
+
+    @prometheus.Registry.register('NodeTestUdpClientBlueLed', 'g0')
+    def off(self):
+        self.send(b'g0')
 
 
 class NodeTestUdpClientIntegratedLed(prometheus.Prometheus):
@@ -72,15 +52,27 @@ class NodeTestUdpClientIntegratedLed(prometheus.Prometheus):
         return self.recv(10)
 
 
+class NodeTestUdpClientDsb(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('NodeTestUdpClientDsb', 'sv', 'OUT')
+    def value(self):
+        self.send(b'sv')
+        return self.recv(10)
+
+
 class NodeTestUdpClientHygrometer(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('NodeTestUdpClientHygrometer', 'hr', 'OUT')
+    @prometheus.Registry.register('NodeTestUdpClientHygrometer', 'ar', 'OUT')
     def read(self):
-        self.send(b'hr')
+        self.send(b'ar')
         return self.recv(10)
 
 
@@ -126,12 +118,12 @@ class NodeTestUdpClient(prometheus.misc.RemoteTemplate):
         self.register(blue_led=self.blue_led)
         self.dht11 = NodeTestUdpClientDht11(self.send, self.recv)
         self.register(dht11=self.dht11)
+        self.dsb = NodeTestUdpClientDsb(self.send, self.recv)
+        self.register(dsb=self.dsb)
         self.hygrometer = NodeTestUdpClientHygrometer(self.send, self.recv)
         self.register(hygrometer=self.hygrometer)
         self.integrated_led = NodeTestUdpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
-        self.red_led = NodeTestUdpClientRedLed(self.send, self.recv)
-        self.register(red_led=self.red_led)
 
     def send(self, data):
         self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
@@ -172,44 +164,24 @@ class NodeTestUdpClient(prometheus.misc.RemoteTemplate):
 
 
 # region NodeTestTcpClient
-class NodeTestTcpClientRedLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('NodeTestTcpClientRedLed', 'rv', 'OUT')
-    def value(self):
-        self.send(b'rv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('NodeTestTcpClientRedLed', 'r0')
-    def off(self):
-        self.send(b'r0')
-
-    @prometheus.Registry.register('NodeTestTcpClientRedLed', 'r1')
-    def on(self):
-        self.send(b'r1')
-
-
 class NodeTestTcpClientBlueLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('NodeTestTcpClientBlueLed', 'bv', 'OUT')
+    @prometheus.Registry.register('NodeTestTcpClientBlueLed', 'gv', 'OUT')
     def value(self):
-        self.send(b'bv')
+        self.send(b'gv')
         return self.recv(10)
 
-    @prometheus.Registry.register('NodeTestTcpClientBlueLed', 'b0')
-    def off(self):
-        self.send(b'b0')
-
-    @prometheus.Registry.register('NodeTestTcpClientBlueLed', 'b1')
+    @prometheus.Registry.register('NodeTestTcpClientBlueLed', 'g1')
     def on(self):
-        self.send(b'b1')
+        self.send(b'g1')
+
+    @prometheus.Registry.register('NodeTestTcpClientBlueLed', 'g0')
+    def off(self):
+        self.send(b'g0')
 
 
 class NodeTestTcpClientIntegratedLed(prometheus.Prometheus):
@@ -232,15 +204,27 @@ class NodeTestTcpClientIntegratedLed(prometheus.Prometheus):
         return self.recv(10)
 
 
+class NodeTestTcpClientDsb(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('NodeTestTcpClientDsb', 'sv', 'OUT')
+    def value(self):
+        self.send(b'sv')
+        return self.recv(10)
+
+
 class NodeTestTcpClientHygrometer(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('NodeTestTcpClientHygrometer', 'hr', 'OUT')
+    @prometheus.Registry.register('NodeTestTcpClientHygrometer', 'ar', 'OUT')
     def read(self):
-        self.send(b'hr')
+        self.send(b'ar')
         return self.recv(10)
 
 
@@ -285,12 +269,12 @@ class NodeTestTcpClient(prometheus.misc.RemoteTemplate):
         self.register(blue_led=self.blue_led)
         self.dht11 = NodeTestTcpClientDht11(self.send, self.recv)
         self.register(dht11=self.dht11)
+        self.dsb = NodeTestTcpClientDsb(self.send, self.recv)
+        self.register(dsb=self.dsb)
         self.hygrometer = NodeTestTcpClientHygrometer(self.send, self.recv)
         self.register(hygrometer=self.hygrometer)
         self.integrated_led = NodeTestTcpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
-        self.red_led = NodeTestTcpClientRedLed(self.send, self.recv)
-        self.register(red_led=self.red_led)
 
     def create_socket(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

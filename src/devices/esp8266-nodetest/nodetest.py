@@ -40,11 +40,30 @@ class NodeTest(prometheus.Prometheus):
         self.green_led = prometheus.Led(machine.Pin(16, machine.Pin.OUT))
         self.register(prefix='g', blue_led=self.green_led)
 
-        self.ssd.fill(False)
-        self.ssd.text('init', 0, 0)
-        self.ssd.show()
+        if prometheus.is_micro:
+            self.ssd.fill(False)
+            self.ssd.text('init', 0, 0)
+            self.ssd.show()
 
-        self.display.brightness(0)
-        self.display.fill(0)
-        self.display.text('init', 0, 0, 1)
-        self.display.show()
+            self.display.brightness(0)
+            self.display.fill(False)
+            self.display.text('init', 0, 0, 1)
+            self.display.show()
+
+    def custom_command(self, command, reply, source, **kwargs):
+        print('custom cmd: %s' % command)
+
+        if len(command) > 6 and command[0:6] == 'stext ':
+            self.ssd.fill(False)
+            self.ssd.text(command[6:], 0, 0)
+            self.ssd.show()
+            gc.collect()
+            return True
+        elif len(command) > 6 and command[0:6] == 'dtext ':
+            self.display.fill(False)
+            self.display.text(command[6:], 0, 0, 1)
+            self.display.show()
+            gc.collect()
+            return True
+
+        return prometheus.Prometheus.custom_command(self, command, reply, source, **kwargs)

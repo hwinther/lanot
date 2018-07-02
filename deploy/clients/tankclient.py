@@ -1,4 +1,4 @@
-# generated at 2018-06-18 21:29:49
+# generated at 2018-07-03 00:00:28
 import prometheus
 import socket
 import time

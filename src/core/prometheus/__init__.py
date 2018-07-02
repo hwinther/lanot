@@ -3,7 +3,7 @@ import gc
 import sys
 import prometheus.logging as logging
 
-__version__ = '0.1.7'
+__version__ = '0.1.8'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -243,7 +243,7 @@ class Prometheus(object):
             url = b'/' + url + b'/' + value.method_name.encode('ascii')
             self.cached_urls[url] = value
 
-    def custom_command(self, reply, source, **kwargs):
+    def custom_command(self, command, reply, source, **kwargs):
         # by default, do nothing
         # usage: reply(return_value, source, **kwargs)
         return False

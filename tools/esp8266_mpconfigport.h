@@ -30,6 +30,7 @@
 #define MICROPY_CAN_OVERRIDE_BUILTINS (1)
 #define MICROPY_USE_INTERNAL_ERRNO  (1)
 #define MICROPY_ENABLE_SCHEDULER    (1)
+#define MICROPY_PY_DESCRIPTORS      (1)
 #define MICROPY_PY_ALL_SPECIAL_METHODS (1)
 #define MICROPY_PY_BUILTINS_COMPLEX (0)
 #define MICROPY_PY_BUILTINS_STR_UNICODE (1)
@@ -100,7 +101,6 @@
 #define MICROPY_MODULE_FROZEN_MPY   (1)
 #define MICROPY_MODULE_FROZEN_LEXER mp_lexer_new_from_str32
 #define MICROPY_QSTR_EXTRA_POOL     mp_qstr_frozen_const_pool
-#define MICROPY_PY_FUNCTION_ATTRS   (1)
 
 #define MICROPY_VFS                    (1)
 #define MICROPY_FATFS_ENABLE_LFN       (1)
@@ -110,6 +110,7 @@
 #define MICROPY_VFS_FAT                (1)
 #define MICROPY_ESP8266_APA102         (1)
 #define MICROPY_ESP8266_NEOPIXEL       (1)
+#define MICROPY_PY_FUNCTION_ATTRS      (1)
 
 #define MICROPY_EVENT_POLL_HOOK {ets_event_poll();}
 #define MICROPY_VM_HOOK_COUNT (10)
@@ -201,7 +202,7 @@ extern const struct _mp_obj_module_t mp_module_onewire;
 // board specifics
 
 #define MICROPY_MPHALPORT_H "esp_mphal.h"
-#define MICROPY_HW_BOARD_NAME "LoLin-ESP-12E"
+#define MICROPY_HW_BOARD_NAME "NodeMCU-ESP-12E"
 #define MICROPY_HW_MCU_NAME "xtensa-lx106-32"
 #define MICROPY_PY_SYS_PLATFORM "esp8266"
 

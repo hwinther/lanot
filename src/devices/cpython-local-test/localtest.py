@@ -3,7 +3,7 @@ import prometheus.dht11
 import prometheus.server.multiserver
 import prometheus.server.socketserver.tcp
 import prometheus.server.socketserver.udp
-import prometheus.server.socketserver.udp2
+# import prometheus.server.socketserver.udp2
 import prometheus.server.socketserver.jsonrest
 # from prometheus.server.socketserver.sslsocket import SslSocket
 import prometheus.logging as logging
@@ -34,7 +34,7 @@ if __name__ == '__main__':
 
     # multiserver = prometheus.server.multiserver.MultiServer()
 
-    udpserver = prometheus.server.socketserver.udp2.UdpSocketServer2(node)
+    udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
     # multiserver.add(udpserver)
     #
     # tcpserver = prometheus.server.socketserver.tcp.TcpSocketServer(node)

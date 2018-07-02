@@ -58,6 +58,9 @@ class Pin(object):
     def toggle(self):
         self.state_value = not self.state_value
 
+    def __call__(self, *args, **kwargs):
+        self.value(args[0])
+
 
 class Timer(object):
     A = 0
@@ -126,6 +129,14 @@ class I2C(object):
         self.freq = freq
         self.scl = scl
         self.sda = sda
+
+
+class SPI(object):
+    def __init__(self, channel=0, baudrate=10000000, polarity=0, phase=0):
+        pass
+
+    def write(self, bytes):
+        pass
 
 
 class SD(object):

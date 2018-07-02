@@ -6,7 +6,7 @@ import prometheus.pgc as gc
 import prometheus
 import prometheus.logging as logging
 
-__version__ = '0.1.8g'
+__version__ = '0.1.8h'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -133,7 +133,7 @@ class Server(object):
             machine.reset()
         elif command == 'tftpd':
             self.reply(self.tftpd(), source=source, **kwargs)
-        elif self.instance.custom_command(self.reply, source=source, **kwargs):
+        elif self.instance.custom_command(command, self.reply, source=source, **kwargs):
             pass
         else:
             logging.error('invalid cmd: %s' % command)
