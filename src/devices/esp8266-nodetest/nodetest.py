@@ -27,7 +27,7 @@ class NodeTest(prometheus.Prometheus):
         self.register(prefix='s', dsb=self.dsb)
 
         self.adc1 = prometheus.Adc(0)
-        self.register(prefix='a', hygrometer=self.adc1)
+        self.register(prefix='a', adc1=self.adc1)
 
         self.i2c = machine.I2C(freq=400000, scl=machine.Pin(0, machine.Pin.OUT), sda=machine.Pin(4, machine.Pin.OUT))
         self.ssd = ssd1306.SSD1306_I2C(width=128, height=64, i2c=self.i2c)

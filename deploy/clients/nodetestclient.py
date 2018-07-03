@@ -1,4 +1,4 @@
-# generated at 2018-07-03 00:00:30
+# generated at 2018-07-03 22:36:54
 import prometheus
 import socket
 import time
@@ -12,6 +12,18 @@ gc.collect()
 
 
 # region NodeTestUdpClient
+class NodeTestUdpClientAdc1(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('NodeTestUdpClientAdc1', 'ar', 'OUT')
+    def read(self):
+        self.send(b'ar')
+        return self.recv(10)
+
+
 class NodeTestUdpClientBlueLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -64,18 +76,6 @@ class NodeTestUdpClientDsb(prometheus.Prometheus):
         return self.recv(10)
 
 
-class NodeTestUdpClientHygrometer(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('NodeTestUdpClientHygrometer', 'ar', 'OUT')
-    def read(self):
-        self.send(b'ar')
-        return self.recv(10)
-
-
 class NodeTestUdpClientDht11(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -114,14 +114,14 @@ class NodeTestUdpClient(prometheus.misc.RemoteTemplate):
         self.splitChars = b'\n'
         self.endChars = b'\r'
         
+        self.adc1 = NodeTestUdpClientAdc1(self.send, self.recv)
+        self.register(adc1=self.adc1)
         self.blue_led = NodeTestUdpClientBlueLed(self.send, self.recv)
         self.register(blue_led=self.blue_led)
         self.dht11 = NodeTestUdpClientDht11(self.send, self.recv)
         self.register(dht11=self.dht11)
         self.dsb = NodeTestUdpClientDsb(self.send, self.recv)
         self.register(dsb=self.dsb)
-        self.hygrometer = NodeTestUdpClientHygrometer(self.send, self.recv)
-        self.register(hygrometer=self.hygrometer)
         self.integrated_led = NodeTestUdpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
 
@@ -164,6 +164,18 @@ class NodeTestUdpClient(prometheus.misc.RemoteTemplate):
 
 
 # region NodeTestTcpClient
+class NodeTestTcpClientAdc1(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('NodeTestTcpClientAdc1', 'ar', 'OUT')
+    def read(self):
+        self.send(b'ar')
+        return self.recv(10)
+
+
 class NodeTestTcpClientBlueLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -216,18 +228,6 @@ class NodeTestTcpClientDsb(prometheus.Prometheus):
         return self.recv(10)
 
 
-class NodeTestTcpClientHygrometer(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('NodeTestTcpClientHygrometer', 'ar', 'OUT')
-    def read(self):
-        self.send(b'ar')
-        return self.recv(10)
-
-
 class NodeTestTcpClientDht11(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -265,14 +265,14 @@ class NodeTestTcpClient(prometheus.misc.RemoteTemplate):
         self.splitChars = b'\n'
         self.endChars = b'\r'
         
+        self.adc1 = NodeTestTcpClientAdc1(self.send, self.recv)
+        self.register(adc1=self.adc1)
         self.blue_led = NodeTestTcpClientBlueLed(self.send, self.recv)
         self.register(blue_led=self.blue_led)
         self.dht11 = NodeTestTcpClientDht11(self.send, self.recv)
         self.register(dht11=self.dht11)
         self.dsb = NodeTestTcpClientDsb(self.send, self.recv)
         self.register(dsb=self.dsb)
-        self.hygrometer = NodeTestTcpClientHygrometer(self.send, self.recv)
-        self.register(hygrometer=self.hygrometer)
         self.integrated_led = NodeTestTcpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
 
@@ -301,7 +301,8 @@ class NodeTestTcpClient(prometheus.misc.RemoteTemplate):
     def try_recv(self, buffersize):
         try:
             return self.socket.recvfrom(buffersize)  # data, addr
-        except prometheus.psocket.socket_error:
+        except prometheus.psocket.socket_error as e:
+            # print(e)
             return None, None
 
     def recv(self, buffersize=10):
