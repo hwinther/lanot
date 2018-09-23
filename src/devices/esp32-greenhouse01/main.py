@@ -1,9 +1,12 @@
 import greenhouse01
+import urequests
+import machine
 import prometheus.server.multiserver
 import prometheus.server.socketserver.udp
 import prometheus.server.socketserver.tcp
 import prometheus.server.socketserver.jsonrest
 import prometheus.tftpd
+import prometheus.pnetwork
 import prometheus.logging as logging
 import prometheus.pgc as gc
 import time
@@ -18,21 +21,20 @@ def td():
 class LocalEvents(prometheus.server.Server):
     def __init__(self, instance):
         """
-
         :type instance: greenhouse01.GreenHouse01
         """
         prometheus.server.Server.__init__(self, instance)
         self.timer = 0
 
     def pre_loop(self, **kwargs):
-        self.timer = time.time()
+        self.timer = time.time() - 300
         self.instance.ssd.fill(False)
         self.instance.ssd.text('v: %s' % self.version(), 0, 0)
         self.instance.ssd.show()
 
     def loop_tick(self, **kwargs):
         diff = time.time() - self.timer
-        if diff >= 1:
+        if diff >= 300:
             self.timer = time.time()
             # print('1 sec event, diff=%d' % diff)
             assert isinstance(self.instance, greenhouse01.Greenhouse01)
@@ -47,18 +49,35 @@ class LocalEvents(prometheus.server.Server):
 
             self.instance.ssd.fill(False)
             self.instance.ssd.text('v: %s' % self.version(), 0, 0)
-            self.instance.ssd.text('t: %d o: %s' % (time.time(), wlan.isconnected()), 0, 10)
-            if wlan.isconnected():
-                self.instance.ssd.text('i:%s' % wlan.ifconfig()[0], 0, 20)
+            self.instance.ssd.text('t: %d o: %s' % (time.time(), prometheus.pnetwork.sta_if.isconnected()), 0, 10)
+            if prometheus.pnetwork.sta_if.isconnected():
+                self.instance.ssd.text('i:%s' % prometheus.pnetwork.sta_if.ifconfig()[0], 0, 20)
             self.instance.ssd.text('h1:%d h2:%d' % (h1, h2), 0, 30)
             self.instance.ssd.text('h3:%d h4:%d' % (h3, h4), 0, 40)
             self.instance.ssd.text('h5:%d h6:%d' % (h5, h6), 0, 50)
+
+            dht_value = self.instance.dht11.value()
+            temperature = '0'
+            humidity = '0'
+            if dht_value.find('c') != -1:
+                temperature, humidity = dht_value.split('c')
+            self.instance.ssd.text('tem:%s hum:%s' % (temperature, humidity), 0, 60)
+
             self.instance.ssd.show()
+
+            # update thingspeak graph data
+            # GET https://api.thingspeak.com/update?api_key=YC62U1B1P23RVPQS&field1=0
+            # fields = temperature, humidity, hygro1, hygro2, hygro3, hygro4, hygro5, hygro6
+            response = urequests.get('https://api.thingspeak.com/update?api_key=YC62U1B1P23RVPQS&field1=%s&field2=%s&'
+                                     'field3=%s&field4=%s&field5=%s&field6=%s&field7=%s&field8=%s' % (temperature,
+                                                                                                      humidity, h1,
+                                                                                                      h2, h3, h4,
+                                                                                                      h5, h6))
+            del response
 
 
 node = greenhouse01.Greenhouse01()
 gc.collect()
-logging.debug('mem_free: %s' % gc.mem_free())
 multiserver = prometheus.server.multiserver.MultiServer()
 
 udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
@@ -83,4 +102,14 @@ localevents = LocalEvents(node)
 multiserver.add(localevents)
 
 logging.boot(udpserver)
-multiserver.start()
+try:
+    multiserver.start()
+except:
+    gc.collect()
+
+try:
+    logging.error('crashed? rst')
+except:
+    gc.collect()
+
+machine.reset()

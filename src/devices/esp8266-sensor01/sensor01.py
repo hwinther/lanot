@@ -11,7 +11,7 @@ class Sensor01(prometheus.Prometheus):
     def __init__(self):
         prometheus.Prometheus.__init__(self)
 
-        self.dht11 = prometheus.dht11.Dht11(machine.Pin(13, machine.Pin.OUT))
+        self.dht11 = prometheus.dht11.Dht11(machine.Pin(12, machine.Pin.OUT))
         self.register(prefix='d', dht11=self.dht11)
 
         self.lightsensor = prometheus.Adc(0)

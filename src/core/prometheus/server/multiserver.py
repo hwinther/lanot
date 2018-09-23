@@ -28,6 +28,7 @@ class MultiServer(object):
                 if not wrapped_server.server.loopActive:
                     loop_active = False
                     break
+                gc.collect()
 
         for wrapped_server in self.wrapped_servers:
             wrapped_server.server.post_loop(**wrapped_server.kwargs)

@@ -56,6 +56,7 @@
 #define MICROPY_PY_MATH             (1)
 #define MICROPY_PY_CMATH            (0)
 #define MICROPY_PY_IO               (1)
+#define MICROPY_PY_IO_IOBASE        (1)
 #define MICROPY_PY_IO_FILEIO        (1)
 #define MICROPY_PY_STRUCT           (1)
 #define MICROPY_PY_SYS              (1)
@@ -202,7 +203,8 @@ extern const struct _mp_obj_module_t mp_module_onewire;
 // board specifics
 
 #define MICROPY_MPHALPORT_H "esp_mphal.h"
-#define MICROPY_HW_BOARD_NAME "NodeMCU-ESP-12E"
+//#define MICROPY_HW_BOARD_NAME "NodeMCU-ESP-12E"
+#define MICROPY_HW_BOARD_NAME "LoLin-ESP-12E"
 #define MICROPY_HW_MCU_NAME "xtensa-lx106-32"
 #define MICROPY_PY_SYS_PLATFORM "esp8266"
 

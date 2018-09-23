@@ -143,6 +143,9 @@ def ap_mode():
     if sta_if.active():
         sta_if.active(False)
 
+    cfg = ap_if.ifconfig()
+    logging.notice('WLAN AP active - %s (IP %s)' % (ap_if.config('essid'), cfg[0]))
+
 
 def connect(network_info):
     if network_info.find(':') is -1:
