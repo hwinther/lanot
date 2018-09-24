@@ -20,6 +20,15 @@ Proxy clients for devices are under [test/html5ui](test/html5ui)
 
 [Python client proxy generator](test/html5ui)
 
+## Requirements
+
+micropython
+* built with support for MICROPY_PY_FUNCTION_ATTRS enabled
+  * firmware for wipy (1.0), esp8266 (12E) and esp32 can be found under [deploy/micropython](deploy/micropython)
+* src/core/prometheus directory symlinked under ports/esp*/modules/
+* additional hardware drivers may be included
+  * ccs811 [tools/CCS811](tools/CCS811) from https://github.com/Notthemarsian/CCS811.git
+
 ## Example devices can be found under [src/devices](src/devices)
 
 * chain-test
