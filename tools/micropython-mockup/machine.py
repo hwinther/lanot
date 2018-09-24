@@ -130,6 +130,9 @@ class I2C(object):
         self.scl = scl
         self.sda = sda
 
+    def scan(self):
+        return list()
+
 
 class SPI(object):
     def __init__(self, channel=0, baudrate=10000000, polarity=0, phase=0):

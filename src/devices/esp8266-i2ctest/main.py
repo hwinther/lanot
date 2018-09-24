@@ -3,103 +3,78 @@ import ds1307
 import CCS811
 import time
 import ssd1306
-import neopixel
+# import neopixel
 import onewire
-import dht
+import prometheus.pds18x20
+import nanoi2c
+import misc
+# import dht
 import gc
 import prometheus.tftpd
 
 gc.collect()
 
-# 60 oled
-# 72 adc
-# 90 o2
-# 87, 104 = rtc
-
-
-def cycle(np, n):
-    # cycle
-    for i in range(4 * n):
-        for j in range(n):
-            np[j] = (0, 0, 0)
-        np[i % n] = (255, 255, 255)
-        np.write()
-        # time.sleep_ms(25)
-
-
-def bounce(np, n):
-    # bounce
-    for i in range(4 * n):
-        for j in range(n):
-            np[j] = (0, 0, 128)
-        if (i // n) % 2 == 0:
-            np[i % n] = (0, 0, 0)
-        else:
-            np[n - 1 - (i % n)] = (0, 0, 0)
-        np.write()
-        time.sleep_ms(60)
-
-
-def fade(np, n):
-    # fade in/out
-    for i in range(0, 4 * 256, 8):
-        for j in range(n):
-            if (i // 256) % 2 == 0:
-                val = i & 0xff
-            else:
-                val = 255 - (i & 0xff)
-            np[j] = (val, 0, 0)
-        np.write()
-
-
-def clear(np, n):
-    # clear
-    for i in range(n):
-        np[i] = (0, 0, 0)
-    np.write()
-
-
-def demo(np):
-    n = np.n
-    cycle(np, n)
-    bounce(np, n)
-    clear(np, n)
-
-
-def screenloop(s, d, ds):
-    while True:
-        if s.data_ready():
-            d.fill(0)
-            d.text('eCO2 ppm', 0, 0)
-            d.text('TVOC ppb', 0, 20)
-            d.text(str(s.eCO2) + '   ', 0, 10)
-            d.text(str(s.tVOC) + '    ', 0, 30)
-            da = ds.datetime()
-            d.text('%02d:%02d:%02d  ' % (da[4], da[5], da[6]), 0, 40)
-            d.show()
-        time.sleep(1)
-        machine.idle()
-
 
 def td():
     prometheus.tftpd.tftpd()
+    gc.collect()
 
 
-i2c = machine.I2C(scl=machine.Pin(0), sda=machine.Pin(4), freq=400000)
+def gcc():
+    gc.collect()
+    print(gc.mem_free())
+    gc.collect()
+
+
+i2 = machine.I2C(scl=machine.Pin(0), sda=machine.Pin(4), freq=400000)
 time.sleep(0.5)
-print(i2c.scan())
+# scan = list()
+scan = i2.scan()
+print(scan)
+# 60 = oled
+# 72 = adc
+# 90 = o2
+# 87, 104 = rtc
+# 8 = nano
 
-# ds = ds1307.DS1307(i2c)
-# d = ssd1306.SSD1306_I2C(128, 64, i2c, 0x3c)
-# time.sleep(0.5)
-# s = CCS811.CCS811(i2c=i2c, addr=90)
+nano = None
+if 8 in scan:
+    print('Detected Nano')
+    nano = nanoi2c.NanoI2C(i2)
 
+d = None
+if 60 in scan:
+    print('Detected SSD1306 display')
+    d = ssd1306.SSD1306_I2C(128, 64, i2, 0x3c)
+    d.text('init', 0, 0)
+    d.show()
+
+ds = None
+if 87 in scan and 104 in scan:
+    print('Detected DS1307')
+    ds = ds1307.DS1307(i2)
+
+s = None
+if 90 in scan:
+    print('Detected CCS811')
+    time.sleep(0.5)
+    s = CCS811.CCS811(i2c=i2, addr=90)
+
+# ow = None
 ow = onewire.OneWire(machine.Pin(5, machine.Pin.IN))  # D1
-npx = neopixel.NeoPixel(machine.Pin(2), 256)  # D4
-dh = dht.DHT11(machine.Pin(12, machine.Pin.OUT))  # D6
+ow_scan = ow.scan()
+ds18 = None
+if len(ow_scan) != 0:
+    # print(ow_scan)
+    ds18 = prometheus.pds18x20.Ds18x20(ow=ow)
+
+# npx = neopixel.NeoPixel(machine.Pin(2), 256)  # D4
+dh = None
+# dh = dht.DHT11(machine.Pin(12, machine.Pin.OUT))  # D6
 
 gc.collect()
-# screenloop(s, d, ds)
+print(gc.mem_free())
+misc.screenloop(s, d, ds, dh, ds18)
 
 # p = machine.Pin(16, machine.Pin.IN)
 # while True:

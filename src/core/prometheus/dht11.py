@@ -4,6 +4,7 @@ import gc
 
 __version__ = '0.1.2b'
 __author__ = 'Hans Christian Winther-Sorensen'
+# TODO: merge dht11 with dht22 via inheritance
 
 gc.collect()
 

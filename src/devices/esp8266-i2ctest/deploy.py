@@ -10,6 +10,8 @@ set PYTHONPATH=p:\lanot\src\core
 '''
 
 files = [
-    'main.py'
+    'main.py',
+    # 'nanoi2c.py',
+    # 'misc.py',
 ]
 prometheus.tftpd.tftp_client('10.20.2.117', *files)  # 133/134

@@ -3,10 +3,11 @@ import prometheus.logging as logging
 
 # noinspection PyPep8Naming,PyMethodMayBeStatic,PyUnusedLocal
 class SSD1306_I2C(object):
-    def __init__(self, width, height, i2c):
+    def __init__(self, width, height, i2c, addr):
         self.width = width
         self.height = height
         self.i2c = i2c
+        self.addr = addr
 
     def text(self, txt, x, y):
         logging.debug('Setting text %s at %d,%d' % (txt, x, y))

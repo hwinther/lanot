@@ -19,7 +19,10 @@ class Dht22(prometheus.Prometheus):
 
     @prometheus.Registry.register('Dht22', 'm')
     def measure(self):
-        self.dht.measure()
+        try:
+            self.dht.measure()
+        except OSError:
+            pass
 
     @prometheus.Registry.register('Dht22', 't', 'OUT')
     def temperature(self):
