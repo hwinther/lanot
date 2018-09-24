@@ -78,3 +78,12 @@ Proxy clients for devices are under [test/html5ui](test/html5ui)
     self.dsb = prometheus.pds18x20.Ds18x20(ow=self.onewire)
     self.register(prefix='s', dsb=self.dsb)
 
+
+## Devices that will be supported soon:
+* ssd1306 oled display of various sizes (64x128 is common)
+* ccs822 air quality sensor (co2 & ppm)
+* ds1307+ real time clock
+* max7219 (led matrix, e.g. 8x32)
+* neopixel (rgb led matrix, chain, or similar)
+* nanoi2c (subproject)
+* ads1115 (4 channel adc)
