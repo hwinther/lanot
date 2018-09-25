@@ -1,9 +1,10 @@
+# coding=utf-8
 import machine
 import gc
 import sys
 import prometheus.logging as logging
 
-__version__ = '0.1.8'
+__version__ = '0.1.9'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -89,8 +90,8 @@ class RegisteredMethod(object):
         self.command_key = None
 
     def __repr__(self):
-        return u"RegisteredMethod(class_name='%s' method_name='%s' method_reference=%s data_value='%s' return_type=%s)" % \
-               (self.class_name, self.method_name, self.method_reference, self.data_value, self.return_type)
+        return u"RegisteredMethod(class_name='%s' method_name='%s' method_reference=%s data_value='%s' return_type=%s)"\
+               % (self.class_name, self.method_name, self.method_reference, self.data_value, self.return_type)
 
 
 class Registry(object):

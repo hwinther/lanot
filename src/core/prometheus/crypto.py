@@ -1,3 +1,4 @@
+# coding=utf-8
 import sys
 import gc
 import os
@@ -125,7 +126,7 @@ def decrypt(pk, ciphertext):
     # plain = [chr((char ** key) % n) for char in ciphertext]
     try:
         plain = [chr(pow(char, key, n)) for char in ciphertext]
-    except OverflowError as e:
+    except OverflowError:
         raise
     # Return the array of bytes as a string
     return ''.join(plain)
@@ -294,7 +295,7 @@ class RsaUdpSocketServer(prometheus.server.socketserver.udp.UdpSocketServer):
         if decrypted is not None:
             command = decrypted
 
-            prometheus.server.socketserver.udp.UdpSocketServer.handle_data(self, command, source=source, **kwargs)
+        prometheus.server.socketserver.udp.UdpSocketServer.handle_data(self, command, source=source, **kwargs)
 
     def reply(self, return_value, source=None, _encrypt=True, **kwargs):
         if _encrypt:
@@ -303,7 +304,7 @@ class RsaUdpSocketServer(prometheus.server.socketserver.udp.UdpSocketServer):
             else:
                 return_value = encrypt_packet(return_value, self.private_key)
 
-                prometheus.server.socketserver.udp.UdpSocketServer.reply(self, return_value, source, **kwargs)
+            prometheus.server.socketserver.udp.UdpSocketServer.reply(self, return_value, source, **kwargs)
 
 
 def decrypt_packet(ciphertext, private_key, public_key=None):

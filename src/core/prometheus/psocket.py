@@ -1,3 +1,4 @@
+# coding=utf-8
 import gc
 import socket
 import prometheus

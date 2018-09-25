@@ -27,7 +27,14 @@ micropython
   * firmware for wipy (1.0), esp8266 (12E) and esp32 can be found under [deploy/micropython](deploy/micropython)
 * src/core/prometheus directory symlinked under ports/esp*/modules/
 * additional hardware drivers may be included
-  * ccs811 [tools/CCS811](tools/CCS811) from https://github.com/Notthemarsian/CCS811.git
+  * CCS811 [tools/CCS811](tools/CCS811) from https://github.com/Notthemarsian/CCS811.git
+  * max7219 [tools/micropython-max7219](tools/micropython-max7219) from https://github.com/mcauser/micropython-max7219.git  
+  * tinyrtc-i2c [tools/micropython-tinyrtc-i2c](tools/micropython-tinyrtc-i2c) from https://github.com/mcauser/micropython-tinyrtc-i2c.git
+
+cpython
+* add [micropython-mockup](tools/micropython-mockup) to PYTHONPATH or sys.path
+* all IO has (limited) simulated input and output
+* might look into supporting raspberry pi in the future
 
 ## Example devices can be found under [src/devices](src/devices)
 

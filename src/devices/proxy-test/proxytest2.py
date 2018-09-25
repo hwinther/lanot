@@ -25,7 +25,7 @@ class ProxyTest2(prometheus.Prometheus):
         self.sensor02 = sensor02client.Sensor02UdpClient('sensor02', bind_port=random.randrange(1024, 9000))
         self.register(prefix='s2', sensor02=self.sensor02)
 
-        self.nodetest = nodetestclient.NodeTestUdpClient('nodetest', bind_port=random.randrange(1024, 9000))
+        self.nodetest = nodetestclient.NodeTestTcpClient('10.20.2.117')
         self.register(prefix='nt', nodetest=self.nodetest)
 
         # self.test01 = test01client.Test01UdpClient('test01', bind_port=random.randrange(1024, 9000))

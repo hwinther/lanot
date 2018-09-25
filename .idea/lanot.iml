@@ -26,6 +26,7 @@
       <sourceFolder url="file://$MODULE_DIR$/tools/micropython-max7219" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tools/micropython-tinyrtc-i2c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tools/CCS811" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/tools/ads1x15" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/deploy/clients/archive" />
       <excludeFolder url="file://$MODULE_DIR$/src/pcb/adapter-gerber" />
       <excludeFolder url="file://$MODULE_DIR$/src/pcb/esp8266-new" />
@@ -35,6 +36,7 @@
       <excludeFolder url="file://$MODULE_DIR$/tools/Adafruit_bitfield_python" />
       <excludeFolder url="file://$MODULE_DIR$/tools/IRLib" />
       <excludeFolder url="file://$MODULE_DIR$/tools/MicroPython_ESP32_psRAM_LoBo" />
+      <excludeFolder url="file://$MODULE_DIR$/tools/esp-idf" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython-esp32" />
       <excludeFolder url="file://$MODULE_DIR$/tools/micropython-font-to-py" />

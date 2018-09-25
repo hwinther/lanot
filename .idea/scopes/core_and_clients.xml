@@ -1,0 +1,3 @@
+<component name="DependencyValidationManager">
+  <scope name="core and clients" pattern="file[lanot]:deploy/clients//*||file[lanot]:src/core//*" />
+</component>

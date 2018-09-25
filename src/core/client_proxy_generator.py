@@ -1,3 +1,4 @@
+# coding=utf-8
 import os
 import sys
 import re
@@ -453,7 +454,7 @@ class PrometheusTemplate(object):
         """
         self.instance = instance  # type: prometheus.Prometheus
         self.name = name  # type: str
-        self.children = list()  # type: list<prometheus.Prometheus>
+        self.children = list()  # type: list[prometheus.Prometheus]
         self.parent = parent  # type: PrometheusTemplate
         self.prefix = prefix
 
@@ -468,7 +469,7 @@ class PrometheusTemplate(object):
         # generate method templates and arrange command values
         # rem param remap_counter: prometheus.RemapCounter
         if self.parent is not None:
-            generated_class_name = parent_class_name + generated_class_name
+            generated_class_name += parent_class_name
         template_commands = dict()
 
         command_keys = list(self.instance.commands.keys())

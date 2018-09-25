@@ -1,3 +1,4 @@
+# coding=utf-8
 import socket
 import prometheus.pgc as gc
 import time
@@ -108,7 +109,7 @@ class JsonRestServer(socketserver.SocketServer):
                                 # give default empty response
                                 self.reply(return_value=None, source=sock, query=query)
                             found = True
-                        elif path == b'/api' and b'class' in query.keys():
+                        elif path == b'/schema':
                             d = dict()
                             for key in self.instance.cached_urls.keys():
                                 value = self.instance.cached_urls[key]  # type: prometheus.RegisteredMethod
@@ -124,7 +125,7 @@ class JsonRestServer(socketserver.SocketServer):
                                 logging.debug('after api: %s' % str(gc.mem_free()))
                             self.reply(return_value=d, source=sock, query=query)
                             found = True
-                        elif path == b'/api':
+                        elif path == b'/schemauri':
                             lst = list()
                             for key in self.instance.cached_urls.keys():
                                 lst.append(key.decode('utf-8'))
@@ -141,7 +142,7 @@ class JsonRestServer(socketserver.SocketServer):
                             found = True
                         elif path == b'/die':
                             self.reply(return_value='ok', source=sock, query=query)
-                            self.loopActive = False
+                            self.loop_active = False
                             found = True
                         elif path == b'/favicon.ico':
                             self.reply(return_value=prometheus.server.favicon,

@@ -1,3 +1,4 @@
+# coding=utf-8
 import sys
 import os
 import machine
@@ -6,7 +7,7 @@ import prometheus.pgc as gc
 import prometheus
 import prometheus.logging as logging
 
-__version__ = '0.1.8h'
+__version__ = '0.1.9'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()

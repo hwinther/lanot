@@ -1,3 +1,4 @@
+# coding=utf-8
 import prometheus
 import prometheus.logging as logging
 import socket

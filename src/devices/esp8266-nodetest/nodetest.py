@@ -1,11 +1,17 @@
 import gc
 import machine
-import ssd1306
 import onewire
-import max7219
 import prometheus
 import prometheus.dht11
 import prometheus.pds18x20
+import prometheus.pneopixel
+import prometheus.pssd1306
+import prometheus.pmax7219
+import prometheus.pccs822
+import prometheus.pds1307
+import prometheus.pads1115
+import prometheus.pnano
+import prometheus.logging as logging
 
 gc.collect()
 
@@ -29,41 +35,56 @@ class NodeTest(prometheus.Prometheus):
         self.adc1 = prometheus.Adc(0)
         self.register(prefix='a', adc1=self.adc1)
 
-        self.i2c = machine.I2C(freq=400000, scl=machine.Pin(0, machine.Pin.OUT), sda=machine.Pin(4, machine.Pin.OUT))
-        self.ssd = ssd1306.SSD1306_I2C(width=128, height=64, i2c=self.i2c)
+        self.i2c = machine.I2C(scl=machine.Pin(0), sda=machine.Pin(4), freq=400000)
+        logging.info('i2c: %s' % self.i2c.scan())
+        # machine.I2C(freq=400000, scl=machine.Pin(0, machine.Pin.OUT), sda=machine.Pin(4, machine.Pin.OUT))
+        # self.ssd = ssd1306.SSD1306_I2C(width=128, height=64, i2c=self.i2c)
 
         self.spi = machine.SPI(1, baudrate=10000000, polarity=0, phase=0)
-        self.display = max7219.Matrix8x8(self.spi, machine.Pin(15), 4)
+        # self.display = max7219.Matrix8x8(self.spi, machine.Pin(15), 4)
 
         # endregion
 
-        self.green_led = prometheus.Led(machine.Pin(16, machine.Pin.OUT))
-        self.register(prefix='g', blue_led=self.green_led)
+        # self.green_led = prometheus.Led(machine.Pin(16, machine.Pin.OUT))
+        # self.register(prefix='g', green_led=self.green_led)
+
+        self.neopixel = prometheus.pneopixel.NeoPixel(machine.Pin(2), 256)
+        # TODO: doesnt do much(?):
+        self.register(prefix='p', neopixel=self.neopixel)
+
+        self.ssd = prometheus.pssd1306.SSD1306(self.i2c)
+
+        self.max = prometheus.pmax7219.MAX7219(self.spi, machine.Pin(15), 4)
+
+        self.ds1307 = prometheus.pds1307.DS1307(self.i2c)
+        self.register(prefix='ds', ds1307=self.ds1307)
+
+        try:
+            self.ccs822 = prometheus.pccs822.CCS822(self.i2c)
+            self.register(prefix='cs', ccs822=self.ccs822)
+        except ValueError:
+            pass
+
+        self.ads = prometheus.pads1115.ADS1115(self.i2c)
+        self.register(prefix='ad', ads=self.ads)
+
+        self.nano = prometheus.pnano.NanoI2C(self.i2c)
+        self.register(prefix='na', nano=self.nano)
 
         if prometheus.is_micro:
-            self.ssd.fill(False)
             self.ssd.text('init', 0, 0)
-            self.ssd.show()
-
-            self.display.brightness(0)
-            self.display.fill(False)
-            self.display.text('init', 0, 0, 1)
-            self.display.show()
+            self.max.text('init', 0, 0, 1)
 
     def custom_command(self, command, reply, source, **kwargs):
-        print('custom cmd: %s' % command)
+        logging.notice('custom_command: %s' % command)
 
-        if len(command) > 6 and command[0:6] == 'stext ':
-            self.ssd.fill(False)
-            self.ssd.text(command[6:], 0, 0)
-            self.ssd.show()
-            gc.collect()
+        # TODO: implement this pattern by default in Prometheus class?
+        # foreach underlying p objects, call custom_command
+        if self.neopixel.custom_command(command, reply, source, **kwargs):
             return True
-        elif len(command) > 6 and command[0:6] == 'dtext ':
-            self.display.fill(False)
-            self.display.text(command[6:], 0, 0, 1)
-            self.display.show()
-            gc.collect()
+        elif self.ssd.custom_command(command, reply, source, **kwargs):
+            return True
+        elif self.max.custom_command(command, reply, source, **kwargs):
             return True
 
         return prometheus.Prometheus.custom_command(self, command, reply, source, **kwargs)

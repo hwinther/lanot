@@ -1,3 +1,4 @@
+# coding=utf-8
 import socket
 import gc
 import time
@@ -40,7 +41,7 @@ def tftpd(timeout=None):
                 if line == b'':
                     # most likely, connection closed
                     break
-                data = data + line
+                data += line
                 del line
                 gc.collect()
             except prometheus.psocket.socket_error:

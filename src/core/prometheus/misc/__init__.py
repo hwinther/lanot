@@ -1,3 +1,4 @@
+# coding=utf-8
 import gc
 from prometheus import Prometheus, Registry
 import prometheus.logging as logging

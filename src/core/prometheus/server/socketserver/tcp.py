@@ -1,3 +1,4 @@
+# coding=utf-8
 import socket
 import gc
 import os
@@ -16,8 +17,8 @@ class TcpSocketServer(socketserver.SocketServer):
         self.socket = self.socketwrapper(socket.AF_INET, socket.SOCK_STREAM)
         self.splitChars = '\n'
         self.endChars = '\r'
-        self.sockets = dict()  # type: dict((str,int), socket.socket)
-        self.buffers = dict()  # type: dict((str,int), prometheus.Buffer)
+        self.sockets = dict()  # type: dict[(str,int), socket.socket]
+        self.buffers = dict()  # type: dict[(str,int), prometheus.Buffer]
 
     def start(self, bind_host='', bind_port=9195):
         socketserver.SocketServer.start(self, bind_host=bind_host, bind_port=bind_port)

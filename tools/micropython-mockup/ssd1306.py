@@ -3,7 +3,7 @@ import prometheus.logging as logging
 
 # noinspection PyPep8Naming,PyMethodMayBeStatic,PyUnusedLocal
 class SSD1306_I2C(object):
-    def __init__(self, width, height, i2c, addr):
+    def __init__(self, width, height, i2c, addr=60):
         self.width = width
         self.height = height
         self.i2c = i2c

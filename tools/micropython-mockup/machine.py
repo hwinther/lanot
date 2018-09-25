@@ -42,7 +42,7 @@ class Pin(object):
         self.alt = alt
         self.state_value = False
 
-    def init(self, pin, mode, alt=None):
+    def init(self, pin, mode=0, alt=None):
         self.pin = pin
         self.mode = mode
         self.alt = alt

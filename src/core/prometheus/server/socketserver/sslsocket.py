@@ -1,3 +1,4 @@
+# coding=utf-8
 import prometheus
 import prometheus.logging as logging
 import socket
@@ -18,7 +19,7 @@ __author__ = 'Hans Christian Winther-Sorensen'
 # object or the _closedsocket object.
 _delegate_methods = ('recvfrom', 'sendto', 'bind', 'listen', 'settimeout', 'setsockopt')
 if not prometheus.is_micro:
-    _delegate_methods = _delegate_methods + ('recv_into', 'recvfrom_into')
+    _delegate_methods += 'recv_into', 'recvfrom_into'
 
 gc.collect()
 
@@ -51,10 +52,10 @@ class SslSocket(object):
                 # note: at present this does not work at all on esp8266 due to stack size limitations
                 # ultimately the tls code does not seem mature enough - it might create new attack vectors
                 if sys.platform == 'esp32':
-                    # mbedtls
-                    # esp32 will work, but chrome seems to reject something during handshake
+                    # mbedtls - esp32 will work, but chrome seems to reject something during handshake
                     cert = open(certfile, 'r').read()
                     key = open(keyfile, 'r').read()
+                    # noinspection PyArgumentList
                     self.sslsock = ssl_wrap_socket(self._sock, server_side=True, cert=cert, key=key)
                 else:
                     # axtls
