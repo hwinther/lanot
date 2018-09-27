@@ -43,7 +43,7 @@ class SerialTemplate(prometheus.misc.RemoteTemplate):
             self.buffer.parse(self.uart.read(buffersize))
         else:
             self.buffer.parse(self.uart.read())
-        return self.buffer.pop()
+        return self.buffer.pop().packet
 
     def recv_timeout(self, buffersize, timeout):
         # TODO: actually implement this
@@ -60,10 +60,12 @@ class SerialTemplate(prometheus.misc.RemoteTemplate):
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
-        self.recv(10)
+        packet = self.recv(10)
+        if packet is not None:
+            return packet
         # TODO: replace this with something better?
         time.sleep(0.5)
-        return self.buffer.pop()
+        return self.resolve_response(self.buffer.pop().packet)
 
 
 class UdpTemplate(prometheus.misc.RemoteTemplate):
@@ -100,7 +102,7 @@ class UdpTemplate(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.buffers[addr].pop().packet
 
     def recv(self, buffersize=10):
         return self.recv_timeout(buffersize, 0.5)
@@ -130,7 +132,7 @@ class UdpTemplate(prometheus.misc.RemoteTemplate):
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
-        return self.recv_timeout(10, 0.5)
+        return self.resolve_response(self.recv_timeout(10, 0.5))
 
 
 class TcpTemplate(prometheus.misc.RemoteTemplate):
@@ -185,7 +187,7 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.resolve_response(self.buffers[addr].pop().packet)
 
     # cut
 
@@ -302,7 +304,7 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.buffers[addr].pop().packet
 
     def recv(self, buffersize=250):
         data = self.recv_timeout(buffersize, 0.5)
@@ -338,7 +340,7 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
-        return self.recv_timeout(10, 0.5)
+        return self.resolve_response(self.recv_timeout(10, 0.5))
 
 
 class CodeValue(object):
@@ -487,7 +489,8 @@ class PrometheusTemplate(object):
         # generate method templates and arrange command values
         # rem param remap_counter: prometheus.RemapCounter
         if self.parent is not None:
-            generated_class_name += parent_class_name
+            # noinspection PyAugmentAssignment
+            generated_class_name = parent_class_name + generated_class_name
         template_commands = dict()
 
         command_keys = list(self.instance.commands.keys())
@@ -718,50 +721,50 @@ def build_client(cls, output_filename, client_template_instances):
         import_machine = 'import machine\n'
     imports %= import_socket, import_machine
     open(output_path, 'w').write(
-        '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +
+        '# coding=utf-8\n# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +
         imports + all_code)
 
 
 if __name__ == '__main__':
     # to "make" lightcontrol and other things from basic sources
-    folder_import()
+    # folder_import()
 
+    """
     from tank import Tank
-
     build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
+    
     from tankproxy import TankProxy
-
     build_client(TankProxy, 'tankproxyclient.py', [UdpTemplate, TcpTemplate])
+    
     # from proxytest import ProxyTest
     # build_client(ProxyTest, 'proxyclient.py', [UdpTemplate, TcpTemplate])
+    
     from chaintest import A, B, C
-
     build_client(A, 'chainclientA.py', [UdpTemplate, TcpTemplate])
     build_client(B, 'chainclientB.py', [UdpTemplate, TcpTemplate])
     build_client(C, 'chainclientC.py', [UdpTemplate, TcpTemplate])
 
     from sensor01 import Sensor01
-
     build_client(Sensor01, 'sensor01client.py', [UdpTemplate])
+    
     from sensor02 import Sensor02
-
     build_client(Sensor02, 'sensor02client.py', [UdpTemplate])
 
     from nodetest import NodeTest
-
     build_client(NodeTest, 'nodetestclient.py', [UdpTemplate, TcpTemplate])
+    """
+
     from localtest import LocalTest
-
     build_client(LocalTest, 'localtestclient.py', [UdpTemplate, TcpTemplate])
+
+    """
     from test01 import Test01
-
     build_client(Test01, 'test01client.py', [UdpTemplate, TcpTemplate])
+    
     from test02 import Test02
-
     build_client(Test02, 'test02client.py', [UdpTemplate, TcpTemplate])
 
     from proxytest2 import ProxyTest2
-
     build_client(ProxyTest2, 'proxytest2client.py', [UdpTemplate, TcpTemplate])
     # , RsaUdpTemplate
 
@@ -771,5 +774,5 @@ if __name__ == '__main__':
     # logging.info('version: %s' % v)
 
     from rover01 import Rover01
-
     build_client(Rover01, 'rover01client.py', [UdpTemplate, TcpTemplate])
+    """

@@ -131,7 +131,7 @@ class Server(object):
             gc.collect()
         elif command in self.instance.cached_remap:
             registered_method = self.instance.cached_remap[command]  # type: prometheus.RegisteredMethod
-            print('invoking method ref')
+            # print('invoking method ref')
             return_value = registered_method.method_reference(**context)
             if registered_method.return_type == 'str':
                 if type(return_value) is bool:

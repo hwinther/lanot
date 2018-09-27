@@ -8,6 +8,7 @@ import prometheus.server.socketserver.jsonrest
 # from prometheus.server.socketserver.sslsocket import SslSocket
 import prometheus.logging as logging
 import machine
+import sys
 # import pickle
 # from guppy import hpy
 
@@ -16,8 +17,8 @@ class LocalTest(prometheus.Prometheus):
     def __init__(self):
         prometheus.Prometheus.__init__(self)
 
-        self.test = prometheus.Digital(machine.Pin(0, machine.Pin.OUT))
-        self.register(prefix='t', test=self.test)
+        self.digital0 = prometheus.Digital(machine.Pin(0, machine.Pin.OUT))
+        self.register(prefix='t', digital0=self.digital0)
 
         self.blue_led = prometheus.Led(machine.Pin(14, machine.Pin.OUT))
         self.register(prefix='b', blue_led=self.blue_led)
@@ -31,20 +32,82 @@ class LocalTest(prometheus.Prometheus):
         self.hygrometer = prometheus.Adc(0)
         self.register(prefix='h', hygrometer=self.hygrometer)
 
+    @prometheus.Registry.register('LocalTest', '1', 'OUT')
+    def test1(self, **kwargs):
+        """
+        Returns True as bool
+        :param kwargs:
+        :return: bool
+        """
+        return True
+
+    @prometheus.Registry.register('LocalTest', '2', 'OUT')
+    def test2(self, **kwargs):
+        """
+        Returns False as bool
+        :param kwargs:
+        :return: bool
+        """
+        return False
+
+    @prometheus.Registry.register('LocalTest', '3', 'OUT')
+    def test3(self, **kwargs):
+        """
+        Returns None explicitly
+        :param kwargs:
+        :return: bool
+        """
+        return None
+
+    @prometheus.Registry.register('LocalTest', '4', 'OUT')
+    def test4(self, **kwargs):
+        """
+        Returns None implicitly
+        :param kwargs:
+        :return: bool
+        """
+
+    @prometheus.Registry.register('LocalTest', '5', 'OUT')
+    def test5(self, **kwargs):
+        """
+        Returns 0 as int
+        :param kwargs:
+        :return: int
+        """
+        return 0
+
+    @prometheus.Registry.register('LocalTest', '6', 'OUT')
+    def test6(self, **kwargs):
+        """
+        Returns 'test'
+        :param kwargs:
+        :return: str
+        """
+        return 'test'
+
+    @prometheus.Registry.register('LocalTest', '7', 'OUT')
+    def test7(self, **kwargs):
+        """
+        Returns b'test'
+        :param kwargs:
+        :return: bytes
+        """
+        return b'test'
+
 
 if __name__ == '__main__':
     node = LocalTest()
 
-    # multiserver = prometheus.server.multiserver.MultiServer()
+    multiserver = prometheus.server.multiserver.MultiServer()
 
     udpserver = prometheus.server.socketserver.udp.UdpSocketServer(node)
-    # multiserver.add(udpserver)
-    #
-    # tcpserver = prometheus.server.socketserver.tcp.TcpSocketServer(node)
-    # multiserver.add(tcpserver)
-    #
-    # jsonrestserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
-    # multiserver.add(jsonrestserver, bind_port=8080)
+    multiserver.add(udpserver)
+
+    tcpserver = prometheus.server.socketserver.tcp.TcpSocketServer(node)
+    multiserver.add(tcpserver)
+
+    jsonrestserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
+    multiserver.add(jsonrestserver, bind_port=8080)
 
     # loop_tick_delay is for cpython, limits cpu cycles
     # jsonrestsslserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node,
@@ -56,8 +119,8 @@ if __name__ == '__main__':
     # print('len(s)=%d' % len(s))
 
     logging.boot(udpserver)
-    # multiserver.start()
-    udpserver.start()
+    multiserver.start()
+    # udpserver.start()
 
     # rsaserver = prometheus_crypto.RsaUdpSocketServer(localtest, clientencrypt=False)
     # rsaserver.start()

@@ -43,7 +43,7 @@ class BufferPacket(object):
     def __init__(self, packet, args):
         self.packet = packet
         self.args = args
-        print('packet - packet=%s args=%s' % (packet, args))
+        # print('packet - packet=%s args=%s' % (packet, args))
 
 
 class Buffer(object):

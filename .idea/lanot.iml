@@ -27,6 +27,7 @@
       <sourceFolder url="file://$MODULE_DIR$/tools/micropython-tinyrtc-i2c" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tools/CCS811" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tools/ads1x15" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/devices" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/deploy/clients/archive" />
       <excludeFolder url="file://$MODULE_DIR$/src/pcb/adapter-gerber" />
       <excludeFolder url="file://$MODULE_DIR$/src/pcb/esp8266-new" />

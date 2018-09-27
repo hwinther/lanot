@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-24 23:41:05
+# generated at 2018-09-27 19:03:13
 import prometheus
 import socket
 import time
@@ -13,6 +13,18 @@ gc.collect()
 
 
 # region LocalTestUdpClient
+class LocalTestUdpClientDigital0(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('LocalTestUdpClientDigital0', 'tv', 'OUT')
+    def value(self):
+        self.send(b'tv')
+        return self.recv(10)
+
+
 class LocalTestUdpClientRedLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -107,13 +119,19 @@ class LocalTestUdpClient(prometheus.misc.RemoteTemplate):
         self.register(blue_led=self.blue_led)
         self.dht11 = LocalTestUdpClientDht11(self.send, self.recv)
         self.register(dht11=self.dht11)
+        self.digital0 = LocalTestUdpClientDigital0(self.send, self.recv)
+        self.register(digital0=self.digital0)
         self.hygrometer = LocalTestUdpClientHygrometer(self.send, self.recv)
         self.register(hygrometer=self.hygrometer)
         self.red_led = LocalTestUdpClientRedLed(self.send, self.recv)
         self.register(red_led=self.red_led)
 
-    def send(self, data):
-        self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
+        self.socket.sendto(data + self.endChars + args + self.splitChars, self.remote_addr)
 
     def try_recv(self, buffersize):
         try:
@@ -128,7 +146,7 @@ class LocalTestUdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.buffers[addr].pop().packet
 
     def recv(self, buffersize=10):
         return self.recv_timeout(buffersize, 0.5)
@@ -146,11 +164,57 @@ class LocalTestUdpClient(prometheus.misc.RemoteTemplate):
                 return data
         return None
 
+    @prometheus.Registry.register('LocalTestUdpClient', '1', 'OUT')
+    def test1(self, **kwargs):
+        self.send(b'1', **kwargs)
+        return self.resolve_response(self.recv_timeout(10, 0.5))
+
+    @prometheus.Registry.register('LocalTestUdpClient', '3', 'OUT')
+    def test3(self, **kwargs):
+        self.send(b'3', **kwargs)
+        return self.resolve_response(self.recv_timeout(10, 0.5))
+
+    @prometheus.Registry.register('LocalTestUdpClient', '2', 'OUT')
+    def test2(self, **kwargs):
+        self.send(b'2', **kwargs)
+        return self.resolve_response(self.recv_timeout(10, 0.5))
+
+    @prometheus.Registry.register('LocalTestUdpClient', '5', 'OUT')
+    def test5(self, **kwargs):
+        self.send(b'5', **kwargs)
+        return self.resolve_response(self.recv_timeout(10, 0.5))
+
+    @prometheus.Registry.register('LocalTestUdpClient', '4', 'OUT')
+    def test4(self, **kwargs):
+        self.send(b'4', **kwargs)
+        return self.resolve_response(self.recv_timeout(10, 0.5))
+
+    @prometheus.Registry.register('LocalTestUdpClient', '7', 'OUT')
+    def test7(self, **kwargs):
+        self.send(b'7', **kwargs)
+        return self.resolve_response(self.recv_timeout(10, 0.5))
+
+    @prometheus.Registry.register('LocalTestUdpClient', '6', 'OUT')
+    def test6(self, **kwargs):
+        self.send(b'6', **kwargs)
+        return self.resolve_response(self.recv_timeout(10, 0.5))
 
 # endregion
 
 
 # region LocalTestTcpClient
+class LocalTestTcpClientDigital0(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('LocalTestTcpClientDigital0', 'tv', 'OUT')
+    def value(self):
+        self.send(b'tv')
+        return self.recv(10)
+
+
 class LocalTestTcpClientRedLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -237,13 +301,15 @@ class LocalTestTcpClient(prometheus.misc.RemoteTemplate):
         self.bind_port = bind_port
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
-        self.splitChars = b'\n'
-        self.endChars = b'\r'
+        self.split_chars = b'\n'
+        self.end_chars = b'\r'
         
         self.blue_led = LocalTestTcpClientBlueLed(self.send, self.recv)
         self.register(blue_led=self.blue_led)
         self.dht11 = LocalTestTcpClientDht11(self.send, self.recv)
         self.register(dht11=self.dht11)
+        self.digital0 = LocalTestTcpClientDigital0(self.send, self.recv)
+        self.register(digital0=self.digital0)
         self.hygrometer = LocalTestTcpClientHygrometer(self.send, self.recv)
         self.register(hygrometer=self.hygrometer)
         self.red_led = LocalTestTcpClientRedLed(self.send, self.recv)
@@ -259,17 +325,21 @@ class LocalTestTcpClient(prometheus.misc.RemoteTemplate):
         logging.info('Connecting to %s' % repr(self.remote_addr))
         self.socket.connect(self.remote_addr)
 
-    def send_once(self, data):
-        self.socket.send(data + self.endChars + self.splitChars)
+    def send_once(self, data, args):
+        self.socket.send(data + self.end_chars + args + self.split_chars)
 
-    def send(self, data):
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
         if self.socket is None:
             self.create_socket()
         try:
-            self.send_once(data)
+            self.send_once(data, args)
         except prometheus.psocket.socket_error:
             self.create_socket()
-            self.send_once(data)
+            self.send_once(data, args)
 
     def try_recv(self, buffersize):
         try:
@@ -282,9 +352,43 @@ class LocalTestTcpClient(prometheus.misc.RemoteTemplate):
         if data is None:
             return None
         if addr not in self.buffers:
-            self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.resolve_response(self.buffers[addr].pop().packet)
 
+    @prometheus.Registry.register('LocalTestTcpClient', '1', 'OUT')
+    def test1(self, **kwargs):
+        self.send(b'1', **kwargs)
+        return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestTcpClient', '3', 'OUT')
+    def test3(self, **kwargs):
+        self.send(b'3', **kwargs)
+        return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestTcpClient', '2', 'OUT')
+    def test2(self, **kwargs):
+        self.send(b'2', **kwargs)
+        return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestTcpClient', '5', 'OUT')
+    def test5(self, **kwargs):
+        self.send(b'5', **kwargs)
+        return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestTcpClient', '4', 'OUT')
+    def test4(self, **kwargs):
+        self.send(b'4', **kwargs)
+        return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestTcpClient', '7', 'OUT')
+    def test7(self, **kwargs):
+        self.send(b'7', **kwargs)
+        return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestTcpClient', '6', 'OUT')
+    def test6(self, **kwargs):
+        self.send(b'6', **kwargs)
+        return self.recv(10)
 
 # endregion
