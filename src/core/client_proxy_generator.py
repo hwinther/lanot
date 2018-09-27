@@ -203,6 +203,77 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
         return self.recv(10)
 
 
+class JsonRestTemplate(prometheus.misc.RemoteTemplate):
+    def __init__(self, remote_host, remote_port=8080, bind_host=None, bind_port=9195):
+        prometheus.misc.RemoteTemplate.__init__(self)
+        self.socket = None  # type: socket.socket
+        self.bind_host = bind_host
+        self.bind_port = bind_port
+        self.remote_addr = (remote_host, remote_port)
+        # POST_INIT
+
+    def create_socket(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if self.bind_host is not None:
+            logging.notice('bound to %s:%d' % (self.bind_host, self.bind_port))
+            self.socket.bind((self.bind_host, self.bind_port))
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.settimeout(5)
+        # logging.info('Connecting to %s' % repr(self.remote_addr))
+        self.socket.connect(self.remote_addr)
+
+    def send_once(self, data, args):
+        # print('sending data=%s args=%s' % (data, args))
+        if len(args) is not 0:
+            args = b'?' + args
+        request = b'GET /%s%s HTTP/1.1\r\nHost: %s\r\n' % (data, args, self.remote_addr[0].encode('utf-8'))
+        # print('request: %s' % repr(request))
+        self.socket.send(request)
+
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
+
+        self.create_socket()
+        self.send_once(data, args)
+
+    def try_recv(self, buffersize):
+        try:
+            return self.socket.recvfrom(buffersize)  # data, addr
+        except prometheus.psocket.socket_error:
+            return None, None
+
+    def recv(self, buffersize=200):
+        data, addr = self.try_recv(buffersize)
+
+        self.socket.close()
+        if data is None:
+            return None
+
+        # print('data: %s' % (repr(data)))
+        head, body = data.split(b'\r\n\r\n', 1)
+        import json
+        json_body = json.loads(body)
+        # print(json_body)
+
+        return self.resolve_response(json_body['value'])
+
+    # cut
+
+    # noinspection PyPep8Naming
+    @prometheus.Registry.register('CLASS_NAME', 'DVAL')
+    def METHOD_NAME(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
+
+    # noinspection PyPep8Naming
+    @prometheus.Registry.register('CLASS_NAME', 'DVAL', 'OUT')
+    def METHOD_NAME_OUT(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
+        return self.recv(200)
+
+
 class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195, clientencrypt=False):
         prometheus.misc.RemoteTemplate.__init__(self)
@@ -344,13 +415,16 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
 
 
 class CodeValue(object):
-    def __init__(self, name, value, out=False):
+    def __init__(self, name, value, out=False, data_value=None):
         # type: (str, str, bool) -> None
         self.name = name
         if len(value) > 2 and value[0:2] == '0d':
             value = chr(int(value[2:]))
         self.value = value
         self.out = out
+        if data_value is None:
+            data_value = value
+        self.data_value = data_value
 
     def method_template(self, template_class, generated_class_name):
         if self.value == 'undefined' or self.name == 'microcontroller' or self.name == 'classname':
@@ -365,8 +439,9 @@ class CodeValue(object):
             # logging.debug('line',line,line.find(replace_name))
             if line.find(replace_name) != -1:
                 template.append(line.replace(replace_name, self.name).replace('CLASS_NAME', generated_class_name))
-            elif line.find('VALUE') != -1:
-                template.append(line.replace('VALUE', str(self.value)).replace('CLASS_NAME', generated_class_name))
+            elif line.find('VALUE') != -1 or line.find('DVAL') != -1:
+                template.append(line.replace('VALUE', str(self.value)).replace('DVAL', self.data_value)
+                                .replace('CLASS_NAME', generated_class_name))
             elif line.strip()[0] == '#':
                 continue  # ignore these comments so it doesnt get spammy
             else:
@@ -478,7 +553,8 @@ class PrometheusTemplate(object):
         self.parent = parent  # type: PrometheusTemplate
         self.prefix = prefix
 
-    def generate(self, template_class, parent_class_name, generated_class_name, data_value_prefix=None):
+    def generate(self, template_class, parent_class_name, generated_class_name, data_value_prefix=None,
+                 http_template=False):
         """
         :param template_class: Type<prometheus.InputOutputProxy>
         :param parent_class_name: str
@@ -493,25 +569,42 @@ class PrometheusTemplate(object):
             generated_class_name = parent_class_name + generated_class_name
         template_commands = dict()
 
-        command_keys = list(self.instance.commands.keys())
+        if http_template:
+            self.instance.recursive_remap()
+            self.instance.update_urls()
+            command_keys = list(self.instance.cached_urls.keys())
+            commands = self.instance.cached_urls
+        else:
+            command_keys = list(self.instance.commands.keys())
+            commands = self.instance.commands
         command_keys.sort()
 
         for key in command_keys:
-            value = self.instance.commands[key]
-            if isinstance(value, prometheus.RegisteredMethod):
-                command_key = value.data_value
-                if self.prefix:
-                    command_key = self.prefix + command_key
-                # elif remap_counter:
-                #     command_key = chr(remap_counter.next()) + command_key
-                elif data_value_prefix:
-                    command_key = data_value_prefix + command_key
-                if command_key in template_commands.keys():
-                    logging.warn('Warning: overwriting reference for data_value %s' % command_key)
+            value = commands[key]  # self.instance.commands[key]
+            if not isinstance(value, prometheus.RegisteredMethod):
+                continue
 
-                context_key = value.method_name
-                code_value = CodeValue(name=context_key, value=command_key, out=value.return_type)
-                template_commands[command_key] = code_value.method_template(template_class, generated_class_name)
+            # data value to send
+            command_key = value.data_value
+            if self.prefix:
+                command_key = self.prefix + command_key
+            # elif remap_counter:
+            #     command_key = chr(remap_counter.next()) + command_key
+            elif data_value_prefix:
+                command_key = data_value_prefix + command_key
+            if command_key in template_commands.keys():
+                logging.warn('Warning: overwriting reference for data_value %s' % command_key)
+
+            data_value = None
+            if http_template:
+                # URI
+                data_value = command_key
+                command_key = key
+
+            context_key = value.method_name
+            code_value = CodeValue(name=context_key, value=command_key, out=value.return_type,
+                                   data_value=data_value)
+            template_commands[command_key] = code_value.method_template(template_class, generated_class_name)
 
         method_templates = list()
         for key in template_commands:
@@ -659,6 +752,7 @@ def generate_python_template(source_class, template_class, generated_class_name,
     # remap_counter = prometheus.RemapCounter(65)
     supportclass_templates = list()
     mainclass_template = ''
+    http_template = template_class_name == 'JsonRestTemplate'
 
     for prometheus_template in template_classes:
         if not isinstance(prometheus_template, PrometheusTemplate):
@@ -668,14 +762,16 @@ def generate_python_template(source_class, template_class, generated_class_name,
         if prometheus_template.name == 'self':
             mainclass_template = prometheus_template.generate(template_class,
                                                               generated_class_name,
-                                                              generated_class_name)
+                                                              generated_class_name,
+                                                              http_template=http_template)
         else:
             # data_value_prefix = chr(remap_counter.next())
             # logging.debug('prefix=%s for %s' % (data_value_prefix, prometheus_template.name))
             supportclass_template = prometheus_template.generate(prometheus.misc.InputOutputProxy,
                                                                  generated_class_name,
                                                                  generate_class_name(prometheus_template.name),
-                                                                 data_value_prefix=None)
+                                                                 data_value_prefix=None,
+                                                                 http_template=http_template)
             supportclass_template = supportclass_template.replace('(Prometheus):', '(prometheus.Prometheus):')
             supportclass_template = supportclass_template.replace('Prometheus.__init__(self)',
                                                                   'prometheus.Prometheus.__init__(self)')
@@ -755,7 +851,7 @@ if __name__ == '__main__':
     """
 
     from localtest import LocalTest
-    build_client(LocalTest, 'localtestclient.py', [UdpTemplate, TcpTemplate])
+    build_client(LocalTest, 'localtestclient.py', [UdpTemplate, TcpTemplate, JsonRestTemplate])
 
     """
     from test01 import Test01

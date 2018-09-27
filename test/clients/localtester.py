@@ -55,27 +55,34 @@ class LocalTester(Tester):
         if not isinstance(return_value, type(expected_return)):
             success = False
         if success:
-            logging.success('%s ->  %s               Success: %s' % (self.name, func.__name__, description))
+            logging.success('%s\t-> %s\t\t\tSuccess: %s' % (self.name, func.__name__, description))
             if self.test_state is None:
                 self.test_state = True
         else:
-            logging.error('%s   ->  %s               Failed: %s' % (self.name, func.__name__, description))
+            logging.error('%s\t-> %s\t\t\tFailed: %s' % (self.name, func.__name__, description))
             logging.error(func.__doc__)
             logging.error('Return value was: %s' % repr(return_value))
             self.test_state = False
+
+        # time.sleep(0.2)
 
     def runtests(self):
         Tester.runtests(self)
 
         self.function_test(self.node.test1, 'return True', None, True)
+        # this should fail:
         # self.function_test(node.test1, 'Local return True reversed', None, False)
         self.function_test(self.node.test2, 'return False', None, False)
         self.function_test(self.node.test3, 'return None (e)', None, None)
         self.function_test(self.node.test4, 'return None (i)', None, None)
 
         self.function_test(self.node.test5, 'return 0', None, 0)
-        self.function_test(self.node.test6, "return 'test'", None, 'test')
+        # this should fail:
+        # self.function_test(self.node.test6, "return 'test'", None, 'test')
         self.function_test(self.node.test7, "return b'test'", None, b'test')
+
+        # with parameter(s)
+        self.function_test(self.node.test8, "return dir()", {'input': b'dir()'}, b'dir()')
 
 
 node = LocalTest()
@@ -89,6 +96,10 @@ lt.runtests()
 
 tcp = localtestclient.LocalTestTcpClient('10.20.1.18')
 lt = LocalTester(tcp, 'TCP')
+lt.runtests()
+
+jr = localtestclient.LocalTestJsonRestClient('10.20.1.18')
+lt = LocalTester(jr, 'JsonRest')
 lt.runtests()
 
 # udp = localtestclient.LocalTestUdpClient('localhost', bind_port=9190)

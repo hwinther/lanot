@@ -69,12 +69,16 @@ class RemoteTemplate(Prometheus):
 
     def resolve_response(self, data):
         value = data
-        if isinstance(data, str) and data.find('.') == -1 and data.find(' ') == -1 or \
-           isinstance(data, bytes) and data.find(b'.') == -1 and data.find(b' ') == -1:
+
+        if isinstance(data, bytes) and data.find(b'.') == -1 and data.find(b' ') == -1 and data.find(b'(') == -1 or \
+           isinstance(data, str) and data.find('.') == -1 and data.find(' ') == -1 and data.find('(') == -1:
             try:
                 value = eval(data)
             except NameError:
                 # NameError: name 'test' is not defined
                 # TODO: this means that single word evaluations of local scope can be performed
                 value = data
+
+        if isinstance(value, str):
+            value = value.encode('utf-8')
         return value

@@ -34,6 +34,10 @@ def args_to_bytes(args):
 
     values = list()
     for key, value in args.items():
+        if isinstance(key, str):
+            key = key.encode('utf-8')
+        if isinstance(value, str):
+            value = value.encode('utf-8')
         values.append(b'%s=%s' % (key, value))
     return b'&'.join(values)
     # return b'&'.join([b'{0}={1}'.format(key, value) for (key, value) in args.items()])

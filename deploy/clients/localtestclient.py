@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 19:03:13
+# generated at 2018-09-27 23:24:08
 import prometheus
 import socket
 import time
@@ -184,10 +184,9 @@ class LocalTestUdpClient(prometheus.misc.RemoteTemplate):
         self.send(b'5', **kwargs)
         return self.resolve_response(self.recv_timeout(10, 0.5))
 
-    @prometheus.Registry.register('LocalTestUdpClient', '4', 'OUT')
+    @prometheus.Registry.register('LocalTestUdpClient', '4')
     def test4(self, **kwargs):
         self.send(b'4', **kwargs)
-        return self.resolve_response(self.recv_timeout(10, 0.5))
 
     @prometheus.Registry.register('LocalTestUdpClient', '7', 'OUT')
     def test7(self, **kwargs):
@@ -197,6 +196,11 @@ class LocalTestUdpClient(prometheus.misc.RemoteTemplate):
     @prometheus.Registry.register('LocalTestUdpClient', '6', 'OUT')
     def test6(self, **kwargs):
         self.send(b'6', **kwargs)
+        return self.resolve_response(self.recv_timeout(10, 0.5))
+
+    @prometheus.Registry.register('LocalTestUdpClient', '8', 'OUT')
+    def test8(self, **kwargs):
+        self.send(b'8', **kwargs)
         return self.resolve_response(self.recv_timeout(10, 0.5))
 
 # endregion
@@ -376,10 +380,9 @@ class LocalTestTcpClient(prometheus.misc.RemoteTemplate):
         self.send(b'5', **kwargs)
         return self.recv(10)
 
-    @prometheus.Registry.register('LocalTestTcpClient', '4', 'OUT')
+    @prometheus.Registry.register('LocalTestTcpClient', '4')
     def test4(self, **kwargs):
         self.send(b'4', **kwargs)
-        return self.recv(10)
 
     @prometheus.Registry.register('LocalTestTcpClient', '7', 'OUT')
     def test7(self, **kwargs):
@@ -390,5 +393,260 @@ class LocalTestTcpClient(prometheus.misc.RemoteTemplate):
     def test6(self, **kwargs):
         self.send(b'6', **kwargs)
         return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestTcpClient', '8', 'OUT')
+    def test8(self, **kwargs):
+        self.send(b'8', **kwargs)
+        return self.recv(10)
+
+# endregion
+
+
+# region LocalTestJsonRestClient
+class LocalTestJsonRestClientDigital0(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('LocalTestJsonRestClientDigital0', 'api/digital0/value', 'OUT')
+    def value(self):
+        self.send(b'api/digital0/value')
+        return self.recv(10)
+
+
+class LocalTestJsonRestClientRedLed(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('LocalTestJsonRestClientRedLed', 'api/red_led/value', 'OUT')
+    def value(self):
+        self.send(b'api/red_led/value')
+        return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestJsonRestClientRedLed', 'api/red_led/on')
+    def on(self):
+        self.send(b'api/red_led/on')
+
+    @prometheus.Registry.register('LocalTestJsonRestClientRedLed', 'api/red_led/off')
+    def off(self):
+        self.send(b'api/red_led/off')
+
+
+class LocalTestJsonRestClientBlueLed(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('LocalTestJsonRestClientBlueLed', 'api/blue_led/value', 'OUT')
+    def value(self):
+        self.send(b'api/blue_led/value')
+        return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestJsonRestClientBlueLed', 'api/blue_led/on')
+    def on(self):
+        self.send(b'api/blue_led/on')
+
+    @prometheus.Registry.register('LocalTestJsonRestClientBlueLed', 'api/blue_led/off')
+    def off(self):
+        self.send(b'api/blue_led/off')
+
+
+class LocalTestJsonRestClientHygrometer(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('LocalTestJsonRestClientHygrometer', 'api/hygrometer/read', 'OUT')
+    def read(self):
+        self.send(b'api/hygrometer/read')
+        return self.recv(10)
+
+
+class LocalTestJsonRestClientDht11(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('LocalTestJsonRestClientDht11', 'api/dht11/measure')
+    def measure(self):
+        self.send(b'api/dht11/measure')
+
+    @prometheus.Registry.register('LocalTestJsonRestClientDht11', 'api/dht11/temperature', 'OUT')
+    def temperature(self):
+        self.send(b'api/dht11/temperature')
+        return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestJsonRestClientDht11', 'api/dht11/value', 'OUT')
+    def value(self):
+        self.send(b'api/dht11/value')
+        return self.recv(10)
+
+    @prometheus.Registry.register('LocalTestJsonRestClientDht11', 'api/dht11/humidity', 'OUT')
+    def humidity(self):
+        self.send(b'api/dht11/humidity')
+        return self.recv(10)
+
+
+class LocalTestJsonRestClient(prometheus.misc.RemoteTemplate):
+    def __init__(self, remote_host, remote_port=8080, bind_host=None, bind_port=9195):
+        prometheus.misc.RemoteTemplate.__init__(self)
+        self.socket = None  # type: socket.socket
+        self.bind_host = bind_host
+        self.bind_port = bind_port
+        self.remote_addr = (remote_host, remote_port)
+        
+        self.blue_led = LocalTestJsonRestClientBlueLed(self.send, self.recv)
+        self.register(blue_led=self.blue_led)
+        self.dht11 = LocalTestJsonRestClientDht11(self.send, self.recv)
+        self.register(dht11=self.dht11)
+        self.digital0 = LocalTestJsonRestClientDigital0(self.send, self.recv)
+        self.register(digital0=self.digital0)
+        self.hygrometer = LocalTestJsonRestClientHygrometer(self.send, self.recv)
+        self.register(hygrometer=self.hygrometer)
+        self.red_led = LocalTestJsonRestClientRedLed(self.send, self.recv)
+        self.register(red_led=self.red_led)
+
+    def create_socket(self):
+        self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        if self.bind_host is not None:
+            logging.notice('bound to %s:%d' % (self.bind_host, self.bind_port))
+            self.socket.bind((self.bind_host, self.bind_port))
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+        self.socket.settimeout(5)
+        self.socket.connect(self.remote_addr)
+
+    def send_once(self, data, args):
+        if len(args) is not 0:
+            args = b'?' + args
+        request = b'GET /%s%s HTTP/1.1\r\nHost: %s\r\n' % (data, args, self.remote_addr[0].encode('utf-8'))
+        self.socket.send(request)
+
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
+
+        self.create_socket()
+        self.send_once(data, args)
+
+    def try_recv(self, buffersize):
+        try:
+            return self.socket.recvfrom(buffersize)  # data, addr
+        except prometheus.psocket.socket_error:
+            return None, None
+
+    def recv(self, buffersize=200):
+        data, addr = self.try_recv(buffersize)
+
+        self.socket.close()
+        if data is None:
+            return None
+
+        head, body = data.split(b'\r\n\r\n', 1)
+        import json
+        json_body = json.loads(body)
+
+        return self.resolve_response(json_body['value'])
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', 'v', 'OUT')
+    def value(self, **kwargs):
+        self.send(b'api/blue_led/value', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', 'v', 'OUT')
+    def value(self, **kwargs):
+        self.send(b'api/digital0/value', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '1')
+    def on(self, **kwargs):
+        self.send(b'api/blue_led/on', **kwargs)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', 'h', 'OUT')
+    def humidity(self, **kwargs):
+        self.send(b'api/dht11/humidity', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '3', 'OUT')
+    def test3(self, **kwargs):
+        self.send(b'root/test3', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', 'm')
+    def measure(self, **kwargs):
+        self.send(b'api/dht11/measure', **kwargs)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', 't', 'OUT')
+    def temperature(self, **kwargs):
+        self.send(b'api/dht11/temperature', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', 'r', 'OUT')
+    def read(self, **kwargs):
+        self.send(b'api/hygrometer/read', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '8', 'OUT')
+    def test8(self, **kwargs):
+        self.send(b'root/test8', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '0')
+    def off(self, **kwargs):
+        self.send(b'api/red_led/off', **kwargs)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', 'v', 'OUT')
+    def value(self, **kwargs):
+        self.send(b'api/dht11/value', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '6', 'OUT')
+    def test6(self, **kwargs):
+        self.send(b'root/test6', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '7', 'OUT')
+    def test7(self, **kwargs):
+        self.send(b'root/test7', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', 'v', 'OUT')
+    def value(self, **kwargs):
+        self.send(b'api/red_led/value', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '5', 'OUT')
+    def test5(self, **kwargs):
+        self.send(b'root/test5', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '4')
+    def test4(self, **kwargs):
+        self.send(b'root/test4', **kwargs)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '1')
+    def on(self, **kwargs):
+        self.send(b'api/red_led/on', **kwargs)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '2', 'OUT')
+    def test2(self, **kwargs):
+        self.send(b'root/test2', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '1', 'OUT')
+    def test1(self, **kwargs):
+        self.send(b'root/test1', **kwargs)
+        return self.recv(200)
+
+    @prometheus.Registry.register('LocalTestJsonRestClient', '0')
+    def off(self, **kwargs):
+        self.send(b'api/blue_led/off', **kwargs)
 
 # endregion

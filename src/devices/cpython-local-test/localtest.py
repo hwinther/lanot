@@ -59,7 +59,7 @@ class LocalTest(prometheus.Prometheus):
         """
         return None
 
-    @prometheus.Registry.register('LocalTest', '4', 'OUT')
+    @prometheus.Registry.register('LocalTest', '4')
     def test4(self, **kwargs):
         """
         Returns None implicitly
@@ -93,6 +93,16 @@ class LocalTest(prometheus.Prometheus):
         :return: bytes
         """
         return b'test'
+
+    @prometheus.Registry.register('LocalTest', '8', 'OUT')
+    def test8(self, input=None, **kwargs):
+        """
+        Returns echo of input
+        :param input: Any
+        :param kwargs:
+        :return: Any
+        """
+        return input
 
 
 if __name__ == '__main__':
