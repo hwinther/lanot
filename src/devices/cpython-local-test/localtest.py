@@ -16,6 +16,9 @@ class LocalTest(prometheus.Prometheus):
     def __init__(self):
         prometheus.Prometheus.__init__(self)
 
+        self.test = prometheus.Digital(machine.Pin(0, machine.Pin.OUT))
+        self.register(prefix='t', test=self.test)
+
         self.blue_led = prometheus.Led(machine.Pin(14, machine.Pin.OUT))
         self.register(prefix='b', blue_led=self.blue_led)
 

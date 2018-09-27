@@ -35,9 +35,9 @@ class MAX7219(prometheus.Prometheus):
     def brightness(self, value):
         self.max.brightness(value)
 
-    def custom_command(self, command, reply, source, **kwargs):
+    def custom_command(self, command, reply, source, context, **kwargs):
         if not len(command) > 4 or not command[0:4] == 'max ':
-            return prometheus.Prometheus.custom_command(self, command, reply, source, **kwargs)
+            return prometheus.Prometheus.custom_command(self, command, reply, source, context, **kwargs)
 
         self.text(command[4:], 0, 0)
 

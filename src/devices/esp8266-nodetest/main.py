@@ -37,7 +37,8 @@ gc.collect()
 logging.debug('mem_free before start: %d' % gc.mem_free())
 try:
     tcpserver.start()
-except Exception:
+except Exception as exception:
+    print(exception)
     gc.collect()
 
 try:

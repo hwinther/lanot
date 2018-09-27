@@ -71,39 +71,52 @@ class Server(object):
     def post_loop(self, **kwargs):
         pass
 
-    def reply(self, return_value, source=None, **kwargs):
+    def reply(self, return_value, source=None, context=None, **kwargs):
         pass
 
-    def handle_data(self, command, source=None, **kwargs):
+    def handle_data(self, command, source=None, context=None, **kwargs):
+        """
+        :param source: Any()
+        :type command: bytes
+        :type context: dict()
+        """
         if debug:
             logging.notice('entering Server.handle_data')
+            logging.notice('input: %s' % repr(command))
+
         if command is b'' or command is None:
             return
 
-        if debug:
-            logging.notice('input: %s' % repr(command))
+        if context is None:
+            context = dict()
 
-        # TODO: handle byte data instead of converting to string, might same some memory
+        # TODO: handle byte data instead of converting to string, might save some memory
         if type(command) is bytes:
             command = command.decode('utf-8')
 
+        replied = False
         command_length = len(command)
 
         # TODO: find a way to implement a custom command extension in the Prometheus inheritors
         if command == 'cap':
             # capability
-            return_value = ''
+            return_values = list()
             for command in self.instance.cached_remap:
-                return_value = return_value + command
-            self.reply(return_value, source=source, **kwargs)
+                return_values.append(command)
+            self.reply(' '.join(return_values), source=source, **kwargs)
+            replied = True
         elif command == 'uname':
             self.reply(self.uname(), source=source, **kwargs)
+            replied = True
         elif command == 'version':
             self.reply(self.version(), source=source, **kwargs)
+            replied = True
         elif command == 'sysinfo':
             self.reply(self.sysinfo(), source=source, **kwargs)
+            replied = True
         elif command == 'uptime':
             self.reply(self.uptime(), source=source, **kwargs)
+            replied = True
         elif config_enabled and command_length > 10 and command[0:8] == 'connect ':
             import prometheus.pnetwork
             gc.collect()
@@ -113,35 +126,43 @@ class Server(object):
                 # if not none, then we are probably not connected and we're returning an error message that the client
                 #  would like to get
                 self.reply(connect_result, source=source, **kwargs)
+                replied = True
             del connect_result
             gc.collect()
         elif command in self.instance.cached_remap:
             registered_method = self.instance.cached_remap[command]  # type: prometheus.RegisteredMethod
-            return_value = registered_method.method_reference()
+            print('invoking method ref')
+            return_value = registered_method.method_reference(**context)
             if registered_method.return_type == 'str':
                 if type(return_value) is bool:
                     return_value = repr(return_value).encode('ascii')
                 self.reply(return_value, source=source, **kwargs)
+                replied = True
         elif os_enabled and self.handle_data_os(command=command, command_length=command_length,
                                                 source=source, **kwargs):
             pass
         elif reset_enabled and command == 'die':
             logging.warn('die command received')
+            self.reply('ok', source=source, **kwargs)
+            replied = True
             self.loop_active = False
-            return
         elif reset_enabled and command == 'reset':
             logging.warn('reset command received')
+            self.reply('ok', source=source, **kwargs)
+            # will not set replied, as the environment goes down next:
             machine.reset()
         elif command == 'tftpd':
             self.reply(self.tftpd(), source=source, **kwargs)
-        elif self.instance.custom_command(command, self.reply, source=source, **kwargs):
-            pass
+            replied = True
+        elif self.instance.custom_command(command, self.reply, source=source, context=context, **kwargs):
+            replied = True
         else:
             logging.error('invalid cmd: %s' % command)
+
         if debug:
             logging.notice('exiting Server.handle_data')
-
         gc.collect()
+        return replied
 
     def handle_data_os(self, command, command_length, source, **kwargs):
         # extended os module commmands

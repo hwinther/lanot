@@ -26,9 +26,9 @@ class LocalEvents(prometheus.server.Server):
 
     def pre_loop(self, **kwargs):
         self.timer = time.time()
-        self.instance.ssd.fill(False)
-        self.instance.ssd.text('v: %s' % self.version(), 0, 0)
-        self.instance.ssd.show()
+        self.instance.ssd.ssd.fill(False)
+        self.instance.ssd.ssd.text('v: %s' % self.version(), 0, 0)
+        self.instance.ssd.ssd.show()
 
     def loop_tick(self, **kwargs):
         diff = time.time() - self.timer
@@ -43,14 +43,14 @@ class LocalEvents(prometheus.server.Server):
             h3 = self.instance.hygrometer03.read()
             h4 = self.instance.hygrometer04.read()
 
-            self.instance.ssd.fill(False)
-            self.instance.ssd.text('v: %s' % self.version(), 0, 0)
-            self.instance.ssd.text('t: %d o: %s' % (time.time(), wlan.isconnected()), 0, 10)
+            # self.instance.ssd.fill(False)
+            self.instance.ssd.ssd.text('v: %s' % self.version(), 0, 0)
+            self.instance.ssd.ssd.text('t: %d o: %s' % (time.time(), wlan.isconnected()), 0, 10)
             if wlan.isconnected():
-                self.instance.ssd.text('i:%s' % wlan.ifconfig()[0], 0, 20)
-            self.instance.ssd.text('h1:%d h2:%d' % (h1, h2), 0, 30)
-            self.instance.ssd.text('h3:%d h4:%d' % (h3, h4), 0, 40)
-            self.instance.ssd.show()
+                self.instance.ssd.ssd.text('i:%s' % wlan.ifconfig()[0], 0, 20)
+            self.instance.ssd.ssd.text('h1:%d h2:%d' % (h1, h2), 0, 30)
+            self.instance.ssd.ssd.text('h3:%d h4:%d' % (h3, h4), 0, 40)
+            self.instance.ssd.ssd.show()
 
 
 node = greenhouse02.Greenhouse02()

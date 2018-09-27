@@ -20,13 +20,13 @@ class MultiServer(object):
     def start(self):
         for wrapped_server in self.wrapped_servers:
             wrapped_server.server.pre_loop(**wrapped_server.kwargs)
-            wrapped_server.server.loopActive = True
+            wrapped_server.server.loop_active = True
 
         loop_active = True
         while loop_active:
             for wrapped_server in self.wrapped_servers:
                 wrapped_server.server.loop_tick(**wrapped_server.kwargs)
-                if not wrapped_server.server.loopActive:
+                if not wrapped_server.server.loop_active:
                     loop_active = False
                     break
                 gc.collect()

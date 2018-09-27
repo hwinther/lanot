@@ -235,22 +235,22 @@ void loop() {
 			//sprintf (buffer, "Sending type=%s data=%lx bits=%d", type, d, b);
 			//Serial.println(buffer);
 
-			if (strstr("NEC", type) != NULL)
+			if (strstr("NEC", type) != nullptr)
 			{
 				Serial.println("sendNEC");
 				irsend.sendNEC(d, b); // 0x48B78877, 32
 			}
-			else if (strstr("RC5", type) != NULL)
+			else if (strstr("RC5", type) != nullptr)
 			{
 				Serial.println("RC5 - sending\n");
 				irsend.sendRC5(d, b);
 			}
-			else if (strstr("RC6", type) != NULL)
+			else if (strstr("RC6", type) != nullptr)
 			{
 				Serial.println("RC6 - sending\n");
 				irsend.sendRC6(d, b);
 			}
-			else if (strstr("SONY", type) != NULL)
+			else if (strstr("SONY", type) != nullptr)
 			{
 				Serial.println("Sony - sending\n");
 				irsend.sendSony(d, b);
@@ -356,13 +356,13 @@ void receive_event(int how_many) {
 	b = 0;
 
 	data = strchr(str, split_char);
-	if (data != NULL)
+	if (data != nullptr)
 	{
 		*data = 0;
 		data++;
 
 		bitlen = strchr(data, split_char);
-		if (bitlen != NULL)
+		if (bitlen != nullptr)
 		{
 			*bitlen = 0;
 			bitlen++;
@@ -375,7 +375,7 @@ void receive_event(int how_many) {
 		//Serial.println(data);
 		//Serial.print("strlen=");
 		//Serial.println(strlen(data), DEC);
-		d = strtoul(data, NULL, 16);
+		d = strtoul(data, nullptr, 16);
 	}
 
 	strcpy(type, str);
@@ -387,20 +387,20 @@ void receive_event(int how_many) {
 	{
 		// empty string, ignore - this will also happen with i2c scan
 	}
-	else if (strstr("NEC", type) != NULL || strstr("RC5", type) != NULL || strstr("RC6", type) != NULL || strstr("SONY", type) != NULL)
+	else if (strstr("NEC", type) != nullptr || strstr("RC5", type) != nullptr || strstr("RC6", type) != nullptr || strstr("SONY", type) != nullptr)
 	{
 		//Serial.println("found valid type");
 		set_state(send);
 	}
-	else if (strstr("DO", type) != NULL)
+	else if (strstr("DO", type) != nullptr)
 	{
 		set_state(digital_out);
 	}
-	else if (strstr("DI", type) != NULL)
+	else if (strstr("DI", type) != nullptr)
 	{
 		set_state(digital_in);
 	}
-	else if (strstr("RECV", type) != NULL)
+	else if (strstr("RECV", type) != nullptr)
 	{
 		set_state(recv);
 	}

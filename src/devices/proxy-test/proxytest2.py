@@ -1,3 +1,4 @@
+import machine
 import random
 import prometheus
 import prometheus.server.multiserver
@@ -18,6 +19,9 @@ import deploy.clients.test02client as test02client
 class ProxyTest2(prometheus.Prometheus):
     def __init__(self):
         prometheus.Prometheus.__init__(self)
+
+        self.test = prometheus.Digital(machine.Pin(0, machine.Pin.OUT))
+        self.register(prefix='t', test=self.test)
 
         self.sensor01 = sensor01client.Sensor01UdpClient('sensor01', bind_port=random.randrange(1024, 9000))
         self.register(prefix='s1', sensor01=self.sensor01)

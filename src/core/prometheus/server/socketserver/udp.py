@@ -75,14 +75,15 @@ class UdpSocketServer(socketserver.SocketServer):
 
         while True:
             command = self.buffers[addr].pop()
+
             if command is None:
                 # logging.notice('Breaking command loop')
                 break
-            if type(command) is bytes:
-                command = command.decode('ascii')
+            # if isinstance(command.packet, bytes):
+            #     command.packet = command.packet.decode('ascii')
             if prometheus.server.debug:
                 logging.debug('Calling handle data')
-            self.handle_data(command, addr)
+            self.handle_data(command.packet, addr, context=prometheus.parse_args(command.args))
 
         gc.collect()
 

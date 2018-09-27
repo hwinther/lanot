@@ -15,12 +15,12 @@ class NanoI2C(prometheus.Prometheus):
         self.i2c = i2c
 
     @prometheus.Registry.register('NanoI2C', 'do')
-    def digital_out(self, pin=4, value=1):
+    def digital_out(self, pin=4, value=1, **kwargs):
         # if not pin in range(0,12):
         self.i2c.writeto(8, b'DO %d %d' % (pin, value))
 
     @prometheus.Registry.register('NanoI2C', 'di', 'OUT')
-    def digital_in(self, pin=4):
+    def digital_in(self, pin=4, **kwargs):
         if pin not in range(0, 12):
             raise Exception("Invalid pin")
         self.i2c.writeto(8, b'DI %d' % pin)
@@ -40,7 +40,7 @@ class NanoI2C(prometheus.Prometheus):
             return None, None, None
 
     @prometheus.Registry.register('NanoI2C', 'ii', 'OUT')
-    def infrain(self):
+    def infrain(self, **kwargs):
         _type, code, bitlength = self._infrain_getdata()
         if _type is not None:
             return '%s %s %s' % (_type, code, bitlength)
@@ -51,5 +51,5 @@ class NanoI2C(prometheus.Prometheus):
         return '%s %s %s' % (_type, code, bitlength)
 
     @prometheus.Registry.register('NanoI2C', 'io')
-    def infraout(self, _type, code, bitlength):
+    def infraout(self, _type, code, bitlength, **kwargs):
         self.i2c.writeto(8, b'%s %x %d' % (_type, code, bitlength))

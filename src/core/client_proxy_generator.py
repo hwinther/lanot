@@ -31,8 +31,12 @@ class SerialTemplate(prometheus.misc.RemoteTemplate):
         self.buffer = prometheus.Buffer(split_chars=b'\n', end_chars=b'\r')
         # POST_INIT
 
-    def send(self, data):
-        self.uart.write(data + self.buffer.endChars + self.buffer.splitChars)
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
+        self.uart.write(data + self.buffer.end_chars + args + self.buffer.split_chars)
 
     def recv(self, buffersize=None):
         if buffersize:
@@ -49,13 +53,13 @@ class SerialTemplate(prometheus.misc.RemoteTemplate):
 
     # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE')
-    def METHOD_NAME(self):
-        self.send(b'VALUE')
+    def METHOD_NAME(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
-    def METHOD_NAME_OUT(self):
-        self.send(b'VALUE')
+    def METHOD_NAME_OUT(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
         self.recv(10)
         # TODO: replace this with something better?
         time.sleep(0.5)
@@ -75,8 +79,12 @@ class UdpTemplate(prometheus.misc.RemoteTemplate):
         self.endChars = b'\r'
         # POST_INIT
 
-    def send(self, data):
-        self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
+        self.socket.sendto(data + self.endChars + args + self.splitChars, self.remote_addr)
 
     def try_recv(self, buffersize):
         try:
@@ -115,13 +123,13 @@ class UdpTemplate(prometheus.misc.RemoteTemplate):
 
     # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE')
-    def METHOD_NAME(self):
-        self.send(b'VALUE')
+    def METHOD_NAME(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
-    def METHOD_NAME_OUT(self):
-        self.send(b'VALUE')
+    def METHOD_NAME_OUT(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
         return self.recv_timeout(10, 0.5)
 
 
@@ -133,8 +141,8 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
         self.bind_port = bind_port
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
-        self.splitChars = b'\n'
-        self.endChars = b'\r'
+        self.split_chars = b'\n'
+        self.end_chars = b'\r'
         # POST_INIT
 
     def create_socket(self):
@@ -147,17 +155,21 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
         logging.info('Connecting to %s' % repr(self.remote_addr))
         self.socket.connect(self.remote_addr)
 
-    def send_once(self, data):
-        self.socket.send(data + self.endChars + self.splitChars)
+    def send_once(self, data, args):
+        self.socket.send(data + self.end_chars + args + self.split_chars)
 
-    def send(self, data):
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
         if self.socket is None:
             self.create_socket()
         try:
-            self.send_once(data)
+            self.send_once(data, args)
         except prometheus.psocket.socket_error:
             self.create_socket()
-            self.send_once(data)
+            self.send_once(data, args)
 
     def try_recv(self, buffersize):
         try:
@@ -171,7 +183,7 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
         if data is None:
             return None
         if addr not in self.buffers:
-            self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
         return self.buffers[addr].pop()
 
@@ -179,13 +191,13 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
 
     # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE')
-    def METHOD_NAME(self):
-        self.send(b'VALUE')
+    def METHOD_NAME(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
-    def METHOD_NAME_OUT(self):
-        self.send(b'VALUE')
+    def METHOD_NAME_OUT(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
         return self.recv(10)
 
 
@@ -198,8 +210,8 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
         self.socket.settimeout(0)
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
-        self.splitChars = b'\n'
-        self.endChars = b'\r'
+        self.split_chars = b'\n'
+        self.end_chars = b'\r'
         self.negotiated = False
         self.remote_key = (0, 0)
         self.clientencrypt = clientencrypt
@@ -254,21 +266,27 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
 
         self.negotiated = True
 
-    def send_raw(self, data):
-        self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
+    def send_raw(self, data, args=b''):
+        self.socket.sendto(data + self.end_chars + args + self.split_chars, self.remote_addr)
 
-    def send_crypted(self, data):
+    def send_crypted(self, data, args):
         logging.notice('send_crypted: cleartext is %d bytes' % len(data))
         if self.clientencrypt:
             data = prometheus.crypto.encrypt_packet(data, self.remote_key, self.private_key)
+            args = prometheus.crypto.encrypt_packet(args, self.remote_key, self.private_key)
         else:
             data = prometheus.crypto.encrypt_packet(data, self.remote_key)
-        self.send_raw(data)
+            args = prometheus.crypto.encrypt_packet(args, self.remote_key)
+        self.send_raw(data, args)
 
-    def send(self, data):
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
         if self.negotiated is False:
             self.negotiate(revalidate=False)
-        self.send_crypted(data)
+        self.send_crypted(data, args)
 
     def try_recv(self, buffersize):
         try:
@@ -282,7 +300,7 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
         if data is None:
             return None
         if addr not in self.buffers:
-            self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
         return self.buffers[addr].pop()
 
@@ -313,13 +331,13 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
 
     # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE')
-    def METHOD_NAME(self):
-        self.send(b'VALUE')
+    def METHOD_NAME(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
-    def METHOD_NAME_OUT(self):
-        self.send(b'VALUE')
+    def METHOD_NAME_OUT(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
         return self.recv_timeout(10, 0.5)
 
 
@@ -698,7 +716,7 @@ def build_client(cls, output_filename, client_template_instances):
         import_socket = 'import socket\n'
     if all_code.find('machine.') != -1:
         import_machine = 'import machine\n'
-    imports = imports % (import_socket, import_machine)
+    imports %= import_socket, import_machine
     open(output_path, 'w').write(
         '# generated at %s\n' % datetime.datetime.now().strftime('%Y-%m-%d %H:%M:%S') +
         imports + all_code)

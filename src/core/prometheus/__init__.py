@@ -14,13 +14,45 @@ is_micro = sys.platform in ['esp8266', 'esp32', 'WiPy']
 data_debug = False
 
 
+def parse_args(args_str):
+    if len(args_str) == 0:
+        return dict()
+
+    args = dict()
+    for query_segment in args_str.split(b'&'):
+        if query_segment.find(b'=') != -1:
+            key, value = query_segment.split(b'=', 1)
+            args[key.decode('utf-8')] = value.decode('utf-8')
+        else:
+            args[query_segment.decode('utf-8')] = True
+    return args
+
+
+def args_to_bytes(args):
+    if len(args) == 0:
+        return b''
+
+    values = list()
+    for key, value in args.items():
+        values.append(b'%s=%s' % (key, value))
+    return b'&'.join(values)
+    # return b'&'.join([b'{0}={1}'.format(key, value) for (key, value) in args.items()])
+
+
+class BufferPacket(object):
+    def __init__(self, packet, args):
+        self.packet = packet
+        self.args = args
+        print('packet - packet=%s args=%s' % (packet, args))
+
+
 class Buffer(object):
     """
     Copied from RadioNetwork.Handlers.PacketParser
     :type Packets: list(str)
     :type packetBuffer: str
-    :type splitChars: str
-    :type endChars: str
+    :type split_chars: str
+    :type end_chars: str
     """
     def __init__(self, split_chars, end_chars):
         """
@@ -30,10 +62,10 @@ class Buffer(object):
         self.packetBuffer = b''
         if type(split_chars) is str:
             split_chars = split_chars.encode('ascii')
-        self.splitChars = split_chars
+        self.split_chars = split_chars
         if type(end_chars) is str:
             end_chars = end_chars.encode('ascii')
-        self.endChars = end_chars
+        self.end_chars = end_chars
 
     def parse(self, packetdata):
         # type: (str) -> None
@@ -51,18 +83,18 @@ class Buffer(object):
         rest = b''
         # logging.notice('for segment in split on %s len=%d' %
         #  (self.splitChars, len(self.packetBuffer.split(self.splitChars))))
-        for segment in self.packetBuffer.split(self.splitChars):
+        for segment in self.packetBuffer.split(self.split_chars):
             # logging.notice('segment[%s].find %s = %s' %
             #  (repr(segment), repr(self.endChars), segment.find(self.endChars) != -1))
             if segment == b'':
                 # the segment empty or only POLYNOMIAL, ignore it
                 pass
-            elif segment.find(self.endChars) != -1:
-                s = segment.split(self.endChars)[0]  # discard everything after
+            elif segment.find(self.end_chars) != -1:
+                packet, args = segment.split(self.end_chars, 1)  # discard everything after
                 # logging.notice('appending packet')
-                self.Packets.append(s)
+                self.Packets.append(BufferPacket(packet, args=args))
             else:
-                rest += self.splitChars + segment
+                rest += self.split_chars + segment
             gc.collect()
 
         if len(rest) > 100:
@@ -72,6 +104,7 @@ class Buffer(object):
         gc.collect()
 
     def pop(self):
+        # type: () -> BufferPacket
         # rtype: str
         if len(self.Packets) != 0:
             return self.Packets.pop(0)
@@ -241,10 +274,10 @@ class Prometheus(object):
         for key in self.cached_remap.keys():
             value = self.cached_remap[key]
             url = '/'.join(value.logical_path.split('.')).replace('root/', 'api/').encode('ascii')
-            url = b'/' + url + b'/' + value.method_name.encode('ascii')
+            url = url + b'/' + value.method_name.encode('ascii')
             self.cached_urls[url] = value
 
-    def custom_command(self, command, reply, source, **kwargs):
+    def custom_command(self, command, reply, source, context, **kwargs):
         # by default, do nothing
         # usage: reply(return_value, source, **kwargs)
         return False
@@ -281,21 +314,21 @@ class Led(Prometheus):
                 self.pin.value(state)
 
     @Registry.register('Led', '1')
-    def on(self):
+    def on(self, **kwargs):
         if self.inverted:
             self.pin.value(False)
         else:
             self.pin.value(True)
 
     @Registry.register('Led', '0')
-    def off(self):
+    def off(self, **kwargs):
         if self.inverted:
             self.pin.value(True)
         else:
             self.pin.value(False)
 
     @Registry.register('Led', 'v', 'OUT')
-    def value(self):
+    def value(self, **kwargs):
         # the equal/not equal operators have to be used to get truthyness ('1 is not True' will not work)
         if self.inverted:
             return self.pin.value() != True
@@ -314,7 +347,7 @@ class Digital(Prometheus):
         self.inverted = inverted
 
     @Registry.register('Digital', 'v', 'OUT')
-    def value(self):
+    def value(self, **kwargs):
         if self.inverted:
             return self.pin.value() != True
         else:
@@ -332,7 +365,7 @@ class Adc(Prometheus):
         self.adc = machine.ADC(pin)
 
     @Registry.register('Adc', 'r', 'OUT')
-    def read(self):
+    def read(self, **kwargs):
         return self.adc.read()
 
 # TODO: when adding new device subclasses, concidering splitting them all into submodules

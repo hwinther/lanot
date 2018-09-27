@@ -53,6 +53,7 @@ class NodeTest(prometheus.Prometheus):
         self.register(prefix='p', neopixel=self.neopixel)
 
         self.ssd = prometheus.pssd1306.SSD1306(self.i2c)
+        self.register(prefix='ss', ssd=self.ssd)
 
         self.max = prometheus.pmax7219.MAX7219(self.spi, machine.Pin(15), 4)
 
@@ -75,7 +76,7 @@ class NodeTest(prometheus.Prometheus):
             self.ssd.text('init', 0, 0)
             self.max.text('init', 0, 0, 1)
 
-    def custom_command(self, command, reply, source, **kwargs):
+    def custom_command(self, command, reply, source, context, **kwargs):
         logging.notice('custom_command: %s' % command)
 
         # TODO: implement this pattern by default in Prometheus class?

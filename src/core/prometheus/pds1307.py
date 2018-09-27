@@ -21,6 +21,6 @@ class DS1307(prometheus.Prometheus):
         self.ds1307 = ds1307.DS1307(i2c=i2c, addr=addr)
 
     @prometheus.Registry.register('DS1307', 'v', 'OUT')
-    def value(self):
+    def value(self, **kwargs):
         dt = self.ds1307.datetime()
         return '%02d:%02d:%02d' % (dt[4], dt[5], dt[6])

@@ -20,22 +20,22 @@ class Dht11(prometheus.Prometheus):
         self.dht = dht.DHT11(self.pin)
 
     @prometheus.Registry.register('Dht11', 'm')
-    def measure(self):
+    def measure(self, **kwargs):
         try:
             self.dht.measure()
         except OSError:
             pass
 
     @prometheus.Registry.register('Dht11', 't', 'OUT')
-    def temperature(self):
+    def temperature(self, **kwargs):
         return self.dht.temperature()
 
     @prometheus.Registry.register('Dht11', 'h', 'OUT')
-    def humidity(self):
+    def humidity(self, **kwargs):
         return self.dht.humidity()
 
     @prometheus.Registry.register('Dht11', 'v', 'OUT')
-    def value(self):
+    def value(self, **kwargs):
         try:
             self.dht.measure()
         except OSError:

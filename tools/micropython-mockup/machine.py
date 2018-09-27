@@ -171,4 +171,4 @@ def idle():
 
 
 def reset():
-    pass
+    raise NotImplementedError()

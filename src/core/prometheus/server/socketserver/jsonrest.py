@@ -1,9 +1,9 @@
 # coding=utf-8
 import socket
-import prometheus.pgc as gc
 import time
 import json
 import prometheus
+import prometheus.pgc as gc
 import prometheus.server
 import prometheus.server.socketserver as socketserver
 import prometheus.logging as logging
@@ -58,14 +58,14 @@ class JsonRestServer(socketserver.SocketServer):
         try:
             # TODO: put this pair in a wrapper class
             sock, addr = self.socket.accept()
-        except prometheus.psocket.socket_error as e:
+        except prometheus.psocket.socket_error as exception:
             if prometheus.is_micro:
-                if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
-                    logging.error(e)
+                if exception.args[0] != 11 and exception.args[0] != 110 and exception.args[0] != 23:
+                    logging.error(exception)
                     raise
             else:
-                if e.errno != 11 and e.errno != 110 and e.errno != 10035:
-                    logging.error(e)
+                if exception.errno != 11 and exception.errno != 110 and exception.errno != 10035:
+                    logging.error(exception)
                     raise
 
         if sock is not None:
@@ -74,81 +74,36 @@ class JsonRestServer(socketserver.SocketServer):
             data = None
             try:
                 data = sock.recv(1024)
-            except prometheus.psocket.socket_error as e:
+            except prometheus.psocket.socket_error as exception:
                 if prometheus.is_micro:
-                    if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
-                        logging.error(e)
+                    if exception.args[0] != 11 and exception.args[0] != 110 and exception.args[0] != 23:
+                        logging.error(exception)
                         raise
                 else:
-                    if e.errno != 11 and e.errno != 110 and e.errno != 10035:
-                        logging.error(e)
+                    if exception.errno != 11 and exception.errno != 110 and exception.errno != 10035:
+                        logging.error(exception)
                         raise
 
             found = False
             if data is not None and data.find(b'\r\n') != -1:
                 for line in data.split(b'\r\n'):
-                    if len(line) == 0:
+                    if not line:
                         continue
+
                     if line.find(b'GET /') != -1:
-                        path = line.split(b' ')[1]
+                        # GET /url?param=value HTTP/1.1
+                        path = line.split(b' ')[1][1:]
+                        # path should be url, query should be (dict) param=value
                         query = dict()
                         if path.find(b'?') != -1:
                             path, querystr = path.split(b'?', 1)
-                            for q in querystr.split(b'&'):
-                                if q.find(b'=') != -1:
-                                    key, value = q.split(b'=', 1)
-                                    query[key] = value
-                                else:
-                                    query[q] = True
+                            query = prometheus.parse_args(querystr)
+
                         logging.notice('get: %s (%s)' % (path, query))
-                        if path in self.instance.cached_urls.keys():
-                            logging.notice('found matching command_key')
-                            value = self.instance.cached_urls[path]  # type: prometheus.RegisteredMethod
-                            self.handle_data(value.command_key, source=sock, query=query)
-                            if value.return_type != 'str':
-                                # give default empty response
-                                self.reply(return_value=None, source=sock, query=query)
+
+                        if self.handle_request(path, query, sock):
                             found = True
-                        elif path == b'/schema':
-                            d = dict()
-                            for key in self.instance.cached_urls.keys():
-                                value = self.instance.cached_urls[key]  # type: prometheus.RegisteredMethod
-                                logical_key = value.logical_path.replace('root.', '')
-                                if logical_key not in d.keys():
-                                    d[logical_key] = {'methods': dict(), 'class': value.class_name,
-                                                      'path': value.logical_path}
-                                d[logical_key]['methods'][value.method_name] = key.decode('utf-8')
-                            if prometheus.server.debug:
-                                logging.debug('before api: %s' % str(gc.mem_free()))
-                            gc.collect()
-                            if prometheus.server.debug:
-                                logging.debug('after api: %s' % str(gc.mem_free()))
-                            self.reply(return_value=d, source=sock, query=query)
-                            found = True
-                        elif path == b'/schemauri':
-                            lst = list()
-                            for key in self.instance.cached_urls.keys():
-                                lst.append(key.decode('utf-8'))
-                            self.reply(return_value=lst, source=sock, query=query)
-                            found = True
-                        elif path == b'/uname':
-                            self.reply(return_value=self.uname(), source=sock, query=query)
-                            found = True
-                        elif path == b'/version':
-                            self.reply(return_value=self.version(), source=sock, query=query)
-                            found = True
-                        elif path == b'/sysinfo':
-                            self.reply(return_value=self.sysinfo(), source=sock, query=query)
-                            found = True
-                        elif path == b'/die':
-                            self.reply(return_value='ok', source=sock, query=query)
-                            self.loop_active = False
-                            found = True
-                        elif path == b'/favicon.ico':
-                            self.reply(return_value=prometheus.server.favicon,
-                                       source=sock,
-                                       contenttype='image/x-icon')
-                            found = True
+                            break
 
             if not found and data is not None:
                 logging.warn('Returning 404')
@@ -162,25 +117,66 @@ class JsonRestServer(socketserver.SocketServer):
         if prometheus.server.debug:
             logging.notice('exiting JsonRestServer.loop_tick')
 
+    def handle_request(self, path, query, sock):
+        if path in self.instance.cached_urls.keys():
+            logging.notice('found matching command_key')
+            value = self.instance.cached_urls[path]  # type: prometheus.RegisteredMethod
+            self.handle_data(value.command_key, source=sock, context=query)
+            if value.return_type != 'str':
+                # give default empty response
+                self.reply(return_value=None, source=sock, context=query)
+            return True
+        elif path == b'schema':
+            schema = dict()
+            for key in self.instance.cached_urls.keys():
+                value = self.instance.cached_urls[key]  # type: prometheus.RegisteredMethod
+                logical_key = value.logical_path.replace('root.', '')
+                if logical_key not in schema.keys():
+                    schema[logical_key] = {'methods': dict(), 'class': value.class_name,
+                                           'path': value.logical_path}
+                schema[logical_key]['methods'][value.method_name] = key.decode('utf-8')
+            if prometheus.server.debug:
+                logging.debug('before api: %s' % str(gc.mem_free()))
+            gc.collect()
+            if prometheus.server.debug:
+                logging.debug('after api: %s' % str(gc.mem_free()))
+            self.reply(return_value=schema, source=sock, context=query)
+            return True
+        elif path == b'schemauri':
+            lst = list()
+            for key in self.instance.cached_urls.keys():
+                lst.append(key.decode('utf-8'))
+            self.reply(return_value=lst, source=sock, context=query)
+            return True
+        elif path == b'favicon.ico':
+            self.reply(return_value=prometheus.server.favicon,
+                       source=sock,
+                       contenttype='image/x-icon')
+            return True
+
+        else:
+            return self.handle_data(path, source=sock, context=query)
+
     def post_loop(self, **kwargs):
         socketserver.SocketServer.post_loop(self, **kwargs)
 
         self.socket.close()
 
-    def reply(self, return_value, source=None, query=None, contenttype=None, **kwargs):
+    def reply(self, return_value, source=None, context=None, contenttype=None, **kwargs):
         socketserver.SocketServer.reply(self, return_value, **kwargs)
 
         # JSON contenttype is assumed/default
         if contenttype is None:
             contenttype = 'application/vnd.api+json'
 
-            if type(return_value) is dict or type(return_value) is list:
+        if contenttype == 'application/vnd.api+json':
+            if isinstance(return_value, (dict, list)):
                 msg = json.dumps(return_value)
             else:
                 msg = json.dumps({'value': return_value})
 
-            if query is not None and b'callback' in query.keys():
-                callback = query[b'callback'].decode('utf-8')
+            if context is not None and b'callback' in context.keys():
+                callback = context[b'callback'].decode('utf-8')
                 msg = '%s(%s)' % (callback, msg)
 
             # convert to bytes

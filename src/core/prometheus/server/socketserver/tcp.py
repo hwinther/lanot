@@ -1,7 +1,7 @@
 # coding=utf-8
 import socket
 import gc
-import os
+import uos
 import prometheus
 import prometheus.server.socketserver as socketserver
 import prometheus.logging as logging
@@ -15,10 +15,10 @@ class TcpSocketServer(socketserver.SocketServer):
     def __init__(self, instance, socketwrapper=None):
         socketserver.SocketServer.__init__(self, instance, socketwrapper)
         self.socket = self.socketwrapper(socket.AF_INET, socket.SOCK_STREAM)
-        self.splitChars = '\n'
-        self.endChars = '\r'
-        self.sockets = dict()  # type: dict[(str,int), socket.socket]
-        self.buffers = dict()  # type: dict[(str,int), prometheus.Buffer]
+        self.split_chars = '\n'
+        self.end_chars = '\r'
+        self.sockets = dict()
+        self.buffers = dict()
 
     def start(self, bind_host='', bind_port=9195):
         socketserver.SocketServer.start(self, bind_host=bind_host, bind_port=bind_port)
@@ -42,14 +42,14 @@ class TcpSocketServer(socketserver.SocketServer):
         try:
             # TODO: put this pair in a wrapper class
             sock, addr = self.socket.accept()
-        except prometheus.psocket.socket_error as e:
+        except prometheus.psocket.socket_error as exception:
             if prometheus.is_micro:
-                if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
-                    logging.error(e)
+                if exception.args[0] != 11 and exception.args[0] != 110 and exception.args[0] != 23:
+                    logging.error(exception)
                     raise
             else:
-                if e.errno != 11 and e.errno != 110 and e.errno != 10035:
-                    logging.error(e)
+                if exception.errno != 11 and exception.errno != 110 and exception.errno != 10035:
+                    logging.error(exception)
                     raise
 
         if sock is not None:
@@ -58,7 +58,7 @@ class TcpSocketServer(socketserver.SocketServer):
             # if addr not in buffers.keys():
             if prometheus.server.debug:
                 logging.debug('Creating new buffer context')
-            self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
             self.sockets[addr] = sock
 
         # TODO: would be more efficient by using Poll (which is the micropython way)
@@ -67,29 +67,30 @@ class TcpSocketServer(socketserver.SocketServer):
             data = None
             try:
                 data = self.sockets[addr].recv(100)
-            except prometheus.psocket.socket_error as e:
+            except prometheus.psocket.socket_error as exception:
                 if prometheus.is_micro:
                     # 104 connect reset by peer, 113 no route to host, might want to make this 100-113
-                    if e.args[0] == 104 or e.args[0] == 113:
+                    if exception.args[0] == 104 or exception.args[0] == 113:
                         if prometheus.server.debug:
                             logging.debug('disconnected')
                         del self.buffers[addr]
                         del self.sockets[addr]
                         continue
-                    if e.args[0] != 11 and e.args[0] != 110 and e.args[0] != 23:
-                        logging.error(e)
+                    if exception.args[0] != 11 and exception.args[0] != 110 and exception.args[0] != 23:
+                        logging.error(exception)
                         raise
                     # else:
                     #     logging.debug(e)
                 else:
-                    if e.errno == 104:
+                    if exception.errno == 104:
                         if prometheus.server.debug:
                             logging.debug('disconnected')
                         del self.buffers[addr]
                         del self.sockets[addr]
                         continue
-                    if e.errno != 11 and e.errno != 104 and e.errno != 110 and e.errno != 10035 and e.errno != 10054:
-                        logging.error(e)
+                    if exception.errno != 11 and exception.errno != 104 and exception.errno != 110 and \
+                       exception.errno != 10035 and exception.errno != 10054:
+                        logging.error(exception)
                         raise
                     # else:
                     #     logging.debug(e)
@@ -114,12 +115,12 @@ class TcpSocketServer(socketserver.SocketServer):
                 self.buffers[addr].parse(data)
 
             while True:
-                command = self.buffers[addr].pop()
+                command = self.buffers[addr].pop()  # type: prometheus.BufferPacket
                 if command is None:
                     # logging.notice('Breaking command loop')
                     break
 
-                if shell_enabled and command == b'shell':
+                if shell_enabled and command.packet == b'shell':
                     if not prometheus.is_micro:
                         self.reply('Not implemented for this platform', source=self.sockets[addr], **kwargs)
                         break
@@ -129,10 +130,11 @@ class TcpSocketServer(socketserver.SocketServer):
                     sock = self.sockets[addr]
                     sock.setblocking(False)
                     # notify REPL on socket incoming data
-                    sock.setsockopt(socket.SOL_SOCKET, 20, os.dupterm_notify)
-                    os.dupterm(sock, 0)
+                    sock.setsockopt(socket.SOL_SOCKET, 20, uos.dupterm_notify)
+                    uos.dupterm(sock, 0)
                     raise Exception('Dropping to REPL')
-                elif command == b'quit':
+                elif command.packet == b'quit':
+                    # TODO: this is somewhat a duplicate of quit from super
                     self.sockets[addr].close()
                     del self.buffers[addr]
                     del self.sockets[addr]
@@ -140,7 +142,8 @@ class TcpSocketServer(socketserver.SocketServer):
 
                 if prometheus.server.debug:
                     logging.debug('Calling handle data')
-                self.handle_data(command, self.sockets[addr])
+
+                self.handle_data(command.packet, self.sockets[addr], context=prometheus.parse_args(command.args))
 
     def post_loop(self, **kwargs):
         socketserver.SocketServer.post_loop(self, **kwargs)
@@ -157,4 +160,4 @@ class TcpSocketServer(socketserver.SocketServer):
             return_value = return_value.encode('utf-8')
 
         logging.notice('returning %s to %s' % (return_value, repr(source)))
-        source.send(b'%s%s%s' % (return_value, self.endChars.encode('utf-8'), self.splitChars.encode('utf-8')))
+        source.send(b'%s%s%s' % (return_value, self.end_chars.encode('utf-8'), self.split_chars.encode('utf-8')))

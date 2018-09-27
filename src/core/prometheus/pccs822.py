@@ -21,7 +21,7 @@ class CCS822(prometheus.Prometheus):
         self.ccs811 = CCS811.CCS811(i2c=i2c, addr=addr)
 
     @prometheus.Registry.register('CCS822', 'v', 'OUT')
-    def value(self):
+    def value(self, **kwargs):
         if not self.ccs811.data_ready():
             return None
         return '%d %d' % (self.ccs811.eCO2, self.ccs811.tVOC)
