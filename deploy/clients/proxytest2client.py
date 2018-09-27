@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:51:48
+# generated at 2018-09-28 00:40:19
 import prometheus
 import socket
 import time
@@ -19,7 +19,7 @@ class ProxyTest2UdpClientTest(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientTest', 'tv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientTest', 'tv', str)
     def value(self, **kwargs):
         self.send(b'tv', **kwargs)
         return self.recv(10)
@@ -56,7 +56,7 @@ class ProxyTest2UdpClientIntegratedLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'i0', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
         return self.recv(10)
@@ -68,7 +68,7 @@ class ProxyTest2UdpClientDsb(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDsb', 'bv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDsb', 'bv', str)
     def value(self, **kwargs):
         self.send(b'bv', **kwargs)
         return self.recv(10)
@@ -80,7 +80,7 @@ class ProxyTest2UdpClientLightsensor(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientLightsensor', 'lr', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientLightsensor', 'lr', str)
     def read(self, **kwargs):
         self.send(b'lr', **kwargs)
         return self.recv(10)
@@ -92,12 +92,12 @@ class ProxyTest2UdpClientDht11(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dv', str)
     def value(self, **kwargs):
         self.send(b'dv', **kwargs)
         return self.recv(10)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dt', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dt', str)
     def temperature(self, **kwargs):
         self.send(b'dt', **kwargs)
         return self.recv(10)
@@ -106,7 +106,7 @@ class ProxyTest2UdpClientDht11(prometheus.Prometheus):
     def measure(self, **kwargs):
         self.send(b'dm', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dh', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dh', str)
     def humidity(self, **kwargs):
         self.send(b'dh', **kwargs)
         return self.recv(10)
@@ -141,7 +141,7 @@ class ProxyTest2UdpClientIntegratedLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'i0', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
         return self.recv(10)
@@ -153,7 +153,7 @@ class ProxyTest2UdpClientLightsensor(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientLightsensor', 'lr', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientLightsensor', 'lr', str)
     def read(self, **kwargs):
         self.send(b'lr', **kwargs)
         return self.recv(10)
@@ -165,12 +165,12 @@ class ProxyTest2UdpClientDht11(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dv', str)
     def value(self, **kwargs):
         self.send(b'dv', **kwargs)
         return self.recv(10)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dt', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dt', str)
     def temperature(self, **kwargs):
         self.send(b'dt', **kwargs)
         return self.recv(10)
@@ -179,7 +179,7 @@ class ProxyTest2UdpClientDht11(prometheus.Prometheus):
     def measure(self, **kwargs):
         self.send(b'dm', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dh', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dh', str)
     def humidity(self, **kwargs):
         self.send(b'dh', **kwargs)
         return self.recv(10)
@@ -226,7 +226,7 @@ class ProxyTest2UdpClientIntegratedLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'i0', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
         return self.recv(10)
@@ -238,7 +238,7 @@ class ProxyTest2UdpClientAds(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientAds', 'adv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientAds', 'adv', str)
     def read(self, **kwargs):
         self.send(b'adv', **kwargs)
         return self.recv(10)
@@ -250,7 +250,7 @@ class ProxyTest2UdpClientNano(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientNano', 'nadi', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientNano', 'nadi', str)
     def digital_in(self, **kwargs):
         self.send(b'nadi', **kwargs)
         return self.recv(10)
@@ -263,7 +263,7 @@ class ProxyTest2UdpClientNano(prometheus.Prometheus):
     def digital_out(self, **kwargs):
         self.send(b'nado', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientNano', 'naii', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientNano', 'naii', str)
     def infrain(self, **kwargs):
         self.send(b'naii', **kwargs)
         return self.recv(10)
@@ -275,7 +275,7 @@ class ProxyTest2UdpClientDs1307(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDs1307', 'dsv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDs1307', 'dsv', str)
     def value(self, **kwargs):
         self.send(b'dsv', **kwargs)
         return self.recv(10)
@@ -295,7 +295,7 @@ class ProxyTest2UdpClientAdc1(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientAdc1', 'ar', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientAdc1', 'ar', str)
     def read(self, **kwargs):
         self.send(b'ar', **kwargs)
         return self.recv(10)
@@ -307,10 +307,9 @@ class ProxyTest2UdpClientSsd(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientSsd', 'sst', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientSsd', 'sst')
     def text(self, **kwargs):
         self.send(b'sst', **kwargs)
-        return self.recv(10)
 
 
 class ProxyTest2UdpClientDsb(prometheus.Prometheus):
@@ -319,7 +318,7 @@ class ProxyTest2UdpClientDsb(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDsb', 'sv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDsb', 'sv', str)
     def value(self, **kwargs):
         self.send(b'sv', **kwargs)
         return self.recv(10)
@@ -331,12 +330,12 @@ class ProxyTest2UdpClientDht11(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dv', str)
     def value(self, **kwargs):
         self.send(b'dv', **kwargs)
         return self.recv(10)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dt', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dt', str)
     def temperature(self, **kwargs):
         self.send(b'dt', **kwargs)
         return self.recv(10)
@@ -345,7 +344,7 @@ class ProxyTest2UdpClientDht11(prometheus.Prometheus):
     def measure(self, **kwargs):
         self.send(b'dm', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dh', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dh', str)
     def humidity(self, **kwargs):
         self.send(b'dh', **kwargs)
         return self.recv(10)
@@ -380,7 +379,7 @@ class ProxyTest2UdpClientBlueLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientBlueLed', 'bv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientBlueLed', 'bv', str)
     def value(self, **kwargs):
         self.send(b'bv', **kwargs)
         return self.recv(10)
@@ -408,7 +407,7 @@ class ProxyTest2UdpClientIntegratedLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'i0', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
         return self.recv(10)
@@ -428,7 +427,7 @@ class ProxyTest2UdpClientYellowLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'y0', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2UdpClientYellowLed', 'yv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientYellowLed', 'yv', str)
     def value(self, **kwargs):
         self.send(b'yv', **kwargs)
         return self.recv(10)
@@ -440,7 +439,7 @@ class ProxyTest2UdpClientRedLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientRedLed', 'rv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientRedLed', 'rv', str)
     def value(self, **kwargs):
         self.send(b'rv', **kwargs)
         return self.recv(10)
@@ -460,7 +459,7 @@ class ProxyTest2UdpClientUwLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientUwLed', 'uv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientUwLed', 'uv', str)
     def value(self, **kwargs):
         self.send(b'uv', **kwargs)
         return self.recv(10)
@@ -480,7 +479,7 @@ class ProxyTest2UdpClientLightsensor(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientLightsensor', 'sr', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientLightsensor', 'sr', str)
     def read(self, **kwargs):
         self.send(b'sr', **kwargs)
         return self.recv(10)
@@ -492,7 +491,7 @@ class ProxyTest2UdpClientGreenLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2UdpClientGreenLed', 'gv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2UdpClientGreenLed', 'gv', str)
     def value(self, **kwargs):
         self.send(b'gv', **kwargs)
         return self.recv(10)
@@ -578,7 +577,7 @@ class ProxyTest2TcpClientTest(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientTest', 'tv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientTest', 'tv', str)
     def value(self, **kwargs):
         self.send(b'tv', **kwargs)
         return self.recv(10)
@@ -615,7 +614,7 @@ class ProxyTest2TcpClientIntegratedLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'i0', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
         return self.recv(10)
@@ -627,7 +626,7 @@ class ProxyTest2TcpClientDsb(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDsb', 'bv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDsb', 'bv', str)
     def value(self, **kwargs):
         self.send(b'bv', **kwargs)
         return self.recv(10)
@@ -639,7 +638,7 @@ class ProxyTest2TcpClientLightsensor(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientLightsensor', 'lr', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientLightsensor', 'lr', str)
     def read(self, **kwargs):
         self.send(b'lr', **kwargs)
         return self.recv(10)
@@ -651,12 +650,12 @@ class ProxyTest2TcpClientDht11(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dv', str)
     def value(self, **kwargs):
         self.send(b'dv', **kwargs)
         return self.recv(10)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dt', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dt', str)
     def temperature(self, **kwargs):
         self.send(b'dt', **kwargs)
         return self.recv(10)
@@ -665,7 +664,7 @@ class ProxyTest2TcpClientDht11(prometheus.Prometheus):
     def measure(self, **kwargs):
         self.send(b'dm', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dh', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dh', str)
     def humidity(self, **kwargs):
         self.send(b'dh', **kwargs)
         return self.recv(10)
@@ -700,7 +699,7 @@ class ProxyTest2TcpClientIntegratedLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'i0', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
         return self.recv(10)
@@ -712,7 +711,7 @@ class ProxyTest2TcpClientLightsensor(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientLightsensor', 'lr', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientLightsensor', 'lr', str)
     def read(self, **kwargs):
         self.send(b'lr', **kwargs)
         return self.recv(10)
@@ -724,12 +723,12 @@ class ProxyTest2TcpClientDht11(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dv', str)
     def value(self, **kwargs):
         self.send(b'dv', **kwargs)
         return self.recv(10)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dt', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dt', str)
     def temperature(self, **kwargs):
         self.send(b'dt', **kwargs)
         return self.recv(10)
@@ -738,7 +737,7 @@ class ProxyTest2TcpClientDht11(prometheus.Prometheus):
     def measure(self, **kwargs):
         self.send(b'dm', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dh', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dh', str)
     def humidity(self, **kwargs):
         self.send(b'dh', **kwargs)
         return self.recv(10)
@@ -785,7 +784,7 @@ class ProxyTest2TcpClientIntegratedLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'i0', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
         return self.recv(10)
@@ -797,7 +796,7 @@ class ProxyTest2TcpClientAds(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientAds', 'adv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientAds', 'adv', str)
     def read(self, **kwargs):
         self.send(b'adv', **kwargs)
         return self.recv(10)
@@ -809,7 +808,7 @@ class ProxyTest2TcpClientNano(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientNano', 'nadi', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientNano', 'nadi', str)
     def digital_in(self, **kwargs):
         self.send(b'nadi', **kwargs)
         return self.recv(10)
@@ -822,7 +821,7 @@ class ProxyTest2TcpClientNano(prometheus.Prometheus):
     def digital_out(self, **kwargs):
         self.send(b'nado', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientNano', 'naii', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientNano', 'naii', str)
     def infrain(self, **kwargs):
         self.send(b'naii', **kwargs)
         return self.recv(10)
@@ -834,7 +833,7 @@ class ProxyTest2TcpClientDs1307(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDs1307', 'dsv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDs1307', 'dsv', str)
     def value(self, **kwargs):
         self.send(b'dsv', **kwargs)
         return self.recv(10)
@@ -854,7 +853,7 @@ class ProxyTest2TcpClientAdc1(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientAdc1', 'ar', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientAdc1', 'ar', str)
     def read(self, **kwargs):
         self.send(b'ar', **kwargs)
         return self.recv(10)
@@ -866,10 +865,9 @@ class ProxyTest2TcpClientSsd(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientSsd', 'sst', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientSsd', 'sst')
     def text(self, **kwargs):
         self.send(b'sst', **kwargs)
-        return self.recv(10)
 
 
 class ProxyTest2TcpClientDsb(prometheus.Prometheus):
@@ -878,7 +876,7 @@ class ProxyTest2TcpClientDsb(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDsb', 'sv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDsb', 'sv', str)
     def value(self, **kwargs):
         self.send(b'sv', **kwargs)
         return self.recv(10)
@@ -890,12 +888,12 @@ class ProxyTest2TcpClientDht11(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dv', str)
     def value(self, **kwargs):
         self.send(b'dv', **kwargs)
         return self.recv(10)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dt', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dt', str)
     def temperature(self, **kwargs):
         self.send(b'dt', **kwargs)
         return self.recv(10)
@@ -904,7 +902,7 @@ class ProxyTest2TcpClientDht11(prometheus.Prometheus):
     def measure(self, **kwargs):
         self.send(b'dm', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dh', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dh', str)
     def humidity(self, **kwargs):
         self.send(b'dh', **kwargs)
         return self.recv(10)
@@ -939,7 +937,7 @@ class ProxyTest2TcpClientBlueLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientBlueLed', 'bv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientBlueLed', 'bv', str)
     def value(self, **kwargs):
         self.send(b'bv', **kwargs)
         return self.recv(10)
@@ -967,7 +965,7 @@ class ProxyTest2TcpClientIntegratedLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'i0', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
         return self.recv(10)
@@ -987,7 +985,7 @@ class ProxyTest2TcpClientYellowLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'y0', **kwargs)
 
-    @prometheus.Registry.register('ProxyTest2TcpClientYellowLed', 'yv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientYellowLed', 'yv', str)
     def value(self, **kwargs):
         self.send(b'yv', **kwargs)
         return self.recv(10)
@@ -999,7 +997,7 @@ class ProxyTest2TcpClientRedLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientRedLed', 'rv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientRedLed', 'rv', str)
     def value(self, **kwargs):
         self.send(b'rv', **kwargs)
         return self.recv(10)
@@ -1019,7 +1017,7 @@ class ProxyTest2TcpClientUwLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientUwLed', 'uv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientUwLed', 'uv', str)
     def value(self, **kwargs):
         self.send(b'uv', **kwargs)
         return self.recv(10)
@@ -1039,7 +1037,7 @@ class ProxyTest2TcpClientLightsensor(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientLightsensor', 'sr', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientLightsensor', 'sr', str)
     def read(self, **kwargs):
         self.send(b'sr', **kwargs)
         return self.recv(10)
@@ -1051,7 +1049,7 @@ class ProxyTest2TcpClientGreenLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ProxyTest2TcpClientGreenLed', 'gv', 'OUT')
+    @prometheus.Registry.register('ProxyTest2TcpClientGreenLed', 'gv', str)
     def value(self, **kwargs):
         self.send(b'gv', **kwargs)
         return self.recv(10)

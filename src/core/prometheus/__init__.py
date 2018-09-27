@@ -4,7 +4,7 @@ import gc
 import sys
 import prometheus.logging as logging
 
-__version__ = '0.1.9'
+__version__ = '0.2.0'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -145,7 +145,9 @@ class Registry(object):
             data_value = args[1]
             return_type = None
             if len(args) == 3:
-                return_type = 'str'
+                # return_type was supposed to contain the desired conversion type, but I'm no longer sure thats needed
+                return_type = True
+                # print('%s %s' % (fn.__name__, args[2]))
             cls.r[class_name][fn.__name__] = RegisteredMethod(class_name=class_name, method_name=fn.__name__,
                                                               method_reference=None, data_value=data_value,
                                                               return_type=return_type)
@@ -277,7 +279,10 @@ class Prometheus(object):
 
         for key in self.cached_remap.keys():
             value = self.cached_remap[key]
-            url = '/'.join(value.logical_path.split('.')).replace('root/', 'api/').encode('ascii')
+            logical_path_split = value.logical_path.split('.')
+            if logical_path_split[0] == 'root':
+                logical_path_split[0] = 'api'
+            url = '/'.join(logical_path_split).encode('ascii')
             url = url + b'/' + value.method_name.encode('ascii')
             self.cached_urls[url] = value
 
@@ -331,7 +336,7 @@ class Led(Prometheus):
         else:
             self.pin.value(False)
 
-    @Registry.register('Led', 'v', 'OUT')
+    @Registry.register('Led', 'v', bool)
     def value(self, **kwargs):
         # the equal/not equal operators have to be used to get truthyness ('1 is not True' will not work)
         if self.inverted:
@@ -350,7 +355,7 @@ class Digital(Prometheus):
         self.pin = pin
         self.inverted = inverted
 
-    @Registry.register('Digital', 'v', 'OUT')
+    @Registry.register('Digital', 'v', bool)
     def value(self, **kwargs):
         if self.inverted:
             return self.pin.value() != True
@@ -368,7 +373,7 @@ class Adc(Prometheus):
         self.pin = pin
         self.adc = machine.ADC(pin)
 
-    @Registry.register('Adc', 'r', 'OUT')
+    @Registry.register('Adc', 'r', int)
     def read(self, **kwargs):
         return self.adc.read()
 

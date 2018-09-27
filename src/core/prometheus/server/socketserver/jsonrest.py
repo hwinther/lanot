@@ -173,6 +173,7 @@ class JsonRestServer(socketserver.SocketServer):
             if isinstance(return_value, (dict, list)):
                 msg = json.dumps(return_value)
             else:
+                print('ret: %s' % repr(return_value))
                 msg = json.dumps({'value': return_value})
 
             if context is not None and b'callback' in context.keys():
@@ -181,7 +182,7 @@ class JsonRestServer(socketserver.SocketServer):
 
             # convert to bytes
             msg = msg.encode('ascii')
-            if prometheus.server.debug:
+            if True:  # prometheus.server.debug:
                 logging.notice('returning %s to %s' % (msg, repr(source)))
             else:
                 logging.notice('returning %d bytes' % len(msg))

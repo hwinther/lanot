@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:51:45
+# generated at 2018-09-28 00:40:15
 import prometheus
 import socket
 import time
@@ -19,7 +19,7 @@ class BUdpClientBLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('BUdpClientBLed', 'blv', 'OUT')
+    @prometheus.Registry.register('BUdpClientBLed', 'blv', str)
     def value(self, **kwargs):
         self.send(b'blv', **kwargs)
         return self.recv(10)
@@ -53,7 +53,7 @@ class BUdpClientALed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('BUdpClientALed', 'alv', 'OUT')
+    @prometheus.Registry.register('BUdpClientALed', 'alv', str)
     def value(self, **kwargs):
         self.send(b'alv', **kwargs)
         return self.recv(10)
@@ -136,7 +136,7 @@ class BTcpClientBLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('BTcpClientBLed', 'blv', 'OUT')
+    @prometheus.Registry.register('BTcpClientBLed', 'blv', str)
     def value(self, **kwargs):
         self.send(b'blv', **kwargs)
         return self.recv(10)
@@ -170,7 +170,7 @@ class BTcpClientALed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('BTcpClientALed', 'alv', 'OUT')
+    @prometheus.Registry.register('BTcpClientALed', 'alv', str)
     def value(self, **kwargs):
         self.send(b'alv', **kwargs)
         return self.recv(10)

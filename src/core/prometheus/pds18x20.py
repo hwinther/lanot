@@ -37,7 +37,7 @@ class Ds18x20(prometheus.Prometheus):
             self.roms = list()
         logging.notice('found devices: %s' % self.roms)
 
-    @prometheus.Registry.register('Ds18x20', 'v', 'OUT')
+    @prometheus.Registry.register('Ds18x20', 'v', str)
     def value(self, **kwargs):
         self.ds.convert_temp()
         time.sleep_ms(750)

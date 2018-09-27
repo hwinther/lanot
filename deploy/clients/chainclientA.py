@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:51:45
+# generated at 2018-09-28 00:40:15
 import prometheus
 import socket
 import time
@@ -19,7 +19,7 @@ class AUdpClientALed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('AUdpClientALed', 'alv', 'OUT')
+    @prometheus.Registry.register('AUdpClientALed', 'alv', str)
     def value(self, **kwargs):
         self.send(b'alv', **kwargs)
         return self.recv(10)
@@ -100,7 +100,7 @@ class ATcpClientALed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('ATcpClientALed', 'alv', 'OUT')
+    @prometheus.Registry.register('ATcpClientALed', 'alv', str)
     def value(self, **kwargs):
         self.send(b'alv', **kwargs)
         return self.recv(10)

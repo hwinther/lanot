@@ -22,7 +22,7 @@ class InputOutputProxy(Prometheus):
         self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
-    @Registry.register('CLASS_NAME', 'VALUE', 'OUT')
+    @Registry.register('CLASS_NAME', 'VALUE', str)
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
         # TODO: determine output size declaratively in source?

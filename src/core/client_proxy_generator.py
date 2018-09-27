@@ -57,7 +57,7 @@ class SerialTemplate(prometheus.misc.RemoteTemplate):
         self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
-    @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
+    @prometheus.Registry.register('CLASS_NAME', 'VALUE', str)
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
         packet = self.recv(10)
@@ -129,7 +129,7 @@ class UdpTemplate(prometheus.misc.RemoteTemplate):
         self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
-    @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
+    @prometheus.Registry.register('CLASS_NAME', 'VALUE', str)
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
         return self.resolve_response(self.recv_timeout(10, 0.5))
@@ -197,7 +197,7 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
         self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
-    @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
+    @prometheus.Registry.register('CLASS_NAME', 'VALUE', str)
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
         return self.recv(10)
@@ -268,7 +268,7 @@ class JsonRestTemplate(prometheus.misc.RemoteTemplate):
         self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
-    @prometheus.Registry.register('CLASS_NAME', 'DVAL', 'OUT')
+    @prometheus.Registry.register('CLASS_NAME', 'DVAL', str)
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
         return self.recv(200)
@@ -408,7 +408,7 @@ class RsaUdpTemplate(prometheus.misc.RemoteTemplate):
         self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
-    @prometheus.Registry.register('CLASS_NAME', 'VALUE', 'OUT')
+    @prometheus.Registry.register('CLASS_NAME', 'VALUE', str)
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
         return self.resolve_response(self.recv_timeout(10, 0.5))

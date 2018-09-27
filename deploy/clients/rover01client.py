@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:51:49
+# generated at 2018-09-28 00:40:19
 import prometheus
 import socket
 import time
@@ -27,7 +27,7 @@ class Rover01UdpClientIntegratedLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'i0', **kwargs)
 
-    @prometheus.Registry.register('Rover01UdpClientIntegratedLed', 'iv', 'OUT')
+    @prometheus.Registry.register('Rover01UdpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
         return self.recv(10)
@@ -172,7 +172,7 @@ class Rover01TcpClientIntegratedLed(prometheus.Prometheus):
     def off(self, **kwargs):
         self.send(b'i0', **kwargs)
 
-    @prometheus.Registry.register('Rover01TcpClientIntegratedLed', 'iv', 'OUT')
+    @prometheus.Registry.register('Rover01TcpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
         return self.recv(10)

@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:51:45
+# generated at 2018-09-28 00:40:15
 import prometheus
 import socket
 import time
@@ -35,7 +35,7 @@ class CUdpClientBLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('CUdpClientBLed', 'blv', 'OUT')
+    @prometheus.Registry.register('CUdpClientBLed', 'blv', str)
     def value(self, **kwargs):
         self.send(b'blv', **kwargs)
         return self.recv(10)
@@ -69,7 +69,7 @@ class CUdpClientALed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('CUdpClientALed', 'alv', 'OUT')
+    @prometheus.Registry.register('CUdpClientALed', 'alv', str)
     def value(self, **kwargs):
         self.send(b'alv', **kwargs)
         return self.recv(10)
@@ -89,7 +89,7 @@ class CUdpClientCLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('CUdpClientCLed', 'clv', 'OUT')
+    @prometheus.Registry.register('CUdpClientCLed', 'clv', str)
     def value(self, **kwargs):
         self.send(b'clv', **kwargs)
         return self.recv(10)
@@ -188,7 +188,7 @@ class CTcpClientBLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('CTcpClientBLed', 'blv', 'OUT')
+    @prometheus.Registry.register('CTcpClientBLed', 'blv', str)
     def value(self, **kwargs):
         self.send(b'blv', **kwargs)
         return self.recv(10)
@@ -222,7 +222,7 @@ class CTcpClientALed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('CTcpClientALed', 'alv', 'OUT')
+    @prometheus.Registry.register('CTcpClientALed', 'alv', str)
     def value(self, **kwargs):
         self.send(b'alv', **kwargs)
         return self.recv(10)
@@ -242,7 +242,7 @@ class CTcpClientCLed(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('CTcpClientCLed', 'clv', 'OUT')
+    @prometheus.Registry.register('CTcpClientCLed', 'clv', str)
     def value(self, **kwargs):
         self.send(b'clv', **kwargs)
         return self.recv(10)

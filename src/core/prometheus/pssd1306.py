@@ -24,7 +24,7 @@ class SSD1306(prometheus.Prometheus):
         prometheus.Prometheus.__init__(self)
         self.ssd = ssd1306.SSD1306_I2C(height, width, i2c, addr)
 
-    @prometheus.Registry.register('SSD1306', 't', 'OUT')
+    @prometheus.Registry.register('SSD1306', 't')
     def text(self, txt=None, x=0, y=0, **kwargs):
         self.ssd.fill(False)
         if txt is not None:

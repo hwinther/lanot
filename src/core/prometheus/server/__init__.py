@@ -7,7 +7,7 @@ import prometheus.pgc as gc
 import prometheus
 import prometheus.logging as logging
 
-__version__ = '0.1.9'
+__version__ = '0.2.0'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -133,9 +133,9 @@ class Server(object):
             registered_method = self.instance.cached_remap[command]  # type: prometheus.RegisteredMethod
             # print('invoking method ref')
             return_value = registered_method.method_reference(**context)
-            if registered_method.return_type == 'str':
-                if type(return_value) is bool:
-                    return_value = repr(return_value).encode('ascii')
+            if registered_method.return_type is not None:
+                # if type(return_value) is bool:
+                #     return_value = repr(return_value).encode('ascii')
                 self.reply(return_value, source=source, **kwargs)
                 replied = True
         elif os_enabled and self.handle_data_os(command=command, command_length=command_length,
