@@ -825,7 +825,6 @@ if __name__ == '__main__':
     # to "make" lightcontrol and other things from basic sources
     # folder_import()
 
-    """
     from tank import Tank
     build_client(Tank, 'tankclient.py', [UdpTemplate, TcpTemplate])
     
@@ -848,12 +847,10 @@ if __name__ == '__main__':
 
     from nodetest import NodeTest
     build_client(NodeTest, 'nodetestclient.py', [UdpTemplate, TcpTemplate])
-    """
 
     from localtest import LocalTest
     build_client(LocalTest, 'localtestclient.py', [UdpTemplate, TcpTemplate, JsonRestTemplate])
 
-    """
     from test01 import Test01
     build_client(Test01, 'test01client.py', [UdpTemplate, TcpTemplate])
     
@@ -871,4 +868,3 @@ if __name__ == '__main__':
 
     from rover01 import Rover01
     build_client(Rover01, 'rover01client.py', [UdpTemplate, TcpTemplate])
-    """

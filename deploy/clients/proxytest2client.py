@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-24 23:41:06
+# generated at 2018-09-27 23:40:37
 import prometheus
 import socket
 import time
@@ -13,6 +13,18 @@ gc.collect()
 
 
 # region ProxyTest2UdpClient
+class ProxyTest2UdpClientTest(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('ProxyTest2UdpClientTest', 'tv', 'OUT')
+    def value(self):
+        self.send(b'tv')
+        return self.recv(10)
+
+
 class ProxyTest2UdpClientSensor02(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -100,6 +112,79 @@ class ProxyTest2UdpClientDht11(prometheus.Prometheus):
         return self.recv(10)
 
 
+class ProxyTest2UdpClientSensor01(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+        
+        self.dht11 = ProxyTest2UdpClientDht11(self.send, self.recv)
+        self.register(dht11=self.dht11)
+        self.integrated_led = ProxyTest2UdpClientIntegratedLed(self.send, self.recv)
+        self.register(integrated_led=self.integrated_led)
+        self.lightsensor = ProxyTest2UdpClientLightsensor(self.send, self.recv)
+        self.register(lightsensor=self.lightsensor)
+
+
+
+class ProxyTest2UdpClientIntegratedLed(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'i1')
+    def on(self):
+        self.send(b'i1')
+
+    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'i0')
+    def off(self):
+        self.send(b'i0')
+
+    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', 'OUT')
+    def value(self):
+        self.send(b'iv')
+        return self.recv(10)
+
+
+class ProxyTest2UdpClientLightsensor(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('ProxyTest2UdpClientLightsensor', 'lr', 'OUT')
+    def read(self):
+        self.send(b'lr')
+        return self.recv(10)
+
+
+class ProxyTest2UdpClientDht11(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dv', 'OUT')
+    def value(self):
+        self.send(b'dv')
+        return self.recv(10)
+
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dt', 'OUT')
+    def temperature(self):
+        self.send(b'dt')
+        return self.recv(10)
+
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dm')
+    def measure(self):
+        self.send(b'dm')
+
+    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dh', 'OUT')
+    def humidity(self):
+        self.send(b'dh')
+        return self.recv(10)
+
+
 class ProxyTest2UdpClientNodetest(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -122,6 +207,8 @@ class ProxyTest2UdpClientNodetest(prometheus.Prometheus):
         self.register(nano=self.nano)
         self.neopixel = ProxyTest2UdpClientNeopixel(self.send, self.recv)
         self.register(neopixel=self.neopixel)
+        self.ssd = ProxyTest2UdpClientSsd(self.send, self.recv)
+        self.register(ssd=self.ssd)
 
 
 
@@ -214,6 +301,18 @@ class ProxyTest2UdpClientAdc1(prometheus.Prometheus):
         return self.recv(10)
 
 
+class ProxyTest2UdpClientSsd(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('ProxyTest2UdpClientSsd', 'sst', 'OUT')
+    def text(self):
+        self.send(b'sst')
+        return self.recv(10)
+
+
 class ProxyTest2UdpClientDsb(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -223,79 +322,6 @@ class ProxyTest2UdpClientDsb(prometheus.Prometheus):
     @prometheus.Registry.register('ProxyTest2UdpClientDsb', 'sv', 'OUT')
     def value(self):
         self.send(b'sv')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientDht11(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dv', 'OUT')
-    def value(self):
-        self.send(b'dv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dt', 'OUT')
-    def temperature(self):
-        self.send(b'dt')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dm')
-    def measure(self):
-        self.send(b'dm')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientDht11', 'dh', 'OUT')
-    def humidity(self):
-        self.send(b'dh')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientSensor01(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-        
-        self.dht11 = ProxyTest2UdpClientDht11(self.send, self.recv)
-        self.register(dht11=self.dht11)
-        self.integrated_led = ProxyTest2UdpClientIntegratedLed(self.send, self.recv)
-        self.register(integrated_led=self.integrated_led)
-        self.lightsensor = ProxyTest2UdpClientLightsensor(self.send, self.recv)
-        self.register(lightsensor=self.lightsensor)
-
-
-
-class ProxyTest2UdpClientIntegratedLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
-
-    @prometheus.Registry.register('ProxyTest2UdpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
-        return self.recv(10)
-
-
-class ProxyTest2UdpClientLightsensor(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2UdpClientLightsensor', 'lr', 'OUT')
-    def read(self):
-        self.send(b'lr')
         return self.recv(10)
 
 
@@ -498,11 +524,17 @@ class ProxyTest2UdpClient(prometheus.misc.RemoteTemplate):
         self.register(sensor01=self.sensor01)
         self.sensor02 = ProxyTest2UdpClientSensor02(self.send, self.recv)
         self.register(sensor02=self.sensor02)
+        self.test = ProxyTest2UdpClientTest(self.send, self.recv)
+        self.register(test=self.test)
         self.test02 = ProxyTest2UdpClientTest02(self.send, self.recv)
         self.register(test02=self.test02)
 
-    def send(self, data):
-        self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
+        self.socket.sendto(data + self.endChars + args + self.splitChars, self.remote_addr)
 
     def try_recv(self, buffersize):
         try:
@@ -517,7 +549,7 @@ class ProxyTest2UdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.buffers[addr].pop().packet
 
     def recv(self, buffersize=10):
         return self.recv_timeout(buffersize, 0.5)
@@ -540,6 +572,18 @@ class ProxyTest2UdpClient(prometheus.misc.RemoteTemplate):
 
 
 # region ProxyTest2TcpClient
+class ProxyTest2TcpClientTest(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('ProxyTest2TcpClientTest', 'tv', 'OUT')
+    def value(self):
+        self.send(b'tv')
+        return self.recv(10)
+
+
 class ProxyTest2TcpClientSensor02(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -627,6 +671,79 @@ class ProxyTest2TcpClientDht11(prometheus.Prometheus):
         return self.recv(10)
 
 
+class ProxyTest2TcpClientSensor01(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+        
+        self.dht11 = ProxyTest2TcpClientDht11(self.send, self.recv)
+        self.register(dht11=self.dht11)
+        self.integrated_led = ProxyTest2TcpClientIntegratedLed(self.send, self.recv)
+        self.register(integrated_led=self.integrated_led)
+        self.lightsensor = ProxyTest2TcpClientLightsensor(self.send, self.recv)
+        self.register(lightsensor=self.lightsensor)
+
+
+
+class ProxyTest2TcpClientIntegratedLed(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'i1')
+    def on(self):
+        self.send(b'i1')
+
+    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'i0')
+    def off(self):
+        self.send(b'i0')
+
+    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', 'OUT')
+    def value(self):
+        self.send(b'iv')
+        return self.recv(10)
+
+
+class ProxyTest2TcpClientLightsensor(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('ProxyTest2TcpClientLightsensor', 'lr', 'OUT')
+    def read(self):
+        self.send(b'lr')
+        return self.recv(10)
+
+
+class ProxyTest2TcpClientDht11(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dv', 'OUT')
+    def value(self):
+        self.send(b'dv')
+        return self.recv(10)
+
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dt', 'OUT')
+    def temperature(self):
+        self.send(b'dt')
+        return self.recv(10)
+
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dm')
+    def measure(self):
+        self.send(b'dm')
+
+    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dh', 'OUT')
+    def humidity(self):
+        self.send(b'dh')
+        return self.recv(10)
+
+
 class ProxyTest2TcpClientNodetest(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -649,6 +766,8 @@ class ProxyTest2TcpClientNodetest(prometheus.Prometheus):
         self.register(nano=self.nano)
         self.neopixel = ProxyTest2TcpClientNeopixel(self.send, self.recv)
         self.register(neopixel=self.neopixel)
+        self.ssd = ProxyTest2TcpClientSsd(self.send, self.recv)
+        self.register(ssd=self.ssd)
 
 
 
@@ -741,6 +860,18 @@ class ProxyTest2TcpClientAdc1(prometheus.Prometheus):
         return self.recv(10)
 
 
+class ProxyTest2TcpClientSsd(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('ProxyTest2TcpClientSsd', 'sst', 'OUT')
+    def text(self):
+        self.send(b'sst')
+        return self.recv(10)
+
+
 class ProxyTest2TcpClientDsb(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -750,79 +881,6 @@ class ProxyTest2TcpClientDsb(prometheus.Prometheus):
     @prometheus.Registry.register('ProxyTest2TcpClientDsb', 'sv', 'OUT')
     def value(self):
         self.send(b'sv')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientDht11(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dv', 'OUT')
-    def value(self):
-        self.send(b'dv')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dt', 'OUT')
-    def temperature(self):
-        self.send(b'dt')
-        return self.recv(10)
-
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dm')
-    def measure(self):
-        self.send(b'dm')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientDht11', 'dh', 'OUT')
-    def humidity(self):
-        self.send(b'dh')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientSensor01(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-        
-        self.dht11 = ProxyTest2TcpClientDht11(self.send, self.recv)
-        self.register(dht11=self.dht11)
-        self.integrated_led = ProxyTest2TcpClientIntegratedLed(self.send, self.recv)
-        self.register(integrated_led=self.integrated_led)
-        self.lightsensor = ProxyTest2TcpClientLightsensor(self.send, self.recv)
-        self.register(lightsensor=self.lightsensor)
-
-
-
-class ProxyTest2TcpClientIntegratedLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
-
-    @prometheus.Registry.register('ProxyTest2TcpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
-        return self.recv(10)
-
-
-class ProxyTest2TcpClientLightsensor(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('ProxyTest2TcpClientLightsensor', 'lr', 'OUT')
-    def read(self):
-        self.send(b'lr')
         return self.recv(10)
 
 
@@ -1015,8 +1073,8 @@ class ProxyTest2TcpClient(prometheus.misc.RemoteTemplate):
         self.bind_port = bind_port
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
-        self.splitChars = b'\n'
-        self.endChars = b'\r'
+        self.split_chars = b'\n'
+        self.end_chars = b'\r'
         
         self.nodetest = ProxyTest2TcpClientNodetest(self.send, self.recv)
         self.register(nodetest=self.nodetest)
@@ -1024,6 +1082,8 @@ class ProxyTest2TcpClient(prometheus.misc.RemoteTemplate):
         self.register(sensor01=self.sensor01)
         self.sensor02 = ProxyTest2TcpClientSensor02(self.send, self.recv)
         self.register(sensor02=self.sensor02)
+        self.test = ProxyTest2TcpClientTest(self.send, self.recv)
+        self.register(test=self.test)
         self.test02 = ProxyTest2TcpClientTest02(self.send, self.recv)
         self.register(test02=self.test02)
 
@@ -1037,17 +1097,21 @@ class ProxyTest2TcpClient(prometheus.misc.RemoteTemplate):
         logging.info('Connecting to %s' % repr(self.remote_addr))
         self.socket.connect(self.remote_addr)
 
-    def send_once(self, data):
-        self.socket.send(data + self.endChars + self.splitChars)
+    def send_once(self, data, args):
+        self.socket.send(data + self.end_chars + args + self.split_chars)
 
-    def send(self, data):
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
         if self.socket is None:
             self.create_socket()
         try:
-            self.send_once(data)
+            self.send_once(data, args)
         except prometheus.psocket.socket_error:
             self.create_socket()
-            self.send_once(data)
+            self.send_once(data, args)
 
     def try_recv(self, buffersize):
         try:
@@ -1060,9 +1124,9 @@ class ProxyTest2TcpClient(prometheus.misc.RemoteTemplate):
         if data is None:
             return None
         if addr not in self.buffers:
-            self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.resolve_response(self.buffers[addr].pop().packet)
 
 
 # endregion

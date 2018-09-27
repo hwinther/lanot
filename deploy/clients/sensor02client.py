@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-24 23:41:04
+# generated at 2018-09-27 23:40:33
 import prometheus
 import socket
 import time
@@ -104,8 +104,12 @@ class Sensor02UdpClient(prometheus.misc.RemoteTemplate):
         self.lightsensor = Sensor02UdpClientLightsensor(self.send, self.recv)
         self.register(lightsensor=self.lightsensor)
 
-    def send(self, data):
-        self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
+        self.socket.sendto(data + self.endChars + args + self.splitChars, self.remote_addr)
 
     def try_recv(self, buffersize):
         try:
@@ -120,7 +124,7 @@ class Sensor02UdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.buffers[addr].pop().packet
 
     def recv(self, buffersize=10):
         return self.recv_timeout(buffersize, 0.5)

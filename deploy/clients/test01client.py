@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-24 23:41:05
+# generated at 2018-09-27 23:40:36
 import prometheus
 import socket
 import time
@@ -154,8 +154,12 @@ class Test01UdpClient(prometheus.misc.RemoteTemplate):
         self.window02digital = Test01UdpClientWindow02digital(self.send, self.recv)
         self.register(window02digital=self.window02digital)
 
-    def send(self, data):
-        self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
+        self.socket.sendto(data + self.endChars + args + self.splitChars, self.remote_addr)
 
     def try_recv(self, buffersize):
         try:
@@ -170,7 +174,7 @@ class Test01UdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.buffers[addr].pop().packet
 
     def recv(self, buffersize=10):
         return self.recv_timeout(buffersize, 0.5)
@@ -313,8 +317,8 @@ class Test01TcpClient(prometheus.misc.RemoteTemplate):
         self.bind_port = bind_port
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
-        self.splitChars = b'\n'
-        self.endChars = b'\r'
+        self.split_chars = b'\n'
+        self.end_chars = b'\r'
         
         self.integrated_led = Test01TcpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
@@ -343,17 +347,21 @@ class Test01TcpClient(prometheus.misc.RemoteTemplate):
         logging.info('Connecting to %s' % repr(self.remote_addr))
         self.socket.connect(self.remote_addr)
 
-    def send_once(self, data):
-        self.socket.send(data + self.endChars + self.splitChars)
+    def send_once(self, data, args):
+        self.socket.send(data + self.end_chars + args + self.split_chars)
 
-    def send(self, data):
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
         if self.socket is None:
             self.create_socket()
         try:
-            self.send_once(data)
+            self.send_once(data, args)
         except prometheus.psocket.socket_error:
             self.create_socket()
-            self.send_once(data)
+            self.send_once(data, args)
 
     def try_recv(self, buffersize):
         try:
@@ -366,9 +374,9 @@ class Test01TcpClient(prometheus.misc.RemoteTemplate):
         if data is None:
             return None
         if addr not in self.buffers:
-            self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.resolve_response(self.buffers[addr].pop().packet)
 
 
 # endregion

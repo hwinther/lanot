@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-24 23:41:05
+# generated at 2018-09-27 23:40:35
 import prometheus
 import socket
 import time
@@ -70,6 +70,14 @@ class NodeTestUdpClientNano(prometheus.Prometheus):
         return self.recv(10)
 
 
+class NodeTestUdpClientNeopixel(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+
+
 class NodeTestUdpClientDs1307(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -82,14 +90,6 @@ class NodeTestUdpClientDs1307(prometheus.Prometheus):
         return self.recv(10)
 
 
-class NodeTestUdpClientNeopixel(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-
-
 class NodeTestUdpClientAdc1(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -99,6 +99,18 @@ class NodeTestUdpClientAdc1(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientAdc1', 'ar', 'OUT')
     def read(self):
         self.send(b'ar')
+        return self.recv(10)
+
+
+class NodeTestUdpClientSsd(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('NodeTestUdpClientSsd', 'sst', 'OUT')
+    def text(self):
+        self.send(b'sst')
         return self.recv(10)
 
 
@@ -168,9 +180,15 @@ class NodeTestUdpClient(prometheus.misc.RemoteTemplate):
         self.register(nano=self.nano)
         self.neopixel = NodeTestUdpClientNeopixel(self.send, self.recv)
         self.register(neopixel=self.neopixel)
+        self.ssd = NodeTestUdpClientSsd(self.send, self.recv)
+        self.register(ssd=self.ssd)
 
-    def send(self, data):
-        self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
+        self.socket.sendto(data + self.endChars + args + self.splitChars, self.remote_addr)
 
     def try_recv(self, buffersize):
         try:
@@ -185,7 +203,7 @@ class NodeTestUdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.buffers[addr].pop().packet
 
     def recv(self, buffersize=10):
         return self.recv_timeout(buffersize, 0.5)
@@ -265,6 +283,14 @@ class NodeTestTcpClientNano(prometheus.Prometheus):
         return self.recv(10)
 
 
+class NodeTestTcpClientNeopixel(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+
+
 class NodeTestTcpClientDs1307(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -277,14 +303,6 @@ class NodeTestTcpClientDs1307(prometheus.Prometheus):
         return self.recv(10)
 
 
-class NodeTestTcpClientNeopixel(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-
-
 class NodeTestTcpClientAdc1(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -294,6 +312,18 @@ class NodeTestTcpClientAdc1(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientAdc1', 'ar', 'OUT')
     def read(self):
         self.send(b'ar')
+        return self.recv(10)
+
+
+class NodeTestTcpClientSsd(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('NodeTestTcpClientSsd', 'sst', 'OUT')
+    def text(self):
+        self.send(b'sst')
         return self.recv(10)
 
 
@@ -362,6 +392,8 @@ class NodeTestTcpClient(prometheus.misc.RemoteTemplate):
         self.register(nano=self.nano)
         self.neopixel = NodeTestTcpClientNeopixel(self.send, self.recv)
         self.register(neopixel=self.neopixel)
+        self.ssd = NodeTestTcpClientSsd(self.send, self.recv)
+        self.register(ssd=self.ssd)
 
     def create_socket(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -373,17 +405,21 @@ class NodeTestTcpClient(prometheus.misc.RemoteTemplate):
         logging.info('Connecting to %s' % repr(self.remote_addr))
         self.socket.connect(self.remote_addr)
 
-    def send_once(self, data):
-        self.socket.send(data + self.end_chars + self.split_chars)
+    def send_once(self, data, args):
+        self.socket.send(data + self.end_chars + args + self.split_chars)
 
-    def send(self, data):
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
         if self.socket is None:
             self.create_socket()
         try:
-            self.send_once(data)
+            self.send_once(data, args)
         except prometheus.psocket.socket_error:
             self.create_socket()
-            self.send_once(data)
+            self.send_once(data, args)
 
     def try_recv(self, buffersize):
         try:
@@ -398,7 +434,7 @@ class NodeTestTcpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.resolve_response(self.buffers[addr].pop().packet)
 
 
 # endregion

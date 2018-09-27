@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-24 23:41:03
+# generated at 2018-09-27 23:40:32
 import prometheus
 import socket
 import time
@@ -119,8 +119,12 @@ class TankUdpClient(prometheus.misc.RemoteTemplate):
         self.red_led = TankUdpClientRedLed(self.send, self.recv)
         self.register(red_led=self.red_led)
 
-    def send(self, data):
-        self.socket.sendto(data + self.endChars + self.splitChars, self.remote_addr)
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
+        self.socket.sendto(data + self.endChars + args + self.splitChars, self.remote_addr)
 
     def try_recv(self, buffersize):
         try:
@@ -135,7 +139,7 @@ class TankUdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.buffers[addr].pop().packet
 
     def recv(self, buffersize=10):
         return self.recv_timeout(buffersize, 0.5)
@@ -154,44 +158,44 @@ class TankUdpClient(prometheus.misc.RemoteTemplate):
         return None
 
     @prometheus.Registry.register('TankUdpClient', 'A')
-    def turn_left_fast(self):
-        self.send(b'A')
+    def turn_left_fast(self, **kwargs):
+        self.send(b'A', **kwargs)
 
     @prometheus.Registry.register('TankUdpClient', 'a')
-    def turn_left_slow(self):
-        self.send(b'a')
+    def turn_left_slow(self, **kwargs):
+        self.send(b'a', **kwargs)
 
     @prometheus.Registry.register('TankUdpClient', 'b')
-    def blink_lights(self):
-        self.send(b'b')
+    def blink_lights(self, **kwargs):
+        self.send(b'b', **kwargs)
 
     @prometheus.Registry.register('TankUdpClient', 'W')
-    def fast_forward(self):
-        self.send(b'W')
+    def fast_forward(self, **kwargs):
+        self.send(b'W', **kwargs)
 
     @prometheus.Registry.register('TankUdpClient', 'g')
-    def full_stop(self):
-        self.send(b'g')
+    def full_stop(self, **kwargs):
+        self.send(b'g', **kwargs)
 
     @prometheus.Registry.register('TankUdpClient', 'S')
-    def fast_backward(self):
-        self.send(b'S')
+    def fast_backward(self, **kwargs):
+        self.send(b'S', **kwargs)
 
     @prometheus.Registry.register('TankUdpClient', 'd')
-    def turn_right_slow(self):
-        self.send(b'd')
+    def turn_right_slow(self, **kwargs):
+        self.send(b'd', **kwargs)
 
     @prometheus.Registry.register('TankUdpClient', 's')
-    def slow_backward(self):
-        self.send(b's')
+    def slow_backward(self, **kwargs):
+        self.send(b's', **kwargs)
 
     @prometheus.Registry.register('TankUdpClient', 'w')
-    def slow_forward(self):
-        self.send(b'w')
+    def slow_forward(self, **kwargs):
+        self.send(b'w', **kwargs)
 
     @prometheus.Registry.register('TankUdpClient', 'D')
-    def turn_right_fast(self):
-        self.send(b'D')
+    def turn_right_fast(self, **kwargs):
+        self.send(b'D', **kwargs)
 
 # endregion
 
@@ -292,8 +296,8 @@ class TankTcpClient(prometheus.misc.RemoteTemplate):
         self.bind_port = bind_port
         self.remote_addr = (remote_host, remote_port)
         self.buffers = dict()
-        self.splitChars = b'\n'
-        self.endChars = b'\r'
+        self.split_chars = b'\n'
+        self.end_chars = b'\r'
         
         self.blue_led = TankTcpClientBlueLed(self.send, self.recv)
         self.register(blue_led=self.blue_led)
@@ -312,17 +316,21 @@ class TankTcpClient(prometheus.misc.RemoteTemplate):
         logging.info('Connecting to %s' % repr(self.remote_addr))
         self.socket.connect(self.remote_addr)
 
-    def send_once(self, data):
-        self.socket.send(data + self.endChars + self.splitChars)
+    def send_once(self, data, args):
+        self.socket.send(data + self.end_chars + args + self.split_chars)
 
-    def send(self, data):
+    def send(self, data, **kwargs):
+        if len(kwargs) is 0:
+            args = b''
+        else:
+            args = prometheus.args_to_bytes(kwargs)
         if self.socket is None:
             self.create_socket()
         try:
-            self.send_once(data)
+            self.send_once(data, args)
         except prometheus.psocket.socket_error:
             self.create_socket()
-            self.send_once(data)
+            self.send_once(data, args)
 
     def try_recv(self, buffersize):
         try:
@@ -335,48 +343,48 @@ class TankTcpClient(prometheus.misc.RemoteTemplate):
         if data is None:
             return None
         if addr not in self.buffers:
-            self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
+            self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop()
+        return self.resolve_response(self.buffers[addr].pop().packet)
 
     @prometheus.Registry.register('TankTcpClient', 'A')
-    def turn_left_fast(self):
-        self.send(b'A')
+    def turn_left_fast(self, **kwargs):
+        self.send(b'A', **kwargs)
 
     @prometheus.Registry.register('TankTcpClient', 'a')
-    def turn_left_slow(self):
-        self.send(b'a')
+    def turn_left_slow(self, **kwargs):
+        self.send(b'a', **kwargs)
 
     @prometheus.Registry.register('TankTcpClient', 'b')
-    def blink_lights(self):
-        self.send(b'b')
+    def blink_lights(self, **kwargs):
+        self.send(b'b', **kwargs)
 
     @prometheus.Registry.register('TankTcpClient', 'W')
-    def fast_forward(self):
-        self.send(b'W')
+    def fast_forward(self, **kwargs):
+        self.send(b'W', **kwargs)
 
     @prometheus.Registry.register('TankTcpClient', 'g')
-    def full_stop(self):
-        self.send(b'g')
+    def full_stop(self, **kwargs):
+        self.send(b'g', **kwargs)
 
     @prometheus.Registry.register('TankTcpClient', 'S')
-    def fast_backward(self):
-        self.send(b'S')
+    def fast_backward(self, **kwargs):
+        self.send(b'S', **kwargs)
 
     @prometheus.Registry.register('TankTcpClient', 'd')
-    def turn_right_slow(self):
-        self.send(b'd')
+    def turn_right_slow(self, **kwargs):
+        self.send(b'd', **kwargs)
 
     @prometheus.Registry.register('TankTcpClient', 's')
-    def slow_backward(self):
-        self.send(b's')
+    def slow_backward(self, **kwargs):
+        self.send(b's', **kwargs)
 
     @prometheus.Registry.register('TankTcpClient', 'w')
-    def slow_forward(self):
-        self.send(b'w')
+    def slow_forward(self, **kwargs):
+        self.send(b'w', **kwargs)
 
     @prometheus.Registry.register('TankTcpClient', 'D')
-    def turn_right_fast(self):
-        self.send(b'D')
+    def turn_right_fast(self, **kwargs):
+        self.send(b'D', **kwargs)
 
 # endregion
