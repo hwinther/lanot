@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:40:35
+# generated at 2018-09-27 23:51:47
 import prometheus
 import socket
 import time
@@ -20,16 +20,16 @@ class NodeTestUdpClientIntegratedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestUdpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
+    def on(self, **kwargs):
+        self.send(b'i1', **kwargs)
 
     @prometheus.Registry.register('NodeTestUdpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
+    def off(self, **kwargs):
+        self.send(b'i0', **kwargs)
 
     @prometheus.Registry.register('NodeTestUdpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
+    def value(self, **kwargs):
+        self.send(b'iv', **kwargs)
         return self.recv(10)
 
 
@@ -40,8 +40,8 @@ class NodeTestUdpClientAds(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestUdpClientAds', 'adv', 'OUT')
-    def read(self):
-        self.send(b'adv')
+    def read(self, **kwargs):
+        self.send(b'adv', **kwargs)
         return self.recv(10)
 
 
@@ -52,21 +52,21 @@ class NodeTestUdpClientNano(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestUdpClientNano', 'nadi', 'OUT')
-    def digital_in(self):
-        self.send(b'nadi')
+    def digital_in(self, **kwargs):
+        self.send(b'nadi', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('NodeTestUdpClientNano', 'naio')
-    def infraout(self):
-        self.send(b'naio')
+    def infraout(self, **kwargs):
+        self.send(b'naio', **kwargs)
 
     @prometheus.Registry.register('NodeTestUdpClientNano', 'nado')
-    def digital_out(self):
-        self.send(b'nado')
+    def digital_out(self, **kwargs):
+        self.send(b'nado', **kwargs)
 
     @prometheus.Registry.register('NodeTestUdpClientNano', 'naii', 'OUT')
-    def infrain(self):
-        self.send(b'naii')
+    def infrain(self, **kwargs):
+        self.send(b'naii', **kwargs)
         return self.recv(10)
 
 
@@ -85,8 +85,8 @@ class NodeTestUdpClientDs1307(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestUdpClientDs1307', 'dsv', 'OUT')
-    def value(self):
-        self.send(b'dsv')
+    def value(self, **kwargs):
+        self.send(b'dsv', **kwargs)
         return self.recv(10)
 
 
@@ -97,8 +97,8 @@ class NodeTestUdpClientAdc1(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestUdpClientAdc1', 'ar', 'OUT')
-    def read(self):
-        self.send(b'ar')
+    def read(self, **kwargs):
+        self.send(b'ar', **kwargs)
         return self.recv(10)
 
 
@@ -109,8 +109,8 @@ class NodeTestUdpClientSsd(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestUdpClientSsd', 'sst', 'OUT')
-    def text(self):
-        self.send(b'sst')
+    def text(self, **kwargs):
+        self.send(b'sst', **kwargs)
         return self.recv(10)
 
 
@@ -121,8 +121,8 @@ class NodeTestUdpClientDsb(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestUdpClientDsb', 'sv', 'OUT')
-    def value(self):
-        self.send(b'sv')
+    def value(self, **kwargs):
+        self.send(b'sv', **kwargs)
         return self.recv(10)
 
 
@@ -133,22 +133,22 @@ class NodeTestUdpClientDht11(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestUdpClientDht11', 'dv', 'OUT')
-    def value(self):
-        self.send(b'dv')
+    def value(self, **kwargs):
+        self.send(b'dv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('NodeTestUdpClientDht11', 'dt', 'OUT')
-    def temperature(self):
-        self.send(b'dt')
+    def temperature(self, **kwargs):
+        self.send(b'dt', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('NodeTestUdpClientDht11', 'dm')
-    def measure(self):
-        self.send(b'dm')
+    def measure(self, **kwargs):
+        self.send(b'dm', **kwargs)
 
     @prometheus.Registry.register('NodeTestUdpClientDht11', 'dh', 'OUT')
-    def humidity(self):
-        self.send(b'dh')
+    def humidity(self, **kwargs):
+        self.send(b'dh', **kwargs)
         return self.recv(10)
 
 
@@ -233,16 +233,16 @@ class NodeTestTcpClientIntegratedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestTcpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
+    def on(self, **kwargs):
+        self.send(b'i1', **kwargs)
 
     @prometheus.Registry.register('NodeTestTcpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
+    def off(self, **kwargs):
+        self.send(b'i0', **kwargs)
 
     @prometheus.Registry.register('NodeTestTcpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
+    def value(self, **kwargs):
+        self.send(b'iv', **kwargs)
         return self.recv(10)
 
 
@@ -253,8 +253,8 @@ class NodeTestTcpClientAds(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestTcpClientAds', 'adv', 'OUT')
-    def read(self):
-        self.send(b'adv')
+    def read(self, **kwargs):
+        self.send(b'adv', **kwargs)
         return self.recv(10)
 
 
@@ -265,21 +265,21 @@ class NodeTestTcpClientNano(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestTcpClientNano', 'nadi', 'OUT')
-    def digital_in(self):
-        self.send(b'nadi')
+    def digital_in(self, **kwargs):
+        self.send(b'nadi', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('NodeTestTcpClientNano', 'naio')
-    def infraout(self):
-        self.send(b'naio')
+    def infraout(self, **kwargs):
+        self.send(b'naio', **kwargs)
 
     @prometheus.Registry.register('NodeTestTcpClientNano', 'nado')
-    def digital_out(self):
-        self.send(b'nado')
+    def digital_out(self, **kwargs):
+        self.send(b'nado', **kwargs)
 
     @prometheus.Registry.register('NodeTestTcpClientNano', 'naii', 'OUT')
-    def infrain(self):
-        self.send(b'naii')
+    def infrain(self, **kwargs):
+        self.send(b'naii', **kwargs)
         return self.recv(10)
 
 
@@ -298,8 +298,8 @@ class NodeTestTcpClientDs1307(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestTcpClientDs1307', 'dsv', 'OUT')
-    def value(self):
-        self.send(b'dsv')
+    def value(self, **kwargs):
+        self.send(b'dsv', **kwargs)
         return self.recv(10)
 
 
@@ -310,8 +310,8 @@ class NodeTestTcpClientAdc1(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestTcpClientAdc1', 'ar', 'OUT')
-    def read(self):
-        self.send(b'ar')
+    def read(self, **kwargs):
+        self.send(b'ar', **kwargs)
         return self.recv(10)
 
 
@@ -322,8 +322,8 @@ class NodeTestTcpClientSsd(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestTcpClientSsd', 'sst', 'OUT')
-    def text(self):
-        self.send(b'sst')
+    def text(self, **kwargs):
+        self.send(b'sst', **kwargs)
         return self.recv(10)
 
 
@@ -334,8 +334,8 @@ class NodeTestTcpClientDsb(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestTcpClientDsb', 'sv', 'OUT')
-    def value(self):
-        self.send(b'sv')
+    def value(self, **kwargs):
+        self.send(b'sv', **kwargs)
         return self.recv(10)
 
 
@@ -346,22 +346,22 @@ class NodeTestTcpClientDht11(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('NodeTestTcpClientDht11', 'dv', 'OUT')
-    def value(self):
-        self.send(b'dv')
+    def value(self, **kwargs):
+        self.send(b'dv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('NodeTestTcpClientDht11', 'dt', 'OUT')
-    def temperature(self):
-        self.send(b'dt')
+    def temperature(self, **kwargs):
+        self.send(b'dt', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('NodeTestTcpClientDht11', 'dm')
-    def measure(self):
-        self.send(b'dm')
+    def measure(self, **kwargs):
+        self.send(b'dm', **kwargs)
 
     @prometheus.Registry.register('NodeTestTcpClientDht11', 'dh', 'OUT')
-    def humidity(self):
-        self.send(b'dh')
+    def humidity(self, **kwargs):
+        self.send(b'dh', **kwargs)
         return self.recv(10)
 
 

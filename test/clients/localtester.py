@@ -82,7 +82,7 @@ class LocalTester(Tester):
         self.function_test(self.node.test7, "return b'test'", None, b'test')
 
         # with parameter(s)
-        self.function_test(self.node.test8, "return dir()", {'input': b'dir()'}, b'dir()')
+        self.function_test(self.node.test8, "return b'dir()'", {'input': b'dir()'}, b'dir()')
 
 
 node = LocalTest()

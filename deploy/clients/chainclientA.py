@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:40:33
+# generated at 2018-09-27 23:51:45
 import prometheus
 import socket
 import time
@@ -20,17 +20,17 @@ class AUdpClientALed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('AUdpClientALed', 'alv', 'OUT')
-    def value(self):
-        self.send(b'alv')
+    def value(self, **kwargs):
+        self.send(b'alv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('AUdpClientALed', 'al0')
-    def off(self):
-        self.send(b'al0')
+    def off(self, **kwargs):
+        self.send(b'al0', **kwargs)
 
     @prometheus.Registry.register('AUdpClientALed', 'al1')
-    def on(self):
-        self.send(b'al1')
+    def on(self, **kwargs):
+        self.send(b'al1', **kwargs)
 
 
 class AUdpClient(prometheus.misc.RemoteTemplate):
@@ -101,17 +101,17 @@ class ATcpClientALed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('ATcpClientALed', 'alv', 'OUT')
-    def value(self):
-        self.send(b'alv')
+    def value(self, **kwargs):
+        self.send(b'alv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('ATcpClientALed', 'al0')
-    def off(self):
-        self.send(b'al0')
+    def off(self, **kwargs):
+        self.send(b'al0', **kwargs)
 
     @prometheus.Registry.register('ATcpClientALed', 'al1')
-    def on(self):
-        self.send(b'al1')
+    def on(self, **kwargs):
+        self.send(b'al1', **kwargs)
 
 
 class ATcpClient(prometheus.misc.RemoteTemplate):

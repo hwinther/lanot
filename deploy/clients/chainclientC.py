@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:40:33
+# generated at 2018-09-27 23:51:45
 import prometheus
 import socket
 import time
@@ -25,8 +25,8 @@ class CUdpClientBObject(prometheus.Prometheus):
         self.register(b_led=self.b_led)
 
     @prometheus.Registry.register('CUdpClientBObject', 'bT')
-    def toggle(self):
-        self.send(b'bT')
+    def toggle(self, **kwargs):
+        self.send(b'bT', **kwargs)
 
 
 class CUdpClientBLed(prometheus.Prometheus):
@@ -36,17 +36,17 @@ class CUdpClientBLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('CUdpClientBLed', 'blv', 'OUT')
-    def value(self):
-        self.send(b'blv')
+    def value(self, **kwargs):
+        self.send(b'blv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('CUdpClientBLed', 'bl1')
-    def on(self):
-        self.send(b'bl1')
+    def on(self, **kwargs):
+        self.send(b'bl1', **kwargs)
 
     @prometheus.Registry.register('CUdpClientBLed', 'bl0')
-    def off(self):
-        self.send(b'bl0')
+    def off(self, **kwargs):
+        self.send(b'bl0', **kwargs)
 
 
 class CUdpClientAObject(prometheus.Prometheus):
@@ -59,8 +59,8 @@ class CUdpClientAObject(prometheus.Prometheus):
         self.register(a_led=self.a_led)
 
     @prometheus.Registry.register('CUdpClientAObject', 'aT')
-    def toggle(self):
-        self.send(b'aT')
+    def toggle(self, **kwargs):
+        self.send(b'aT', **kwargs)
 
 
 class CUdpClientALed(prometheus.Prometheus):
@@ -70,17 +70,17 @@ class CUdpClientALed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('CUdpClientALed', 'alv', 'OUT')
-    def value(self):
-        self.send(b'alv')
+    def value(self, **kwargs):
+        self.send(b'alv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('CUdpClientALed', 'al0')
-    def off(self):
-        self.send(b'al0')
+    def off(self, **kwargs):
+        self.send(b'al0', **kwargs)
 
     @prometheus.Registry.register('CUdpClientALed', 'al1')
-    def on(self):
-        self.send(b'al1')
+    def on(self, **kwargs):
+        self.send(b'al1', **kwargs)
 
 
 class CUdpClientCLed(prometheus.Prometheus):
@@ -90,17 +90,17 @@ class CUdpClientCLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('CUdpClientCLed', 'clv', 'OUT')
-    def value(self):
-        self.send(b'clv')
+    def value(self, **kwargs):
+        self.send(b'clv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('CUdpClientCLed', 'cl0')
-    def off(self):
-        self.send(b'cl0')
+    def off(self, **kwargs):
+        self.send(b'cl0', **kwargs)
 
     @prometheus.Registry.register('CUdpClientCLed', 'cl1')
-    def on(self):
-        self.send(b'cl1')
+    def on(self, **kwargs):
+        self.send(b'cl1', **kwargs)
 
 
 class CUdpClient(prometheus.misc.RemoteTemplate):
@@ -178,8 +178,8 @@ class CTcpClientBObject(prometheus.Prometheus):
         self.register(b_led=self.b_led)
 
     @prometheus.Registry.register('CTcpClientBObject', 'bT')
-    def toggle(self):
-        self.send(b'bT')
+    def toggle(self, **kwargs):
+        self.send(b'bT', **kwargs)
 
 
 class CTcpClientBLed(prometheus.Prometheus):
@@ -189,17 +189,17 @@ class CTcpClientBLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('CTcpClientBLed', 'blv', 'OUT')
-    def value(self):
-        self.send(b'blv')
+    def value(self, **kwargs):
+        self.send(b'blv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('CTcpClientBLed', 'bl1')
-    def on(self):
-        self.send(b'bl1')
+    def on(self, **kwargs):
+        self.send(b'bl1', **kwargs)
 
     @prometheus.Registry.register('CTcpClientBLed', 'bl0')
-    def off(self):
-        self.send(b'bl0')
+    def off(self, **kwargs):
+        self.send(b'bl0', **kwargs)
 
 
 class CTcpClientAObject(prometheus.Prometheus):
@@ -212,8 +212,8 @@ class CTcpClientAObject(prometheus.Prometheus):
         self.register(a_led=self.a_led)
 
     @prometheus.Registry.register('CTcpClientAObject', 'aT')
-    def toggle(self):
-        self.send(b'aT')
+    def toggle(self, **kwargs):
+        self.send(b'aT', **kwargs)
 
 
 class CTcpClientALed(prometheus.Prometheus):
@@ -223,17 +223,17 @@ class CTcpClientALed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('CTcpClientALed', 'alv', 'OUT')
-    def value(self):
-        self.send(b'alv')
+    def value(self, **kwargs):
+        self.send(b'alv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('CTcpClientALed', 'al0')
-    def off(self):
-        self.send(b'al0')
+    def off(self, **kwargs):
+        self.send(b'al0', **kwargs)
 
     @prometheus.Registry.register('CTcpClientALed', 'al1')
-    def on(self):
-        self.send(b'al1')
+    def on(self, **kwargs):
+        self.send(b'al1', **kwargs)
 
 
 class CTcpClientCLed(prometheus.Prometheus):
@@ -243,17 +243,17 @@ class CTcpClientCLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('CTcpClientCLed', 'clv', 'OUT')
-    def value(self):
-        self.send(b'clv')
+    def value(self, **kwargs):
+        self.send(b'clv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('CTcpClientCLed', 'cl0')
-    def off(self):
-        self.send(b'cl0')
+    def off(self, **kwargs):
+        self.send(b'cl0', **kwargs)
 
     @prometheus.Registry.register('CTcpClientCLed', 'cl1')
-    def on(self):
-        self.send(b'cl1')
+    def on(self, **kwargs):
+        self.send(b'cl1', **kwargs)
 
 
 class CTcpClient(prometheus.misc.RemoteTemplate):

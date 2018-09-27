@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:40:33
+# generated at 2018-09-27 23:51:46
 import prometheus
 import socket
 import time
@@ -20,16 +20,16 @@ class Sensor02UdpClientIntegratedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Sensor02UdpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
+    def on(self, **kwargs):
+        self.send(b'i1', **kwargs)
 
     @prometheus.Registry.register('Sensor02UdpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
+    def off(self, **kwargs):
+        self.send(b'i0', **kwargs)
 
     @prometheus.Registry.register('Sensor02UdpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
+    def value(self, **kwargs):
+        self.send(b'iv', **kwargs)
         return self.recv(10)
 
 
@@ -40,8 +40,8 @@ class Sensor02UdpClientDsb(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Sensor02UdpClientDsb', 'bv', 'OUT')
-    def value(self):
-        self.send(b'bv')
+    def value(self, **kwargs):
+        self.send(b'bv', **kwargs)
         return self.recv(10)
 
 
@@ -52,8 +52,8 @@ class Sensor02UdpClientLightsensor(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Sensor02UdpClientLightsensor', 'lr', 'OUT')
-    def read(self):
-        self.send(b'lr')
+    def read(self, **kwargs):
+        self.send(b'lr', **kwargs)
         return self.recv(10)
 
 
@@ -64,22 +64,22 @@ class Sensor02UdpClientDht11(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Sensor02UdpClientDht11', 'dv', 'OUT')
-    def value(self):
-        self.send(b'dv')
+    def value(self, **kwargs):
+        self.send(b'dv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Sensor02UdpClientDht11', 'dt', 'OUT')
-    def temperature(self):
-        self.send(b'dt')
+    def temperature(self, **kwargs):
+        self.send(b'dt', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Sensor02UdpClientDht11', 'dm')
-    def measure(self):
-        self.send(b'dm')
+    def measure(self, **kwargs):
+        self.send(b'dm', **kwargs)
 
     @prometheus.Registry.register('Sensor02UdpClientDht11', 'dh', 'OUT')
-    def humidity(self):
-        self.send(b'dh')
+    def humidity(self, **kwargs):
+        self.send(b'dh', **kwargs)
         return self.recv(10)
 
 

@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:40:36
+# generated at 2018-09-27 23:51:47
 import prometheus
 import socket
 import time
@@ -20,16 +20,16 @@ class Test01UdpClientIntegratedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01UdpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
+    def on(self, **kwargs):
+        self.send(b'i1', **kwargs)
 
     @prometheus.Registry.register('Test01UdpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
+    def off(self, **kwargs):
+        self.send(b'i0', **kwargs)
 
     @prometheus.Registry.register('Test01UdpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
+    def value(self, **kwargs):
+        self.send(b'iv', **kwargs)
         return self.recv(10)
 
 
@@ -40,17 +40,17 @@ class Test01UdpClientLaser(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01UdpClientLaser', 'lv', 'OUT')
-    def value(self):
-        self.send(b'lv')
+    def value(self, **kwargs):
+        self.send(b'lv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Test01UdpClientLaser', 'l0')
-    def off(self):
-        self.send(b'l0')
+    def off(self, **kwargs):
+        self.send(b'l0', **kwargs)
 
     @prometheus.Registry.register('Test01UdpClientLaser', 'l1')
-    def on(self):
-        self.send(b'l1')
+    def on(self, **kwargs):
+        self.send(b'l1', **kwargs)
 
 
 class Test01UdpClientJoysticky(prometheus.Prometheus):
@@ -60,8 +60,8 @@ class Test01UdpClientJoysticky(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01UdpClientJoysticky', 'yr', 'OUT')
-    def read(self):
-        self.send(b'yr')
+    def read(self, **kwargs):
+        self.send(b'yr', **kwargs)
         return self.recv(10)
 
 
@@ -72,8 +72,8 @@ class Test01UdpClientJoystickx(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01UdpClientJoystickx', 'xr', 'OUT')
-    def read(self):
-        self.send(b'xr')
+    def read(self, **kwargs):
+        self.send(b'xr', **kwargs)
         return self.recv(10)
 
 
@@ -84,8 +84,8 @@ class Test01UdpClientSwitch(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01UdpClientSwitch', 'sv', 'OUT')
-    def value(self):
-        self.send(b'sv')
+    def value(self, **kwargs):
+        self.send(b'sv', **kwargs)
         return self.recv(10)
 
 
@@ -96,8 +96,8 @@ class Test01UdpClientJoystickswitch(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01UdpClientJoystickswitch', 'jv', 'OUT')
-    def value(self):
-        self.send(b'jv')
+    def value(self, **kwargs):
+        self.send(b'jv', **kwargs)
         return self.recv(10)
 
 
@@ -108,8 +108,8 @@ class Test01UdpClientWindow01digital(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01UdpClientWindow01digital', 'w1v', 'OUT')
-    def value(self):
-        self.send(b'w1v')
+    def value(self, **kwargs):
+        self.send(b'w1v', **kwargs)
         return self.recv(10)
 
 
@@ -120,8 +120,8 @@ class Test01UdpClientWindow02digital(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01UdpClientWindow02digital', 'w2v', 'OUT')
-    def value(self):
-        self.send(b'w2v')
+    def value(self, **kwargs):
+        self.send(b'w2v', **kwargs)
         return self.recv(10)
 
 
@@ -204,16 +204,16 @@ class Test01TcpClientIntegratedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01TcpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
+    def on(self, **kwargs):
+        self.send(b'i1', **kwargs)
 
     @prometheus.Registry.register('Test01TcpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
+    def off(self, **kwargs):
+        self.send(b'i0', **kwargs)
 
     @prometheus.Registry.register('Test01TcpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
+    def value(self, **kwargs):
+        self.send(b'iv', **kwargs)
         return self.recv(10)
 
 
@@ -224,17 +224,17 @@ class Test01TcpClientLaser(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01TcpClientLaser', 'lv', 'OUT')
-    def value(self):
-        self.send(b'lv')
+    def value(self, **kwargs):
+        self.send(b'lv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Test01TcpClientLaser', 'l0')
-    def off(self):
-        self.send(b'l0')
+    def off(self, **kwargs):
+        self.send(b'l0', **kwargs)
 
     @prometheus.Registry.register('Test01TcpClientLaser', 'l1')
-    def on(self):
-        self.send(b'l1')
+    def on(self, **kwargs):
+        self.send(b'l1', **kwargs)
 
 
 class Test01TcpClientJoysticky(prometheus.Prometheus):
@@ -244,8 +244,8 @@ class Test01TcpClientJoysticky(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01TcpClientJoysticky', 'yr', 'OUT')
-    def read(self):
-        self.send(b'yr')
+    def read(self, **kwargs):
+        self.send(b'yr', **kwargs)
         return self.recv(10)
 
 
@@ -256,8 +256,8 @@ class Test01TcpClientJoystickx(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01TcpClientJoystickx', 'xr', 'OUT')
-    def read(self):
-        self.send(b'xr')
+    def read(self, **kwargs):
+        self.send(b'xr', **kwargs)
         return self.recv(10)
 
 
@@ -268,8 +268,8 @@ class Test01TcpClientSwitch(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01TcpClientSwitch', 'sv', 'OUT')
-    def value(self):
-        self.send(b'sv')
+    def value(self, **kwargs):
+        self.send(b'sv', **kwargs)
         return self.recv(10)
 
 
@@ -280,8 +280,8 @@ class Test01TcpClientJoystickswitch(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01TcpClientJoystickswitch', 'jv', 'OUT')
-    def value(self):
-        self.send(b'jv')
+    def value(self, **kwargs):
+        self.send(b'jv', **kwargs)
         return self.recv(10)
 
 
@@ -292,8 +292,8 @@ class Test01TcpClientWindow01digital(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01TcpClientWindow01digital', 'w1v', 'OUT')
-    def value(self):
-        self.send(b'w1v')
+    def value(self, **kwargs):
+        self.send(b'w1v', **kwargs)
         return self.recv(10)
 
 
@@ -304,8 +304,8 @@ class Test01TcpClientWindow02digital(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test01TcpClientWindow02digital', 'w2v', 'OUT')
-    def value(self):
-        self.send(b'w2v')
+    def value(self, **kwargs):
+        self.send(b'w2v', **kwargs)
         return self.recv(10)
 
 

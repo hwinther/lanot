@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:40:32
+# generated at 2018-09-27 23:51:45
 import prometheus
 import socket
 import time
@@ -27,44 +27,44 @@ class TankProxyUdpClientTankclient(prometheus.Prometheus):
         self.register(red_led=self.red_led)
 
     @prometheus.Registry.register('TankProxyUdpClientTankclient', 'tW')
-    def fast_forward(self):
-        self.send(b'tW')
+    def fast_forward(self, **kwargs):
+        self.send(b'tW', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientTankclient', 'tS')
-    def fast_backward(self):
-        self.send(b'tS')
+    def fast_backward(self, **kwargs):
+        self.send(b'tS', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientTankclient', 'ts')
-    def slow_backward(self):
-        self.send(b'ts')
+    def slow_backward(self, **kwargs):
+        self.send(b'ts', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientTankclient', 'tw')
-    def slow_forward(self):
-        self.send(b'tw')
+    def slow_forward(self, **kwargs):
+        self.send(b'tw', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientTankclient', 'tg')
-    def full_stop(self):
-        self.send(b'tg')
+    def full_stop(self, **kwargs):
+        self.send(b'tg', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientTankclient', 'tD')
-    def turn_right_fast(self):
-        self.send(b'tD')
+    def turn_right_fast(self, **kwargs):
+        self.send(b'tD', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientTankclient', 'ta')
-    def turn_left_slow(self):
-        self.send(b'ta')
+    def turn_left_slow(self, **kwargs):
+        self.send(b'ta', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientTankclient', 'tb')
-    def blink_lights(self):
-        self.send(b'tb')
+    def blink_lights(self, **kwargs):
+        self.send(b'tb', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientTankclient', 'td')
-    def turn_right_slow(self):
-        self.send(b'td')
+    def turn_right_slow(self, **kwargs):
+        self.send(b'td', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientTankclient', 'tA')
-    def turn_left_fast(self):
-        self.send(b'tA')
+    def turn_left_fast(self, **kwargs):
+        self.send(b'tA', **kwargs)
 
 
 class TankProxyUdpClientRedLed(prometheus.Prometheus):
@@ -74,17 +74,17 @@ class TankProxyUdpClientRedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('TankProxyUdpClientRedLed', 'rv', 'OUT')
-    def value(self):
-        self.send(b'rv')
+    def value(self, **kwargs):
+        self.send(b'rv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyUdpClientRedLed', 'r0')
-    def off(self):
-        self.send(b'r0')
+    def off(self, **kwargs):
+        self.send(b'r0', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientRedLed', 'r1')
-    def on(self):
-        self.send(b'r1')
+    def on(self, **kwargs):
+        self.send(b'r1', **kwargs)
 
 
 class TankProxyUdpClientBlueLed(prometheus.Prometheus):
@@ -94,17 +94,17 @@ class TankProxyUdpClientBlueLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('TankProxyUdpClientBlueLed', 'bv', 'OUT')
-    def value(self):
-        self.send(b'bv')
+    def value(self, **kwargs):
+        self.send(b'bv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyUdpClientBlueLed', 'b0')
-    def off(self):
-        self.send(b'b0')
+    def off(self, **kwargs):
+        self.send(b'b0', **kwargs)
 
     @prometheus.Registry.register('TankProxyUdpClientBlueLed', 'b1')
-    def on(self):
-        self.send(b'b1')
+    def on(self, **kwargs):
+        self.send(b'b1', **kwargs)
 
 
 class TankProxyUdpClientLightControl(prometheus.Prometheus):
@@ -114,43 +114,43 @@ class TankProxyUdpClientLightControl(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('TankProxyUdpClientLightControl', '1', 'OUT')
-    def main_on(self):
-        self.send(b'1')
+    def main_on(self, **kwargs):
+        self.send(b'1', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyUdpClientLightControl', '0', 'OUT')
-    def all_off(self):
-        self.send(b'0')
+    def all_off(self, **kwargs):
+        self.send(b'0', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyUdpClientLightControl', '3', 'OUT')
-    def right_on(self):
-        self.send(b'3')
+    def right_on(self, **kwargs):
+        self.send(b'3', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyUdpClientLightControl', '2', 'OUT')
-    def left_on(self):
-        self.send(b'2')
+    def left_on(self, **kwargs):
+        self.send(b'2', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyUdpClientLightControl', '5', 'OUT')
-    def all_on(self):
-        self.send(b'5')
+    def all_on(self, **kwargs):
+        self.send(b'5', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyUdpClientLightControl', '4', 'OUT')
-    def front_on(self):
-        self.send(b'4')
+    def front_on(self, **kwargs):
+        self.send(b'4', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyUdpClientLightControl', 'V', 'OUT')
-    def version(self):
-        self.send(b'V')
+    def version(self, **kwargs):
+        self.send(b'V', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyUdpClientLightControl', '?', 'OUT')
-    def capability(self):
-        self.send(b'?')
+    def capability(self, **kwargs):
+        self.send(b'?', **kwargs)
         return self.recv(10)
 
 
@@ -226,44 +226,44 @@ class TankProxyTcpClientTankclient(prometheus.Prometheus):
         self.register(red_led=self.red_led)
 
     @prometheus.Registry.register('TankProxyTcpClientTankclient', 'tW')
-    def fast_forward(self):
-        self.send(b'tW')
+    def fast_forward(self, **kwargs):
+        self.send(b'tW', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientTankclient', 'tS')
-    def fast_backward(self):
-        self.send(b'tS')
+    def fast_backward(self, **kwargs):
+        self.send(b'tS', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientTankclient', 'ts')
-    def slow_backward(self):
-        self.send(b'ts')
+    def slow_backward(self, **kwargs):
+        self.send(b'ts', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientTankclient', 'tw')
-    def slow_forward(self):
-        self.send(b'tw')
+    def slow_forward(self, **kwargs):
+        self.send(b'tw', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientTankclient', 'tg')
-    def full_stop(self):
-        self.send(b'tg')
+    def full_stop(self, **kwargs):
+        self.send(b'tg', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientTankclient', 'tD')
-    def turn_right_fast(self):
-        self.send(b'tD')
+    def turn_right_fast(self, **kwargs):
+        self.send(b'tD', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientTankclient', 'ta')
-    def turn_left_slow(self):
-        self.send(b'ta')
+    def turn_left_slow(self, **kwargs):
+        self.send(b'ta', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientTankclient', 'tb')
-    def blink_lights(self):
-        self.send(b'tb')
+    def blink_lights(self, **kwargs):
+        self.send(b'tb', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientTankclient', 'td')
-    def turn_right_slow(self):
-        self.send(b'td')
+    def turn_right_slow(self, **kwargs):
+        self.send(b'td', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientTankclient', 'tA')
-    def turn_left_fast(self):
-        self.send(b'tA')
+    def turn_left_fast(self, **kwargs):
+        self.send(b'tA', **kwargs)
 
 
 class TankProxyTcpClientRedLed(prometheus.Prometheus):
@@ -273,17 +273,17 @@ class TankProxyTcpClientRedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('TankProxyTcpClientRedLed', 'rv', 'OUT')
-    def value(self):
-        self.send(b'rv')
+    def value(self, **kwargs):
+        self.send(b'rv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyTcpClientRedLed', 'r0')
-    def off(self):
-        self.send(b'r0')
+    def off(self, **kwargs):
+        self.send(b'r0', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientRedLed', 'r1')
-    def on(self):
-        self.send(b'r1')
+    def on(self, **kwargs):
+        self.send(b'r1', **kwargs)
 
 
 class TankProxyTcpClientBlueLed(prometheus.Prometheus):
@@ -293,17 +293,17 @@ class TankProxyTcpClientBlueLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('TankProxyTcpClientBlueLed', 'bv', 'OUT')
-    def value(self):
-        self.send(b'bv')
+    def value(self, **kwargs):
+        self.send(b'bv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyTcpClientBlueLed', 'b0')
-    def off(self):
-        self.send(b'b0')
+    def off(self, **kwargs):
+        self.send(b'b0', **kwargs)
 
     @prometheus.Registry.register('TankProxyTcpClientBlueLed', 'b1')
-    def on(self):
-        self.send(b'b1')
+    def on(self, **kwargs):
+        self.send(b'b1', **kwargs)
 
 
 class TankProxyTcpClientLightControl(prometheus.Prometheus):
@@ -313,43 +313,43 @@ class TankProxyTcpClientLightControl(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('TankProxyTcpClientLightControl', '1', 'OUT')
-    def main_on(self):
-        self.send(b'1')
+    def main_on(self, **kwargs):
+        self.send(b'1', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyTcpClientLightControl', '0', 'OUT')
-    def all_off(self):
-        self.send(b'0')
+    def all_off(self, **kwargs):
+        self.send(b'0', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyTcpClientLightControl', '3', 'OUT')
-    def right_on(self):
-        self.send(b'3')
+    def right_on(self, **kwargs):
+        self.send(b'3', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyTcpClientLightControl', '2', 'OUT')
-    def left_on(self):
-        self.send(b'2')
+    def left_on(self, **kwargs):
+        self.send(b'2', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyTcpClientLightControl', '5', 'OUT')
-    def all_on(self):
-        self.send(b'5')
+    def all_on(self, **kwargs):
+        self.send(b'5', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyTcpClientLightControl', '4', 'OUT')
-    def front_on(self):
-        self.send(b'4')
+    def front_on(self, **kwargs):
+        self.send(b'4', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyTcpClientLightControl', 'V', 'OUT')
-    def version(self):
-        self.send(b'V')
+    def version(self, **kwargs):
+        self.send(b'V', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('TankProxyTcpClientLightControl', '?', 'OUT')
-    def capability(self):
-        self.send(b'?')
+    def capability(self, **kwargs):
+        self.send(b'?', **kwargs)
         return self.recv(10)
 
 

@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:40:37
+# generated at 2018-09-27 23:51:49
 import prometheus
 import socket
 import time
@@ -20,16 +20,16 @@ class Rover01UdpClientIntegratedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Rover01UdpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
+    def on(self, **kwargs):
+        self.send(b'i1', **kwargs)
 
     @prometheus.Registry.register('Rover01UdpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
+    def off(self, **kwargs):
+        self.send(b'i0', **kwargs)
 
     @prometheus.Registry.register('Rover01UdpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
+    def value(self, **kwargs):
+        self.send(b'iv', **kwargs)
         return self.recv(10)
 
 
@@ -165,16 +165,16 @@ class Rover01TcpClientIntegratedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Rover01TcpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
+    def on(self, **kwargs):
+        self.send(b'i1', **kwargs)
 
     @prometheus.Registry.register('Rover01TcpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
+    def off(self, **kwargs):
+        self.send(b'i0', **kwargs)
 
     @prometheus.Registry.register('Rover01TcpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
+    def value(self, **kwargs):
+        self.send(b'iv', **kwargs)
         return self.recv(10)
 
 

@@ -56,6 +56,7 @@ class NodeTest(prometheus.Prometheus):
         self.register(prefix='ss', ssd=self.ssd)
 
         self.max = prometheus.pmax7219.MAX7219(self.spi, machine.Pin(15), 4)
+        # self.register(prefix='ma', max=self.max)
 
         self.ds1307 = prometheus.pds1307.DS1307(self.i2c)
         self.register(prefix='ds', ds1307=self.ds1307)

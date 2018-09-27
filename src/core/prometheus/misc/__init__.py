@@ -18,13 +18,13 @@ class InputOutputProxy(Prometheus):
 
     # noinspection PyPep8Naming
     @Registry.register('CLASS_NAME', 'VALUE')
-    def METHOD_NAME(self):
-        self.send(b'VALUE')
+    def METHOD_NAME(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
 
     # noinspection PyPep8Naming
     @Registry.register('CLASS_NAME', 'VALUE', 'OUT')
-    def METHOD_NAME_OUT(self):
-        self.send(b'VALUE')
+    def METHOD_NAME_OUT(self, **kwargs):
+        self.send(b'VALUE', **kwargs)
         # TODO: determine output size declaratively in source?
         return self.recv(10)
 
@@ -33,7 +33,7 @@ class RemoteTemplate(Prometheus):
     def __init__(self):
         Prometheus.__init__(self)
 
-    def send(self, data):
+    def send(self, data, **kwargs):
         logging.notice('send: %s' % repr(data))
 
     def recv(self, buffersize=None):

@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-27 23:40:36
+# generated at 2018-09-27 23:51:47
 import prometheus
 import socket
 import time
@@ -20,17 +20,17 @@ class Test02UdpClientBlueLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02UdpClientBlueLed', 'bv', 'OUT')
-    def value(self):
-        self.send(b'bv')
+    def value(self, **kwargs):
+        self.send(b'bv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Test02UdpClientBlueLed', 'b0')
-    def off(self):
-        self.send(b'b0')
+    def off(self, **kwargs):
+        self.send(b'b0', **kwargs)
 
     @prometheus.Registry.register('Test02UdpClientBlueLed', 'b1')
-    def on(self):
-        self.send(b'b1')
+    def on(self, **kwargs):
+        self.send(b'b1', **kwargs)
 
 
 class Test02UdpClientIntegratedLed(prometheus.Prometheus):
@@ -40,16 +40,16 @@ class Test02UdpClientIntegratedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02UdpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
+    def on(self, **kwargs):
+        self.send(b'i1', **kwargs)
 
     @prometheus.Registry.register('Test02UdpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
+    def off(self, **kwargs):
+        self.send(b'i0', **kwargs)
 
     @prometheus.Registry.register('Test02UdpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
+    def value(self, **kwargs):
+        self.send(b'iv', **kwargs)
         return self.recv(10)
 
 
@@ -60,16 +60,16 @@ class Test02UdpClientYellowLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02UdpClientYellowLed', 'y1')
-    def on(self):
-        self.send(b'y1')
+    def on(self, **kwargs):
+        self.send(b'y1', **kwargs)
 
     @prometheus.Registry.register('Test02UdpClientYellowLed', 'y0')
-    def off(self):
-        self.send(b'y0')
+    def off(self, **kwargs):
+        self.send(b'y0', **kwargs)
 
     @prometheus.Registry.register('Test02UdpClientYellowLed', 'yv', 'OUT')
-    def value(self):
-        self.send(b'yv')
+    def value(self, **kwargs):
+        self.send(b'yv', **kwargs)
         return self.recv(10)
 
 
@@ -80,17 +80,17 @@ class Test02UdpClientRedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02UdpClientRedLed', 'rv', 'OUT')
-    def value(self):
-        self.send(b'rv')
+    def value(self, **kwargs):
+        self.send(b'rv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Test02UdpClientRedLed', 'r0')
-    def off(self):
-        self.send(b'r0')
+    def off(self, **kwargs):
+        self.send(b'r0', **kwargs)
 
     @prometheus.Registry.register('Test02UdpClientRedLed', 'r1')
-    def on(self):
-        self.send(b'r1')
+    def on(self, **kwargs):
+        self.send(b'r1', **kwargs)
 
 
 class Test02UdpClientUwLed(prometheus.Prometheus):
@@ -100,17 +100,17 @@ class Test02UdpClientUwLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02UdpClientUwLed', 'uv', 'OUT')
-    def value(self):
-        self.send(b'uv')
+    def value(self, **kwargs):
+        self.send(b'uv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Test02UdpClientUwLed', 'u1')
-    def on(self):
-        self.send(b'u1')
+    def on(self, **kwargs):
+        self.send(b'u1', **kwargs)
 
     @prometheus.Registry.register('Test02UdpClientUwLed', 'u0')
-    def off(self):
-        self.send(b'u0')
+    def off(self, **kwargs):
+        self.send(b'u0', **kwargs)
 
 
 class Test02UdpClientLightsensor(prometheus.Prometheus):
@@ -120,8 +120,8 @@ class Test02UdpClientLightsensor(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02UdpClientLightsensor', 'sr', 'OUT')
-    def read(self):
-        self.send(b'sr')
+    def read(self, **kwargs):
+        self.send(b'sr', **kwargs)
         return self.recv(10)
 
 
@@ -132,17 +132,17 @@ class Test02UdpClientGreenLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02UdpClientGreenLed', 'gv', 'OUT')
-    def value(self):
-        self.send(b'gv')
+    def value(self, **kwargs):
+        self.send(b'gv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Test02UdpClientGreenLed', 'g1')
-    def on(self):
-        self.send(b'g1')
+    def on(self, **kwargs):
+        self.send(b'g1', **kwargs)
 
     @prometheus.Registry.register('Test02UdpClientGreenLed', 'g0')
-    def off(self):
-        self.send(b'g0')
+    def off(self, **kwargs):
+        self.send(b'g0', **kwargs)
 
 
 class Test02UdpClient(prometheus.misc.RemoteTemplate):
@@ -222,17 +222,17 @@ class Test02TcpClientBlueLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02TcpClientBlueLed', 'bv', 'OUT')
-    def value(self):
-        self.send(b'bv')
+    def value(self, **kwargs):
+        self.send(b'bv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Test02TcpClientBlueLed', 'b0')
-    def off(self):
-        self.send(b'b0')
+    def off(self, **kwargs):
+        self.send(b'b0', **kwargs)
 
     @prometheus.Registry.register('Test02TcpClientBlueLed', 'b1')
-    def on(self):
-        self.send(b'b1')
+    def on(self, **kwargs):
+        self.send(b'b1', **kwargs)
 
 
 class Test02TcpClientIntegratedLed(prometheus.Prometheus):
@@ -242,16 +242,16 @@ class Test02TcpClientIntegratedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02TcpClientIntegratedLed', 'i1')
-    def on(self):
-        self.send(b'i1')
+    def on(self, **kwargs):
+        self.send(b'i1', **kwargs)
 
     @prometheus.Registry.register('Test02TcpClientIntegratedLed', 'i0')
-    def off(self):
-        self.send(b'i0')
+    def off(self, **kwargs):
+        self.send(b'i0', **kwargs)
 
     @prometheus.Registry.register('Test02TcpClientIntegratedLed', 'iv', 'OUT')
-    def value(self):
-        self.send(b'iv')
+    def value(self, **kwargs):
+        self.send(b'iv', **kwargs)
         return self.recv(10)
 
 
@@ -262,16 +262,16 @@ class Test02TcpClientYellowLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02TcpClientYellowLed', 'y1')
-    def on(self):
-        self.send(b'y1')
+    def on(self, **kwargs):
+        self.send(b'y1', **kwargs)
 
     @prometheus.Registry.register('Test02TcpClientYellowLed', 'y0')
-    def off(self):
-        self.send(b'y0')
+    def off(self, **kwargs):
+        self.send(b'y0', **kwargs)
 
     @prometheus.Registry.register('Test02TcpClientYellowLed', 'yv', 'OUT')
-    def value(self):
-        self.send(b'yv')
+    def value(self, **kwargs):
+        self.send(b'yv', **kwargs)
         return self.recv(10)
 
 
@@ -282,17 +282,17 @@ class Test02TcpClientRedLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02TcpClientRedLed', 'rv', 'OUT')
-    def value(self):
-        self.send(b'rv')
+    def value(self, **kwargs):
+        self.send(b'rv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Test02TcpClientRedLed', 'r0')
-    def off(self):
-        self.send(b'r0')
+    def off(self, **kwargs):
+        self.send(b'r0', **kwargs)
 
     @prometheus.Registry.register('Test02TcpClientRedLed', 'r1')
-    def on(self):
-        self.send(b'r1')
+    def on(self, **kwargs):
+        self.send(b'r1', **kwargs)
 
 
 class Test02TcpClientUwLed(prometheus.Prometheus):
@@ -302,17 +302,17 @@ class Test02TcpClientUwLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02TcpClientUwLed', 'uv', 'OUT')
-    def value(self):
-        self.send(b'uv')
+    def value(self, **kwargs):
+        self.send(b'uv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Test02TcpClientUwLed', 'u1')
-    def on(self):
-        self.send(b'u1')
+    def on(self, **kwargs):
+        self.send(b'u1', **kwargs)
 
     @prometheus.Registry.register('Test02TcpClientUwLed', 'u0')
-    def off(self):
-        self.send(b'u0')
+    def off(self, **kwargs):
+        self.send(b'u0', **kwargs)
 
 
 class Test02TcpClientLightsensor(prometheus.Prometheus):
@@ -322,8 +322,8 @@ class Test02TcpClientLightsensor(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02TcpClientLightsensor', 'sr', 'OUT')
-    def read(self):
-        self.send(b'sr')
+    def read(self, **kwargs):
+        self.send(b'sr', **kwargs)
         return self.recv(10)
 
 
@@ -334,17 +334,17 @@ class Test02TcpClientGreenLed(prometheus.Prometheus):
         self.recv = recv
 
     @prometheus.Registry.register('Test02TcpClientGreenLed', 'gv', 'OUT')
-    def value(self):
-        self.send(b'gv')
+    def value(self, **kwargs):
+        self.send(b'gv', **kwargs)
         return self.recv(10)
 
     @prometheus.Registry.register('Test02TcpClientGreenLed', 'g1')
-    def on(self):
-        self.send(b'g1')
+    def on(self, **kwargs):
+        self.send(b'g1', **kwargs)
 
     @prometheus.Registry.register('Test02TcpClientGreenLed', 'g0')
-    def off(self):
-        self.send(b'g0')
+    def off(self, **kwargs):
+        self.send(b'g0', **kwargs)
 
 
 class Test02TcpClient(prometheus.misc.RemoteTemplate):
