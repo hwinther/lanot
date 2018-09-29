@@ -3,6 +3,7 @@
   <component name="VcsDirectoryMappings">
     <mapping directory="$PROJECT_DIR$" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/tools/Adafruit_CCS811_python" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/tools/ads1x15" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/tools/micropython-font-to-py" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/tools/micropython-max7219" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/tools/micropython-tinyrtc-i2c" vcs="Git" />
