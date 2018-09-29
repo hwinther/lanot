@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-28 00:40:18
+# generated at 2018-09-28 23:25:52
 import prometheus
 import socket
 import time
@@ -22,7 +22,7 @@ class Test02UdpClientBlueLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02UdpClientBlueLed', 'bv', str)
     def value(self, **kwargs):
         self.send(b'bv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Test02UdpClientBlueLed', 'b0')
     def off(self, **kwargs):
@@ -50,7 +50,7 @@ class Test02UdpClientIntegratedLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02UdpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test02UdpClientYellowLed(prometheus.Prometheus):
@@ -70,7 +70,7 @@ class Test02UdpClientYellowLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02UdpClientYellowLed', 'yv', str)
     def value(self, **kwargs):
         self.send(b'yv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test02UdpClientRedLed(prometheus.Prometheus):
@@ -82,7 +82,7 @@ class Test02UdpClientRedLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02UdpClientRedLed', 'rv', str)
     def value(self, **kwargs):
         self.send(b'rv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Test02UdpClientRedLed', 'r0')
     def off(self, **kwargs):
@@ -102,7 +102,7 @@ class Test02UdpClientUwLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02UdpClientUwLed', 'uv', str)
     def value(self, **kwargs):
         self.send(b'uv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Test02UdpClientUwLed', 'u1')
     def on(self, **kwargs):
@@ -122,7 +122,7 @@ class Test02UdpClientLightsensor(prometheus.Prometheus):
     @prometheus.Registry.register('Test02UdpClientLightsensor', 'sr', str)
     def read(self, **kwargs):
         self.send(b'sr', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test02UdpClientGreenLed(prometheus.Prometheus):
@@ -134,7 +134,7 @@ class Test02UdpClientGreenLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02UdpClientGreenLed', 'gv', str)
     def value(self, **kwargs):
         self.send(b'gv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Test02UdpClientGreenLed', 'g1')
     def on(self, **kwargs):
@@ -192,9 +192,12 @@ class Test02UdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop().packet
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
-    def recv(self, buffersize=10):
+    def recv(self, buffersize=20):
         return self.recv_timeout(buffersize, 0.5)
 
     def recv_timeout(self, buffersize, timeout):
@@ -224,7 +227,7 @@ class Test02TcpClientBlueLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02TcpClientBlueLed', 'bv', str)
     def value(self, **kwargs):
         self.send(b'bv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Test02TcpClientBlueLed', 'b0')
     def off(self, **kwargs):
@@ -252,7 +255,7 @@ class Test02TcpClientIntegratedLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02TcpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test02TcpClientYellowLed(prometheus.Prometheus):
@@ -272,7 +275,7 @@ class Test02TcpClientYellowLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02TcpClientYellowLed', 'yv', str)
     def value(self, **kwargs):
         self.send(b'yv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test02TcpClientRedLed(prometheus.Prometheus):
@@ -284,7 +287,7 @@ class Test02TcpClientRedLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02TcpClientRedLed', 'rv', str)
     def value(self, **kwargs):
         self.send(b'rv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Test02TcpClientRedLed', 'r0')
     def off(self, **kwargs):
@@ -304,7 +307,7 @@ class Test02TcpClientUwLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02TcpClientUwLed', 'uv', str)
     def value(self, **kwargs):
         self.send(b'uv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Test02TcpClientUwLed', 'u1')
     def on(self, **kwargs):
@@ -324,7 +327,7 @@ class Test02TcpClientLightsensor(prometheus.Prometheus):
     @prometheus.Registry.register('Test02TcpClientLightsensor', 'sr', str)
     def read(self, **kwargs):
         self.send(b'sr', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test02TcpClientGreenLed(prometheus.Prometheus):
@@ -336,7 +339,7 @@ class Test02TcpClientGreenLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test02TcpClientGreenLed', 'gv', str)
     def value(self, **kwargs):
         self.send(b'gv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Test02TcpClientGreenLed', 'g1')
     def on(self, **kwargs):
@@ -412,7 +415,10 @@ class Test02TcpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.resolve_response(self.buffers[addr].pop().packet)
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
 
 # endregion

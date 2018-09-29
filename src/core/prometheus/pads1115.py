@@ -21,6 +21,11 @@ class ADS1115(prometheus.Prometheus):
         self.ads1115 = ads1x15.ADS1115(i2c=i2c, address=addr)
 
     @prometheus.Registry.register('ADS1115', 'v', str)
-    def read(self, **kwargs):
-        return '%d %d %d %d' % (self.ads1115.read(0, 0), self.ads1115.read(1, 0),
-                                self.ads1115.read(2, 0), self.ads1115.read(3, 0))
+    def read(self, channel=None, **kwargs):
+        if channel is not None:
+            if not isinstance(channel, int):
+                channel = int(channel)
+            return '%d' % (self.ads1115.read(0, channel))
+
+        return '%d %d %d %d' % (self.ads1115.read(0, 0), self.ads1115.read(0, 1),
+                                self.ads1115.read(0, 2), self.ads1115.read(0, 3))

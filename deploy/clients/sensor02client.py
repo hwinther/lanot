@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-28 00:40:16
+# generated at 2018-09-28 23:25:51
 import prometheus
 import socket
 import time
@@ -30,7 +30,7 @@ class Sensor02UdpClientIntegratedLed(prometheus.Prometheus):
     @prometheus.Registry.register('Sensor02UdpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Sensor02UdpClientDsb(prometheus.Prometheus):
@@ -42,7 +42,7 @@ class Sensor02UdpClientDsb(prometheus.Prometheus):
     @prometheus.Registry.register('Sensor02UdpClientDsb', 'bv', str)
     def value(self, **kwargs):
         self.send(b'bv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Sensor02UdpClientLightsensor(prometheus.Prometheus):
@@ -54,7 +54,7 @@ class Sensor02UdpClientLightsensor(prometheus.Prometheus):
     @prometheus.Registry.register('Sensor02UdpClientLightsensor', 'lr', str)
     def read(self, **kwargs):
         self.send(b'lr', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Sensor02UdpClientDht11(prometheus.Prometheus):
@@ -66,12 +66,12 @@ class Sensor02UdpClientDht11(prometheus.Prometheus):
     @prometheus.Registry.register('Sensor02UdpClientDht11', 'dv', str)
     def value(self, **kwargs):
         self.send(b'dv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Sensor02UdpClientDht11', 'dt', str)
     def temperature(self, **kwargs):
         self.send(b'dt', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Sensor02UdpClientDht11', 'dm')
     def measure(self, **kwargs):
@@ -80,7 +80,7 @@ class Sensor02UdpClientDht11(prometheus.Prometheus):
     @prometheus.Registry.register('Sensor02UdpClientDht11', 'dh', str)
     def humidity(self, **kwargs):
         self.send(b'dh', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Sensor02UdpClient(prometheus.misc.RemoteTemplate):
@@ -124,9 +124,12 @@ class Sensor02UdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop().packet
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
-    def recv(self, buffersize=10):
+    def recv(self, buffersize=20):
         return self.recv_timeout(buffersize, 0.5)
 
     def recv_timeout(self, buffersize, timeout):

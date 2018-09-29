@@ -366,8 +366,13 @@ class Digital(Prometheus):
 class Adc(Prometheus):
     def __init__(self, pin):
         """
-        TODO: Warning - pin in analog mode requires max 1.8v, use volt divider to ensure this
+        Warning - pin in analog mode requires max 1.8v, use volt divider to ensure this
+        Not the case for esp8266
+        TODO: esp32 and wipy need verification
         # not always::type pin: int
+        oncider renaming read to value for simplicity:
+        all devices that have a primary output function can thus have the same method name and reduces the need
+        to know how a given device is implemented?
         """
         Prometheus.__init__(self)
         self.pin = pin
@@ -376,5 +381,3 @@ class Adc(Prometheus):
     @Registry.register('Adc', 'r', int)
     def read(self, **kwargs):
         return self.adc.read()
-
-# TODO: when adding new device subclasses, concidering splitting them all into submodules

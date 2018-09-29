@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-28 00:40:17
+# generated at 2018-09-28 23:25:52
 import prometheus
 import socket
 import time
@@ -30,7 +30,7 @@ class NodeTestUdpClientIntegratedLed(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestUdpClientAds(prometheus.Prometheus):
@@ -42,7 +42,7 @@ class NodeTestUdpClientAds(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientAds', 'adv', str)
     def read(self, **kwargs):
         self.send(b'adv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestUdpClientNano(prometheus.Prometheus):
@@ -54,7 +54,7 @@ class NodeTestUdpClientNano(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientNano', 'nadi', str)
     def digital_in(self, **kwargs):
         self.send(b'nadi', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('NodeTestUdpClientNano', 'naio')
     def infraout(self, **kwargs):
@@ -67,7 +67,24 @@ class NodeTestUdpClientNano(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientNano', 'naii', str)
     def infrain(self, **kwargs):
         self.send(b'naii', **kwargs)
-        return self.recv(10)
+        return self.recv()
+
+
+class NodeTestUdpClientMax(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('NodeTestUdpClientMax', 'mab', str)
+    def brightness(self, **kwargs):
+        self.send(b'mab', **kwargs)
+        return self.recv()
+
+    @prometheus.Registry.register('NodeTestUdpClientMax', 'mat', str)
+    def text(self, **kwargs):
+        self.send(b'mat', **kwargs)
+        return self.recv()
 
 
 class NodeTestUdpClientNeopixel(prometheus.Prometheus):
@@ -76,6 +93,17 @@ class NodeTestUdpClientNeopixel(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
+    @prometheus.Registry.register('NodeTestUdpClientNeopixel', 'ps')
+    def set(self, **kwargs):
+        self.send(b'ps', **kwargs)
+
+    @prometheus.Registry.register('NodeTestUdpClientNeopixel', 'psp')
+    def set_pixel(self, **kwargs):
+        self.send(b'psp', **kwargs)
+
+    @prometheus.Registry.register('NodeTestUdpClientNeopixel', 'pwr')
+    def write(self, **kwargs):
+        self.send(b'pwr', **kwargs)
 
 
 class NodeTestUdpClientDs1307(prometheus.Prometheus):
@@ -87,7 +115,7 @@ class NodeTestUdpClientDs1307(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientDs1307', 'dsv', str)
     def value(self, **kwargs):
         self.send(b'dsv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestUdpClientAdc1(prometheus.Prometheus):
@@ -99,7 +127,7 @@ class NodeTestUdpClientAdc1(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientAdc1', 'ar', str)
     def read(self, **kwargs):
         self.send(b'ar', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestUdpClientSsd(prometheus.Prometheus):
@@ -108,9 +136,10 @@ class NodeTestUdpClientSsd(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('NodeTestUdpClientSsd', 'sst')
+    @prometheus.Registry.register('NodeTestUdpClientSsd', 'sst', str)
     def text(self, **kwargs):
         self.send(b'sst', **kwargs)
+        return self.recv()
 
 
 class NodeTestUdpClientDsb(prometheus.Prometheus):
@@ -122,7 +151,7 @@ class NodeTestUdpClientDsb(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientDsb', 'sv', str)
     def value(self, **kwargs):
         self.send(b'sv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestUdpClientDht11(prometheus.Prometheus):
@@ -134,12 +163,12 @@ class NodeTestUdpClientDht11(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientDht11', 'dv', str)
     def value(self, **kwargs):
         self.send(b'dv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('NodeTestUdpClientDht11', 'dt', str)
     def temperature(self, **kwargs):
         self.send(b'dt', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('NodeTestUdpClientDht11', 'dm')
     def measure(self, **kwargs):
@@ -148,7 +177,7 @@ class NodeTestUdpClientDht11(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestUdpClientDht11', 'dh', str)
     def humidity(self, **kwargs):
         self.send(b'dh', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestUdpClient(prometheus.misc.RemoteTemplate):
@@ -175,6 +204,8 @@ class NodeTestUdpClient(prometheus.misc.RemoteTemplate):
         self.register(dsb=self.dsb)
         self.integrated_led = NodeTestUdpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
+        self.max = NodeTestUdpClientMax(self.send, self.recv)
+        self.register(max=self.max)
         self.nano = NodeTestUdpClientNano(self.send, self.recv)
         self.register(nano=self.nano)
         self.neopixel = NodeTestUdpClientNeopixel(self.send, self.recv)
@@ -202,9 +233,12 @@ class NodeTestUdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop().packet
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
-    def recv(self, buffersize=10):
+    def recv(self, buffersize=20):
         return self.recv_timeout(buffersize, 0.5)
 
     def recv_timeout(self, buffersize, timeout):
@@ -242,7 +276,7 @@ class NodeTestTcpClientIntegratedLed(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestTcpClientAds(prometheus.Prometheus):
@@ -254,7 +288,7 @@ class NodeTestTcpClientAds(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientAds', 'adv', str)
     def read(self, **kwargs):
         self.send(b'adv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestTcpClientNano(prometheus.Prometheus):
@@ -266,7 +300,7 @@ class NodeTestTcpClientNano(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientNano', 'nadi', str)
     def digital_in(self, **kwargs):
         self.send(b'nadi', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('NodeTestTcpClientNano', 'naio')
     def infraout(self, **kwargs):
@@ -279,7 +313,24 @@ class NodeTestTcpClientNano(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientNano', 'naii', str)
     def infrain(self, **kwargs):
         self.send(b'naii', **kwargs)
-        return self.recv(10)
+        return self.recv()
+
+
+class NodeTestTcpClientMax(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('NodeTestTcpClientMax', 'mab', str)
+    def brightness(self, **kwargs):
+        self.send(b'mab', **kwargs)
+        return self.recv()
+
+    @prometheus.Registry.register('NodeTestTcpClientMax', 'mat', str)
+    def text(self, **kwargs):
+        self.send(b'mat', **kwargs)
+        return self.recv()
 
 
 class NodeTestTcpClientNeopixel(prometheus.Prometheus):
@@ -288,6 +339,17 @@ class NodeTestTcpClientNeopixel(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
+    @prometheus.Registry.register('NodeTestTcpClientNeopixel', 'ps')
+    def set(self, **kwargs):
+        self.send(b'ps', **kwargs)
+
+    @prometheus.Registry.register('NodeTestTcpClientNeopixel', 'psp')
+    def set_pixel(self, **kwargs):
+        self.send(b'psp', **kwargs)
+
+    @prometheus.Registry.register('NodeTestTcpClientNeopixel', 'pwr')
+    def write(self, **kwargs):
+        self.send(b'pwr', **kwargs)
 
 
 class NodeTestTcpClientDs1307(prometheus.Prometheus):
@@ -299,7 +361,7 @@ class NodeTestTcpClientDs1307(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientDs1307', 'dsv', str)
     def value(self, **kwargs):
         self.send(b'dsv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestTcpClientAdc1(prometheus.Prometheus):
@@ -311,7 +373,7 @@ class NodeTestTcpClientAdc1(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientAdc1', 'ar', str)
     def read(self, **kwargs):
         self.send(b'ar', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestTcpClientSsd(prometheus.Prometheus):
@@ -320,9 +382,10 @@ class NodeTestTcpClientSsd(prometheus.Prometheus):
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('NodeTestTcpClientSsd', 'sst')
+    @prometheus.Registry.register('NodeTestTcpClientSsd', 'sst', str)
     def text(self, **kwargs):
         self.send(b'sst', **kwargs)
+        return self.recv()
 
 
 class NodeTestTcpClientDsb(prometheus.Prometheus):
@@ -334,7 +397,7 @@ class NodeTestTcpClientDsb(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientDsb', 'sv', str)
     def value(self, **kwargs):
         self.send(b'sv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestTcpClientDht11(prometheus.Prometheus):
@@ -346,12 +409,12 @@ class NodeTestTcpClientDht11(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientDht11', 'dv', str)
     def value(self, **kwargs):
         self.send(b'dv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('NodeTestTcpClientDht11', 'dt', str)
     def temperature(self, **kwargs):
         self.send(b'dt', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('NodeTestTcpClientDht11', 'dm')
     def measure(self, **kwargs):
@@ -360,7 +423,7 @@ class NodeTestTcpClientDht11(prometheus.Prometheus):
     @prometheus.Registry.register('NodeTestTcpClientDht11', 'dh', str)
     def humidity(self, **kwargs):
         self.send(b'dh', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class NodeTestTcpClient(prometheus.misc.RemoteTemplate):
@@ -386,6 +449,8 @@ class NodeTestTcpClient(prometheus.misc.RemoteTemplate):
         self.register(dsb=self.dsb)
         self.integrated_led = NodeTestTcpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
+        self.max = NodeTestTcpClientMax(self.send, self.recv)
+        self.register(max=self.max)
         self.nano = NodeTestTcpClientNano(self.send, self.recv)
         self.register(nano=self.nano)
         self.neopixel = NodeTestTcpClientNeopixel(self.send, self.recv)
@@ -432,7 +497,10 @@ class NodeTestTcpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.resolve_response(self.buffers[addr].pop().packet)
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
 
 # endregion

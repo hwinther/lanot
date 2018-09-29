@@ -39,4 +39,4 @@ class Greenhouse02(prometheus.Prometheus):
         self.ssd = prometheus.pssd1306.SSD1306(width=128, height=64, i2c=self.i2c)
         self.register(prefix='ss', ssd=self.ssd)
 
-        self.ssd.text('init', 0, 0)
+        # self.ssd.text('init', 0, 0)

@@ -7,6 +7,7 @@ import prometheus.server.socketserver.udp
 import prometheus.server.socketserver.jsonrest
 # from prometheus.server.socketserver.sslsocket import SslSocket
 import prometheus.logging as logging
+import prometheus.pssd1306
 import machine
 import sys
 # import pickle
@@ -31,6 +32,9 @@ class LocalTest(prometheus.Prometheus):
 
         self.hygrometer = prometheus.Adc(0)
         self.register(prefix='h', hygrometer=self.hygrometer)
+
+        self.ssd = prometheus.pssd1306.SSD1306(None)
+        self.register(prefix='ss', ssd=self.ssd)
 
     @prometheus.Registry.register('LocalTest', '1', 'OUT')
     def test1(self, **kwargs):

@@ -26,7 +26,7 @@ class InputOutputProxy(Prometheus):
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
         # TODO: determine output size declaratively in source?
-        return self.recv(10)
+        return self.recv()
 
 
 class RemoteTemplate(Prometheus):
@@ -39,9 +39,6 @@ class RemoteTemplate(Prometheus):
     def recv(self, buffersize=None):
         logging.notice('recv buffersize=%s' % buffersize)
         return None
-
-    def die(self):
-        self.send(b'die')
 
     def cap(self):
         self.send(b'cap')
@@ -67,6 +64,15 @@ class RemoteTemplate(Prometheus):
         logging.notice('sysinfo: %s' % repr(data))
         return data
 
+    def die(self):
+        self.send(b'die')
+
+    def reset(self):
+        self.send(b'reset')
+
+    def tftpd(self):
+        self.send(b'tftpd')
+
     def resolve_response(self, data):
         value = data
 
@@ -77,6 +83,8 @@ class RemoteTemplate(Prometheus):
             except NameError:
                 # NameError: name 'test' is not defined
                 # TODO: this means that single word evaluations of local scope can be performed
+                value = data
+            except SyntaxError:
                 value = data
 
         if isinstance(value, str):

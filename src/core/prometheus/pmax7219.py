@@ -24,22 +24,25 @@ class MAX7219(prometheus.Prometheus):
         self.max = max7219.Matrix8x8(spi, cspin, matrixes)
         self.max.brightness(0)
 
-    def text(self, txt, x=0, y=0, value=1):
-        if value:
-            self.max.fill(0)
-        else:
-            self.max.fill(1)
-        self.max.text(txt, x, y, value)
+    @prometheus.Registry.register('MAX7219', 't', str)
+    def text(self, text=None, x=0, y=0, value=1, **kwargs):
+        if text is None:
+            text = 'No text set'
+        if not isinstance(x, int):
+            x = int(x)
+        if not isinstance(y, int):
+            y = int(y)
+        if not isinstance(value, int):
+            value = int(value)
+        self.max.fill(value ^ 1)
+        self.max.text(text, x, y, value)
         self.max.show()
+        # for confirmation & testing
+        return text
 
-    def brightness(self, value):
+    @prometheus.Registry.register('MAX7219', 'b', int)
+    def brightness(self, value=0, **kwargs):
+        if not isinstance(value, int):
+            value = int(value)
         self.max.brightness(value)
-
-    def custom_command(self, command, reply, source, context, **kwargs):
-        if not len(command) > 4 or not command[0:4] == 'max ':
-            return prometheus.Prometheus.custom_command(self, command, reply, source, context, **kwargs)
-
-        self.text(command[4:], 0, 0)
-
-        gc.collect()
-        return True
+        return value

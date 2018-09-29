@@ -103,19 +103,19 @@ class Server(object):
             return_values = list()
             for command in self.instance.cached_remap:
                 return_values.append(command)
-            self.reply(' '.join(return_values), source=source, **kwargs)
+            self.reply(' '.join(return_values), source=source, context=context, **kwargs)
             replied = True
         elif command == 'uname':
-            self.reply(self.uname(), source=source, **kwargs)
+            self.reply(self.uname(), source=source, context=context, **kwargs)
             replied = True
         elif command == 'version':
-            self.reply(self.version(), source=source, **kwargs)
+            self.reply(self.version(), source=source, context=context, **kwargs)
             replied = True
         elif command == 'sysinfo':
-            self.reply(self.sysinfo(), source=source, **kwargs)
+            self.reply(self.sysinfo(), source=source, context=context, **kwargs)
             replied = True
         elif command == 'uptime':
-            self.reply(self.uptime(), source=source, **kwargs)
+            self.reply(self.uptime(), source=source, context=context, **kwargs)
             replied = True
         elif config_enabled and command_length > 10 and command[0:8] == 'connect ':
             import prometheus.pnetwork
@@ -125,7 +125,7 @@ class Server(object):
             if connect_result is not None:
                 # if not none, then we are probably not connected and we're returning an error message that the client
                 #  would like to get
-                self.reply(connect_result, source=source, **kwargs)
+                self.reply(connect_result, source=source, context=context, **kwargs)
                 replied = True
             del connect_result
             gc.collect()
@@ -136,23 +136,23 @@ class Server(object):
             if registered_method.return_type is not None:
                 # if type(return_value) is bool:
                 #     return_value = repr(return_value).encode('ascii')
-                self.reply(return_value, source=source, **kwargs)
+                self.reply(return_value, source=source, context=context, **kwargs)
                 replied = True
         elif os_enabled and self.handle_data_os(command=command, command_length=command_length,
-                                                source=source, **kwargs):
+                                                source=source, context=context, **kwargs):
             pass
         elif reset_enabled and command == 'die':
             logging.warn('die command received')
-            self.reply('ok', source=source, **kwargs)
+            self.reply('ok', source=source, context=context, **kwargs)
             replied = True
             self.loop_active = False
         elif reset_enabled and command == 'reset':
             logging.warn('reset command received')
-            self.reply('ok', source=source, **kwargs)
+            self.reply('ok', source=source, context=context, **kwargs)
             # will not set replied, as the environment goes down next:
             machine.reset()
         elif command == 'tftpd':
-            self.reply(self.tftpd(), source=source, **kwargs)
+            self.reply(self.tftpd(), source=source, context=context, **kwargs)
             replied = True
         elif self.instance.custom_command(command, self.reply, source=source, context=context, **kwargs):
             replied = True
@@ -164,7 +164,7 @@ class Server(object):
         gc.collect()
         return replied
 
-    def handle_data_os(self, command, command_length, source, **kwargs):
+    def handle_data_os(self, command, command_length, source, context, **kwargs):
         # extended os module commmands
         cwd = None
 
@@ -174,26 +174,27 @@ class Server(object):
             self.os_safe_function(os.chdir, command[3:])
         elif command == 'getcwd' or command == 'pwd':
             cwd = os.getcwd()
-            self.reply(self.os_safe_function(os.getcwd), source=source, **kwargs)
+            self.reply(self.os_safe_function(os.getcwd), source=source, context=context, **kwargs)
         elif command == 'listdir' or command == 'ls':
             if prometheus.is_micro:
-                self.reply(self.os_safe_function(os.listdir), source=source, **kwargs)
+                self.reply(self.os_safe_function(os.listdir), source=source, context=context, **kwargs)
             else:
-                self.reply(self.os_safe_function(os.listdir, '.'), source=source, **kwargs)
+                self.reply(self.os_safe_function(os.listdir, '.'), source=source, context=context, **kwargs)
         elif command_length > 8 and command[0:8] == 'listdir ':
-            self.reply(self.os_safe_function(os.listdir, command[8:]), source=source, **kwargs)
+            self.reply(self.os_safe_function(os.listdir, command[8:]), source=source, context=context, **kwargs)
         elif command_length > 3 and command[0:3] == 'ls ':
-            self.reply(self.os_safe_function(os.listdir, command[3:]), source=source, **kwargs)
+            self.reply(self.os_safe_function(os.listdir, command[3:]), source=source, context=context, **kwargs)
         elif command_length > 6 and command[0:6] == 'mkdir ':
-            self.reply(self.os_safe_function(os.mkdir, command[6:]), source=source, **kwargs)
+            self.reply(self.os_safe_function(os.mkdir, command[6:]), source=source, context=context, **kwargs)
         elif command_length > 7 and command[0:7] == 'remove ':
-            self.reply(self.os_safe_function(os.remove, command[7:]), source=source, **kwargs)
+            self.reply(self.os_safe_function(os.remove, command[7:]), source=source, context=context, **kwargs)
         elif command_length > 7 and command[0:7] == 'rename ' and command[7:].find(' ') is not -1:
-            self.reply(self.os_safe_function(os.rename, command[7:].split(' ', 1)), source=source, **kwargs)
+            self.reply(self.os_safe_function(os.rename, command[7:].split(' ', 1)), source=source, context=context,
+                       **kwargs)
         elif command_length > 6 and command[0:6] == 'rmdir ':
-            self.reply(self.os_safe_function(os.rmdir, command[6:]), source=source, **kwargs)
+            self.reply(self.os_safe_function(os.rmdir, command[6:]), source=source, context=context, **kwargs)
         elif command_length > 5 and command[0:5] == 'eval ':
-            self.reply(self.os_safe_function(eval, command[5:]), source=source, **kwargs)
+            self.reply(self.os_safe_function(eval, command[5:]), source=source, context=context, **kwargs)
         else:
             return False
 

@@ -12,6 +12,8 @@ gc.collect()
 
 class SSD1306(prometheus.Prometheus):
     ssd = None  # type: ssd1306.SSD1306_I2C
+    # TODO: add more function, such as those inherited from framebuf
+    # TODO: perhaps use a common super class and share with simular devices
 
     def __init__(self, i2c, addr=0x3c, height=128, width=64):
         """
@@ -24,18 +26,16 @@ class SSD1306(prometheus.Prometheus):
         prometheus.Prometheus.__init__(self)
         self.ssd = ssd1306.SSD1306_I2C(height, width, i2c, addr)
 
-    @prometheus.Registry.register('SSD1306', 't')
-    def text(self, txt=None, x=0, y=0, **kwargs):
+    @prometheus.Registry.register('SSD1306', 't', str)
+    def text(self, text=None, x=0, y=0, **kwargs):
+        if text is None:
+            text = 'No text set'
+        if not isinstance(x, int):
+            x = int(x)
+        if not isinstance(y, int):
+            y = int(y)
         self.ssd.fill(False)
-        if txt is not None:
-            self.ssd.text(txt, x, y)
+        self.ssd.text(text, x, y)
         self.ssd.show()
-
-    def custom_command(self, command, reply, source, **kwargs):
-        if not len(command) > 4 or not command[0:4] == 'ssd ':
-            return prometheus.Prometheus.custom_command(self, command, reply, source, **kwargs)
-
-        self.text(command[4:], 0, 0)
-
-        gc.collect()
-        return True
+        # for confirmation & testing
+        return text

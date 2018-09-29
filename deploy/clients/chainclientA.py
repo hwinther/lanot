@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-28 00:40:15
+# generated at 2018-09-28 23:25:50
 import prometheus
 import socket
 import time
@@ -22,7 +22,7 @@ class AUdpClientALed(prometheus.Prometheus):
     @prometheus.Registry.register('AUdpClientALed', 'alv', str)
     def value(self, **kwargs):
         self.send(b'alv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('AUdpClientALed', 'al0')
     def off(self, **kwargs):
@@ -68,9 +68,12 @@ class AUdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop().packet
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
-    def recv(self, buffersize=10):
+    def recv(self, buffersize=20):
         return self.recv_timeout(buffersize, 0.5)
 
     def recv_timeout(self, buffersize, timeout):
@@ -103,7 +106,7 @@ class ATcpClientALed(prometheus.Prometheus):
     @prometheus.Registry.register('ATcpClientALed', 'alv', str)
     def value(self, **kwargs):
         self.send(b'alv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('ATcpClientALed', 'al0')
     def off(self, **kwargs):
@@ -167,7 +170,10 @@ class ATcpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.resolve_response(self.buffers[addr].pop().packet)
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
     @prometheus.Registry.register('ATcpClient', 'T')
     def toggle(self, **kwargs):

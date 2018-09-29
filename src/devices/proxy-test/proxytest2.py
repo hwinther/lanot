@@ -20,8 +20,8 @@ class ProxyTest2(prometheus.Prometheus):
     def __init__(self):
         prometheus.Prometheus.__init__(self)
 
-        self.test = prometheus.Digital(machine.Pin(0, machine.Pin.OUT))
-        self.register(prefix='t', test=self.test)
+        # self.test = prometheus.Digital(machine.Pin(0, machine.Pin.OUT))
+        # self.register(prefix='t', test=self.test)
 
         self.sensor01 = sensor01client.Sensor01UdpClient('sensor01', bind_port=random.randrange(1024, 9000))
         self.register(prefix='s1', sensor01=self.sensor01)
@@ -35,8 +35,8 @@ class ProxyTest2(prometheus.Prometheus):
         # self.test01 = test01client.Test01UdpClient('test01', bind_port=random.randrange(1024, 9000))
         # self.register(prefix='t1', test01=self.test01)
 
-        self.test02 = test02client.Test02UdpClient('test02', bind_port=random.randrange(1024, 9000))
-        self.register(prefix='t2', test02=self.test02)
+        # self.test02 = test02client.Test02UdpClient('test02', bind_port=random.randrange(1024, 9000))
+        # self.register(prefix='t2', test02=self.test02)
 
         # self.tankclient = tankclient.TankUdpClient('192.168.1.250', bind_port=random.randrange(1024, 9000))
         # self.register(prefix='tc', tankclient=self.tankclient)

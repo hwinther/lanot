@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-28 00:40:15
+# generated at 2018-09-28 23:25:51
 import prometheus
 import socket
 import time
@@ -30,7 +30,7 @@ class Sensor01UdpClientIntegratedLed(prometheus.Prometheus):
     @prometheus.Registry.register('Sensor01UdpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Sensor01UdpClientLightsensor(prometheus.Prometheus):
@@ -42,7 +42,7 @@ class Sensor01UdpClientLightsensor(prometheus.Prometheus):
     @prometheus.Registry.register('Sensor01UdpClientLightsensor', 'lr', str)
     def read(self, **kwargs):
         self.send(b'lr', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Sensor01UdpClientDht11(prometheus.Prometheus):
@@ -54,12 +54,12 @@ class Sensor01UdpClientDht11(prometheus.Prometheus):
     @prometheus.Registry.register('Sensor01UdpClientDht11', 'dv', str)
     def value(self, **kwargs):
         self.send(b'dv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Sensor01UdpClientDht11', 'dt', str)
     def temperature(self, **kwargs):
         self.send(b'dt', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Sensor01UdpClientDht11', 'dm')
     def measure(self, **kwargs):
@@ -68,7 +68,7 @@ class Sensor01UdpClientDht11(prometheus.Prometheus):
     @prometheus.Registry.register('Sensor01UdpClientDht11', 'dh', str)
     def humidity(self, **kwargs):
         self.send(b'dh', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Sensor01UdpClient(prometheus.misc.RemoteTemplate):
@@ -110,9 +110,12 @@ class Sensor01UdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop().packet
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
-    def recv(self, buffersize=10):
+    def recv(self, buffersize=20):
         return self.recv_timeout(buffersize, 0.5)
 
     def recv_timeout(self, buffersize, timeout):

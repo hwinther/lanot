@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-28 00:40:15
+# generated at 2018-09-28 23:25:50
 import prometheus
 import socket
 import time
@@ -38,7 +38,7 @@ class CUdpClientBLed(prometheus.Prometheus):
     @prometheus.Registry.register('CUdpClientBLed', 'blv', str)
     def value(self, **kwargs):
         self.send(b'blv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('CUdpClientBLed', 'bl1')
     def on(self, **kwargs):
@@ -72,7 +72,7 @@ class CUdpClientALed(prometheus.Prometheus):
     @prometheus.Registry.register('CUdpClientALed', 'alv', str)
     def value(self, **kwargs):
         self.send(b'alv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('CUdpClientALed', 'al0')
     def off(self, **kwargs):
@@ -92,7 +92,7 @@ class CUdpClientCLed(prometheus.Prometheus):
     @prometheus.Registry.register('CUdpClientCLed', 'clv', str)
     def value(self, **kwargs):
         self.send(b'clv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('CUdpClientCLed', 'cl0')
     def off(self, **kwargs):
@@ -140,9 +140,12 @@ class CUdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop().packet
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
-    def recv(self, buffersize=10):
+    def recv(self, buffersize=20):
         return self.recv_timeout(buffersize, 0.5)
 
     def recv_timeout(self, buffersize, timeout):
@@ -191,7 +194,7 @@ class CTcpClientBLed(prometheus.Prometheus):
     @prometheus.Registry.register('CTcpClientBLed', 'blv', str)
     def value(self, **kwargs):
         self.send(b'blv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('CTcpClientBLed', 'bl1')
     def on(self, **kwargs):
@@ -225,7 +228,7 @@ class CTcpClientALed(prometheus.Prometheus):
     @prometheus.Registry.register('CTcpClientALed', 'alv', str)
     def value(self, **kwargs):
         self.send(b'alv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('CTcpClientALed', 'al0')
     def off(self, **kwargs):
@@ -245,7 +248,7 @@ class CTcpClientCLed(prometheus.Prometheus):
     @prometheus.Registry.register('CTcpClientCLed', 'clv', str)
     def value(self, **kwargs):
         self.send(b'clv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('CTcpClientCLed', 'cl0')
     def off(self, **kwargs):
@@ -311,7 +314,10 @@ class CTcpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.resolve_response(self.buffers[addr].pop().packet)
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
     @prometheus.Registry.register('CTcpClient', 'T')
     def toggle(self, **kwargs):

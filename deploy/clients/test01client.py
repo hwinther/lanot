@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-28 00:40:18
+# generated at 2018-09-28 23:25:52
 import prometheus
 import socket
 import time
@@ -30,7 +30,7 @@ class Test01UdpClientIntegratedLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test01UdpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01UdpClientLaser(prometheus.Prometheus):
@@ -42,7 +42,7 @@ class Test01UdpClientLaser(prometheus.Prometheus):
     @prometheus.Registry.register('Test01UdpClientLaser', 'lv', str)
     def value(self, **kwargs):
         self.send(b'lv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Test01UdpClientLaser', 'l0')
     def off(self, **kwargs):
@@ -62,7 +62,7 @@ class Test01UdpClientJoysticky(prometheus.Prometheus):
     @prometheus.Registry.register('Test01UdpClientJoysticky', 'yr', str)
     def read(self, **kwargs):
         self.send(b'yr', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01UdpClientJoystickx(prometheus.Prometheus):
@@ -74,7 +74,7 @@ class Test01UdpClientJoystickx(prometheus.Prometheus):
     @prometheus.Registry.register('Test01UdpClientJoystickx', 'xr', str)
     def read(self, **kwargs):
         self.send(b'xr', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01UdpClientSwitch(prometheus.Prometheus):
@@ -86,7 +86,7 @@ class Test01UdpClientSwitch(prometheus.Prometheus):
     @prometheus.Registry.register('Test01UdpClientSwitch', 'sv', str)
     def value(self, **kwargs):
         self.send(b'sv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01UdpClientJoystickswitch(prometheus.Prometheus):
@@ -98,7 +98,7 @@ class Test01UdpClientJoystickswitch(prometheus.Prometheus):
     @prometheus.Registry.register('Test01UdpClientJoystickswitch', 'jv', str)
     def value(self, **kwargs):
         self.send(b'jv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01UdpClientWindow01digital(prometheus.Prometheus):
@@ -110,7 +110,7 @@ class Test01UdpClientWindow01digital(prometheus.Prometheus):
     @prometheus.Registry.register('Test01UdpClientWindow01digital', 'w1v', str)
     def value(self, **kwargs):
         self.send(b'w1v', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01UdpClientWindow02digital(prometheus.Prometheus):
@@ -122,7 +122,7 @@ class Test01UdpClientWindow02digital(prometheus.Prometheus):
     @prometheus.Registry.register('Test01UdpClientWindow02digital', 'w2v', str)
     def value(self, **kwargs):
         self.send(b'w2v', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01UdpClient(prometheus.misc.RemoteTemplate):
@@ -174,9 +174,12 @@ class Test01UdpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop().packet
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
-    def recv(self, buffersize=10):
+    def recv(self, buffersize=20):
         return self.recv_timeout(buffersize, 0.5)
 
     def recv_timeout(self, buffersize, timeout):
@@ -214,7 +217,7 @@ class Test01TcpClientIntegratedLed(prometheus.Prometheus):
     @prometheus.Registry.register('Test01TcpClientIntegratedLed', 'iv', str)
     def value(self, **kwargs):
         self.send(b'iv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01TcpClientLaser(prometheus.Prometheus):
@@ -226,7 +229,7 @@ class Test01TcpClientLaser(prometheus.Prometheus):
     @prometheus.Registry.register('Test01TcpClientLaser', 'lv', str)
     def value(self, **kwargs):
         self.send(b'lv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
     @prometheus.Registry.register('Test01TcpClientLaser', 'l0')
     def off(self, **kwargs):
@@ -246,7 +249,7 @@ class Test01TcpClientJoysticky(prometheus.Prometheus):
     @prometheus.Registry.register('Test01TcpClientJoysticky', 'yr', str)
     def read(self, **kwargs):
         self.send(b'yr', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01TcpClientJoystickx(prometheus.Prometheus):
@@ -258,7 +261,7 @@ class Test01TcpClientJoystickx(prometheus.Prometheus):
     @prometheus.Registry.register('Test01TcpClientJoystickx', 'xr', str)
     def read(self, **kwargs):
         self.send(b'xr', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01TcpClientSwitch(prometheus.Prometheus):
@@ -270,7 +273,7 @@ class Test01TcpClientSwitch(prometheus.Prometheus):
     @prometheus.Registry.register('Test01TcpClientSwitch', 'sv', str)
     def value(self, **kwargs):
         self.send(b'sv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01TcpClientJoystickswitch(prometheus.Prometheus):
@@ -282,7 +285,7 @@ class Test01TcpClientJoystickswitch(prometheus.Prometheus):
     @prometheus.Registry.register('Test01TcpClientJoystickswitch', 'jv', str)
     def value(self, **kwargs):
         self.send(b'jv', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01TcpClientWindow01digital(prometheus.Prometheus):
@@ -294,7 +297,7 @@ class Test01TcpClientWindow01digital(prometheus.Prometheus):
     @prometheus.Registry.register('Test01TcpClientWindow01digital', 'w1v', str)
     def value(self, **kwargs):
         self.send(b'w1v', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01TcpClientWindow02digital(prometheus.Prometheus):
@@ -306,7 +309,7 @@ class Test01TcpClientWindow02digital(prometheus.Prometheus):
     @prometheus.Registry.register('Test01TcpClientWindow02digital', 'w2v', str)
     def value(self, **kwargs):
         self.send(b'w2v', **kwargs)
-        return self.recv(10)
+        return self.recv()
 
 
 class Test01TcpClient(prometheus.misc.RemoteTemplate):
@@ -376,7 +379,10 @@ class Test01TcpClient(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.resolve_response(self.buffers[addr].pop().packet)
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
 
 # endregion

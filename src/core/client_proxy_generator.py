@@ -43,7 +43,10 @@ class SerialTemplate(prometheus.misc.RemoteTemplate):
             self.buffer.parse(self.uart.read(buffersize))
         else:
             self.buffer.parse(self.uart.read())
-        return self.buffer.pop().packet
+        bufferpacket = self.buffer.pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
     def recv_timeout(self, buffersize, timeout):
         # TODO: actually implement this
@@ -102,9 +105,12 @@ class UdpTemplate(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.splitChars, end_chars=self.endChars)
         self.buffers[addr].parse(data)
-        return self.buffers[addr].pop().packet
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
-    def recv(self, buffersize=10):
+    def recv(self, buffersize=20):
         return self.recv_timeout(buffersize, 0.5)
 
     def recv_timeout(self, buffersize, timeout):
@@ -132,7 +138,7 @@ class UdpTemplate(prometheus.misc.RemoteTemplate):
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', str)
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
-        return self.resolve_response(self.recv_timeout(10, 0.5))
+        return self.resolve_response(self.recv_timeout(20, 0.5))
 
 
 class TcpTemplate(prometheus.misc.RemoteTemplate):
@@ -187,7 +193,10 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
         if addr not in self.buffers:
             self.buffers[addr] = prometheus.Buffer(split_chars=self.split_chars, end_chars=self.end_chars)
         self.buffers[addr].parse(data)
-        return self.resolve_response(self.buffers[addr].pop().packet)
+        bufferpacket = self.buffers[addr].pop()
+        if bufferpacket is None:
+            return None
+        return bufferpacket.packet
 
     # cut
 
@@ -200,7 +209,7 @@ class TcpTemplate(prometheus.misc.RemoteTemplate):
     @prometheus.Registry.register('CLASS_NAME', 'VALUE', str)
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
-        return self.recv(10)
+        return self.resolve_response(self.recv(50))
 
 
 class JsonRestTemplate(prometheus.misc.RemoteTemplate):
@@ -258,7 +267,7 @@ class JsonRestTemplate(prometheus.misc.RemoteTemplate):
         json_body = json.loads(body)
         # print(json_body)
 
-        return self.resolve_response(json_body['value'])
+        return json_body['value']
 
     # cut
 
@@ -271,7 +280,7 @@ class JsonRestTemplate(prometheus.misc.RemoteTemplate):
     @prometheus.Registry.register('CLASS_NAME', 'DVAL', str)
     def METHOD_NAME_OUT(self, **kwargs):
         self.send(b'VALUE', **kwargs)
-        return self.recv(200)
+        return self.resolve_response(self.recv(200))
 
 
 class RsaUdpTemplate(prometheus.misc.RemoteTemplate):

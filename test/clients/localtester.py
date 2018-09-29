@@ -1,6 +1,6 @@
 from deploy.clients import localtestclient
 from localtest import LocalTest
-# from deploy.clients import nodetestclient
+from deploy.clients import nodetestclient
 # from deploy.clients import sensor01client
 # from deploy.clients import sensor02client
 # from deploy.clients import test02client
@@ -101,6 +101,10 @@ lt.runtests()
 jr = localtestclient.LocalTestJsonRestClient('10.20.1.18')
 lt = LocalTester(jr, 'JsonRest')
 lt.runtests()
+
+# tcp = nodetestclient.NodeTestTcpClient('10.20.2.117')
+# lt = LocalTester(tcp, 'TCP')
+# lt.runtests()
 
 # udp = localtestclient.LocalTestUdpClient('localhost', bind_port=9190)
 # tcp = localtestclient.LocalTestTcpClient('localhost', bind_port=9190)

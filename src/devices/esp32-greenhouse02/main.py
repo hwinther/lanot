@@ -36,7 +36,7 @@ class LocalEvents(prometheus.server.Server):
             self.timer = time.time()
             # print('1 sec event, diff=%d' % diff)
             assert isinstance(self.instance, greenhouse02.Greenhouse02)
-
+            """
             # update the screen with current values
             h1 = self.instance.hygrometer01.read()
             h2 = self.instance.hygrometer02.read()
@@ -51,6 +51,7 @@ class LocalEvents(prometheus.server.Server):
             self.instance.ssd.ssd.text('h1:%d h2:%d' % (h1, h2), 0, 30)
             self.instance.ssd.ssd.text('h3:%d h4:%d' % (h3, h4), 0, 40)
             self.instance.ssd.ssd.show()
+            """
 
 
 node = greenhouse02.Greenhouse02()

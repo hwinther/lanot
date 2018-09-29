@@ -45,16 +45,107 @@
         LanotHost.prototype.update = function() {
             console.log('update query: ' + this.baseUri);
             $.ajax({
-                url: this.baseUri + '/api?class=true',
+                url: this.baseUri + '/schema',
                 dataType: 'jsonp',
                 indexValue: this,
                 success: updatePost
             });
         };
+        function updatePost(data) {
+            this.lanotHost = this.indexValue;
+            //console.log('updatePost data: ' + data);
+            //console.log('updatePost identifier: ' + this.lanotHost.identifier);
+            this.lanotHostContainer = new LanotHostContainer(this.lanotHost);
+
+            // get and show version
+            $.ajax({
+                url: this.lanotHost.baseUri + '/version',
+                dataType: 'jsonp',
+                indexValue: this.lanotHostContainer,
+                success: function (data) {
+                    this.indexValue.titleDiv.append('<label class="form-control version float-left">Version: ' + data['value'] + '</label><br />');
+                }
+            });
+
+            // get and show uname
+            $.ajax({
+                url: this.lanotHost.baseUri + '/uname',
+                dataType: 'jsonp',
+                indexValue: this.lanotHostContainer,
+                success: function (data) {
+                    this.indexValue.titleDiv.append('<label class="form-control uname float-right">' + data['value'] + '</label><br />');
+                }
+            });
+
+            var sorted_keys = Object.keys(data).sort();
+            // TODO: find a better way to accomplish this:
+            var lanotHostInner = this.lanotHost;
+            var lanotHostContainerInner = this.lanotHostContainer;
+            jQuery.each(sorted_keys, function(idx, nodePath) {
+                // idx = indice, e.g. 0
+                // nodePath = name/path, e.g. nodetest.blue_led
+                var obj = data[nodePath]; // {path: "root.sensor02.dsb", methods: {…}, class: "Sensor02UdpClientDsb"}
+                //var name = index.split('_').join(' ');
+                //name = name.charAt(0).toUpperCase() + name.slice(1);
+                var idPostfix = lanotHostInner.identifier + '_' + nodePath.replace('.', '__');
+                var btnElementId = 'btn_' + idPostfix;
+                var friendlyName = nodePath.split('_').join(' ');
+                friendlyName = friendlyName.charAt(0).toUpperCase() + friendlyName.slice(1);
+
+                if (endsWith(obj.class, 'Led') || endsWith(obj.class, 'Laser'))
+                {
+                    var led = new Led(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName);
+                }
+                else if (endsWith(obj.class, 'Dht11'))
+                {
+                    var dht11 = new Dht11(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName);
+                }
+                else if (endsWith(obj.class, 'Dsb') || endsWith(obj.class, 'dsb'))
+                {
+                    var dsb = new Dsb(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName);
+                }
+                else if (endsWith(obj.class, 'Adc') || endsWith(obj.class, 'Lightsensor') || endsWith(obj.class, 'Hygrometer'))
+                {
+                    var adc = new Adc(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName);
+                }
+                else if (endsWith(obj.class, 'Digital') || endsWith(obj.class, 'digital'))
+                {
+                    var digital = new Digital(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName);
+                }
+                else
+                {
+                    console.log('Unhandled class: ' + obj.class + ' from host: ' + lanotHostInner.baseUri + ' showing methods as buttons.');
+                    var lanotHost = this.lanotHost;
+                    jQuery.each(obj.methods, function(method_name, method_uri) {
+                        // console.log('method_name=' + method_name + ' method_uri=' + method_uri);
+                        var method_friendly_name = method_name.split('_').join(' ');
+                        method_friendly_name = method_friendly_name.charAt(0).toUpperCase() + method_friendly_name.slice(1);
+                        var btnElementId = 'btn_' + idPostfix + '_' + method_friendly_name.replace(' ', '_').toLowerCase();
+                        console.log(btnElementId);
+                        lanotHostContainerInner.panelBody.append(
+                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnmethod" data-name="' + method_friendly_name + '" data-host="' + lanotHostInner.name + '" data-hostname="' + lanotHostInner.identifier + '" data-uri="' + method_uri + '" id="' + btnElementId + '">\n' +
+                            method_friendly_name + '\n</button></div>\n');
+                        $('#' + btnElementId).data('lanotHost', lanotHost);
+                    });
+                }
+            });
+
+            // TODO: if update is called more than once, we will be adding additional events to the existing elements (if not in this particular scope, then the other, non updated containers will get duplicate events
+            // perhaps limit the event attachment to this particular container, and wipe the container as part of the update process
+            this.lanotHostContainer.attachEvents();
+
+            $('.btnmethod').click(function() {
+                this.lanotHost = $(this).data('lanotHost');
+                var uri = this.lanotHost.baseUri + '/' + $(this).data('uri');
+                $.ajax({
+                    url: uri,
+                    dataType: 'jsonp'});
+            });
+        }
 
         function dht11ClickEvent() {
             var dht11 = $(this).data('dht11');
-            var uri = dht11.lanotHost.baseUri + $(this).data('uri');
+            var uri = dht11.lanotHost.baseUri + '/' + $(this).data('uri');
             $.ajax({
                 url: uri,
                 dataType: 'jsonp',
@@ -91,7 +182,7 @@
 
         function dsbClickEvent() {
             var dsb = $(this).data('dsb');
-            var uri = dsb.lanotHost.baseUri + $(this).data('uri');
+            var uri = dsb.lanotHost.baseUri + '/' + $(this).data('uri');
             $.ajax({
                 url: uri,
                 dataType: 'jsonp',
@@ -129,21 +220,21 @@
             var led = $(this).data('led');
             var toggled = $(this).hasClass('active');
             if (toggled) {
-                //console.log('turning off');
+                console.log('turning off');
                 $(this).text($(this).data('name') + ' on');
-                //$(this).data('host')
-                var uri = led.lanotHost.baseUri + $(this).data('uri-off');
-                //console.log('uri=' + uri);
+                $(this).data('host')
+                var uri = led.lanotHost.baseUri + '/' + $(this).data('uri-off');
+                console.log('uri=' + uri);
                 $.ajax({
                     url: uri,
                     dataType: 'jsonp'
                 });
             }
             else {
-                //console.log('turning on');
+                console.log('turning on');
                 $(this).text($(this).data('name') + ' off');
-                var uri = led.lanotHost.baseUri + $(this).data('uri-on');
-                //console.log('uri=' + uri);
+                var uri = led.lanotHost.baseUri + '/' + $(this).data('uri-on');
+                console.log('uri=' + uri);
                 $.ajax({
                     url: uri,
                     dataType: 'jsonp'
@@ -167,7 +258,7 @@
 
             $('#' + btnElementId).data('led', this);
 
-            var uri = lanotHost.baseUri + obj.methods['value'];
+            var uri = lanotHost.baseUri + '/' + obj.methods['value'];
             //console.log('uri: ' + uri + ' obj: ' + obj);
             $.ajax({
                 url: uri,
@@ -199,7 +290,7 @@
 
         function adcClickEvent() {
             var adc = $(this).data('adc');
-            var uri = adc.lanotHost.baseUri + $(this).data('uri');
+            var uri = adc.lanotHost.baseUri + '/' + $(this).data('uri');
             $.ajax({
                 url: uri,
                 dataType: 'jsonp',
@@ -235,7 +326,7 @@
 
         function digitalClickEvent() {
             var digital = $(this).data('digital');
-            var uri = digital.lanotHost.baseUri + $(this).data('uri');
+            var uri = digital.lanotHost.baseUri + '/' + $(this).data('uri');
             $.ajax({
                 url: uri,
                 dataType: 'jsonp',
@@ -298,94 +389,6 @@
                 this.eventAttachers[i](this.container);
             }
         };
-
-        function updatePost(data) {
-            this.lanotHost = this.indexValue;
-            // console.log('updatePost data: ' + data);
-            // console.log('updatePost identifier: ' + this.lanotHost.identifier);
-            this.lanotHostContainer = new LanotHostContainer(this.lanotHost);
-
-            // get and show version
-            $.ajax({
-                url: this.lanotHost.baseUri + '/version',
-                dataType: 'jsonp',
-                indexValue: this.lanotHostContainer,
-                success: function (data) {
-                    this.indexValue.titleDiv.append('<label class="form-control version float-left">Version: ' + data['value'] + '</label><br />');
-                }
-            });
-
-            // get and show uname
-            $.ajax({
-                url: this.lanotHost.baseUri + '/uname',
-                dataType: 'jsonp',
-                indexValue: this.lanotHostContainer,
-                success: function (data) {
-                    this.indexValue.titleDiv.append('<label class="form-control uname float-right">' + data['value'] + '</label><br />');
-                }
-            });
-
-            var sorted_keys = Object.keys(data).sort();
-            // TODO: find a better way to accomplish this:
-            var lanotHostInner = this.lanotHost;
-            var lanotHostContainerInner = this.lanotHostContainer;
-            jQuery.each(sorted_keys, function(idx, nodePath) {
-                // idx = indice, e.g. 0
-                // nodePath = name/path, e.g. nodetest.blue_led
-                var obj = data[nodePath]; // {path: "root.sensor02.dsb", methods: {…}, class: "Sensor02UdpClientDsb"}
-                //var name = index.split('_').join(' ');
-                //name = name.charAt(0).toUpperCase() + name.slice(1);
-                var idPostfix = lanotHostInner.identifier + '_' + nodePath.replace('.', '__');
-                var btnElementId = 'btn_' + idPostfix;
-                var friendlyName = nodePath.split('_').join(' ');
-                friendlyName = friendlyName.charAt(0).toUpperCase() + friendlyName.slice(1);
-
-                if (endsWith(obj.class, 'Led') || endsWith(obj.class, 'Laser'))
-                {
-                    var led = new Led(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName);
-                }
-                else if (endsWith(obj.class, 'Dht11'))
-                {
-                    var dht11 = new Dht11(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName);
-                }
-                else if (endsWith(obj.class, 'Dsb') || endsWith(obj.class, 'dsb'))
-                {
-                    var dsb = new Dsb(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName);
-                }
-                else if (endsWith(obj.class, 'Adc') || endsWith(obj.class, 'Lightsensor') || endsWith(obj.class, 'Hygrometer'))
-                {
-                    var adc = new Adc(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName);
-                }
-                else if (endsWith(obj.class, 'Digital') || endsWith(obj.class, 'digital'))
-                {
-                    var digital = new Digital(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName);
-                }
-                else
-                {
-                    console.log('Unhandled class: ' + obj.class + ' from host: ' + lanotHostInner.baseUri + ' showing methods as buttons.');
-                    jQuery.each(obj.methods, function(method_name, method_uri) {
-                        // console.log('method_name=' + method_name + ' method_uri=' + method_uri);
-                        var method_friendly_name = method_name.split('_').join(' ');
-                        method_friendly_name = method_friendly_name.charAt(0).toUpperCase() + method_friendly_name.slice(1);
-                        lanotHostContainerInner.panelBody.append(
-                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnmethod" data-name="' + method_friendly_name + '" data-host="' + lanotHostInner.name + '" data-hostname="' + lanotHostInner.identifier + '" data-uri="' + method_uri + '" id="' + btnElementId + '">\n' +
-                            method_friendly_name + '\n</button></div>\n');
-                    });
-                }
-            });
-
-            // TODO: if update is called more than once, we will be adding additional events to the existing elements (if not in this particular scope, then the other, non updated containers will get duplicate events
-            // perhaps limit the event attachment to this particular container, and wipe the container as part of the update process
-            this.lanotHostContainer.attachEvents();
-
-            $('.btnmethod').click(function() {
-                this.lanotHost = $(this).data('lanotHost');
-                var uri = this.lanotHost.baseUri + $(this).data('uri');
-                $.ajax({
-                    url: uri,
-                    dataType: 'jsonp'});
-            });
-        }
 
         $(function() {
             /*
