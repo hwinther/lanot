@@ -115,32 +115,25 @@
                 else
                 {
                     console.log('Unhandled class: ' + obj.class + ' from host: ' + lanotHostInner.baseUri + ' showing methods as buttons.');
-                    var lanotHost = this.lanotHost;
-                    jQuery.each(obj.methods, function(method_name, method_uri) {
-                        // console.log('method_name=' + method_name + ' method_uri=' + method_uri);
+
+                    for (var method_name in obj.methods) {
+                        if (!obj.methods.hasOwnProperty(method_name)) {
+                            continue;
+                        }
+                        var method_uri = obj.methods[method_name];
+
                         var method_friendly_name = method_name.split('_').join(' ');
                         method_friendly_name = method_friendly_name.charAt(0).toUpperCase() + method_friendly_name.slice(1);
-                        var btnElementId = 'btn_' + idPostfix + '_' + method_friendly_name.replace(' ', '_').toLowerCase();
-                        console.log(btnElementId);
-                        lanotHostContainerInner.panelBody.append(
-                            '<div class="input-group input-group-sm"><button type="button" class="btn btn-default btn-sm btnmethod" data-name="' + method_friendly_name + '" data-host="' + lanotHostInner.name + '" data-hostname="' + lanotHostInner.identifier + '" data-uri="' + method_uri + '" id="' + btnElementId + '">\n' +
-                            method_friendly_name + '\n</button></div>\n');
-                        $('#' + btnElementId).data('lanotHost', lanotHost);
-                    });
+                        btnElementId = 'btn_' + idPostfix + '_' + method_friendly_name.replace(' ', '_').toLowerCase();
+
+                        var gi = new GenericInput(lanotHostContainerInner, lanotHostInner, idPostfix, btnElementId, obj, nodePath, friendlyName, method_friendly_name, method_uri);
+                    }
                 }
             });
 
             // TODO: if update is called more than once, we will be adding additional events to the existing elements (if not in this particular scope, then the other, non updated containers will get duplicate events
             // perhaps limit the event attachment to this particular container, and wipe the container as part of the update process
             this.lanotHostContainer.attachEvents();
-
-            $('.btnmethod').click(function() {
-                this.lanotHost = $(this).data('lanotHost');
-                var uri = this.lanotHost.baseUri + '/' + $(this).data('uri');
-                $.ajax({
-                    url: uri,
-                    dataType: 'jsonp'});
-            });
         }
 
         function dht11ClickEvent() {
@@ -321,6 +314,51 @@
 
             lanotHostContainer.eventAttachers.push(function(container) {
                 container.find('#' + btnElementId).click(adcClickEvent);
+            });
+        }
+
+        function genericInputClickEvent() {
+            var genericInput = $(this).data('genericinput');
+            var requestArgs = genericInput.textBoxInput.val();
+            var uri = genericInput.lanotHost.baseUri + '/' + $(this).data('uri');
+            if (requestArgs !== '') {
+                uri = genericInput.lanotHost.baseUri + '/' + $(this).data('uri') + '?' + requestArgs;
+            }
+            console.log(uri);
+            $.ajax({
+                url: uri,
+                dataType: 'jsonp',
+                indexValue: genericInput,
+                success: function (data) {
+                    var value = data['value'];
+                    if (value === null) {
+                        value = 'No value returned';
+                    }
+                    genericInput.textBoxOutput.val(value);
+                }
+            });
+        }
+        function GenericInput(lanotHostContainer, lanotHost, idPostfix, btnElementId, obj, nodePath, friendlyName, methodFriendlyName, methodUri) {
+            this.lanotHost = lanotHost;
+            var completeFriendlyName = methodFriendlyName.replace(' ', '_').toLowerCase();
+            var textBoxInputId = 'gi_input_' + completeFriendlyName + idPostfix;
+            var textBoxOutputId = 'gi_output_' + completeFriendlyName + idPostfix;
+
+            lanotHostContainer.panelBody.append(
+                '<div class="input-group input-group-sm">\n' +
+                '  <button type="button" class="btn btn-default btn-sm btngi" data-uri="' + methodUri + '" id="' + btnElementId + '">' +
+                '    ' + friendlyName + ' send ' + methodFriendlyName +
+                '  </button>\n' +
+                '  <input class="form-control" type="textbox" id="' + textBoxInputId + '" />\n' +
+                '  <input class="form-control" type="textbox" id="' + textBoxOutputId + '" />\n' +
+                '</div>\n');
+
+            this.textBoxInput = $('#' + textBoxInputId);
+            this.textBoxOutput = $('#' + textBoxOutputId);
+            $('#' + btnElementId).data('genericinput', this);
+
+            lanotHostContainer.eventAttachers.push(function(container) {
+                container.find('#' + btnElementId).click(genericInputClickEvent);
             });
         }
 

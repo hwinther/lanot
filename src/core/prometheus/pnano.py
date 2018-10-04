@@ -1,5 +1,6 @@
 # coding=utf-8
 import prometheus
+import prometheus.logging as logging
 import time
 import gc
 
@@ -51,5 +52,12 @@ class NanoI2C(prometheus.Prometheus):
         return '%s %s %s' % (_type, code, bitlength)
 
     @prometheus.Registry.register('NanoI2C', 'io')
-    def infraout(self, device, code, bitlength, **kwargs):
+    def infraout(self, device=None, code=0, bitlength=20, **kwargs):
+        if device is None:
+            logging.notice('infraout did not get device')
+            return
+        if not isinstance(code, int):
+            code = int(code)
+        if not isinstance(bitlength, int):
+            bitlength = int(bitlength)
         self.i2c.writeto(8, b'%s %x %d' % (device, code, bitlength))

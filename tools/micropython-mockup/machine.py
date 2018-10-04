@@ -129,9 +129,25 @@ class I2C(object):
         self.freq = freq
         self.scl = scl
         self.sda = sda
+        import smbus
+        self.bus = smbus.SMBus(1)
 
     def scan(self):
-        return list()
+        addresses = list()
+        for device in range(128):
+            try:
+                self.bus.read_byte(device)
+                addresses.append(device)
+            except IOError as io_error:
+                if io_error.errno is not 121:
+                    raise
+        return addresses
+
+    def readfrom(self, addr, nbytes, stop=True):
+        pass
+
+    def writeto(self, addr, buf, stop=True):
+        pass
 
 
 class SPI(object):

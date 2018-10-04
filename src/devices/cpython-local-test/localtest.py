@@ -33,8 +33,13 @@ class LocalTest(prometheus.Prometheus):
         self.hygrometer = prometheus.Adc(0)
         self.register(prefix='h', hygrometer=self.hygrometer)
 
-        self.ssd = prometheus.pssd1306.SSD1306(None)
-        self.register(prefix='ss', ssd=self.ssd)
+        # self.i2c = machine.I2C(scl=machine.Pin(0), sda=machine.Pin(4), freq=400000)
+        # logging.info('i2c: %s' % self.i2c.scan())
+
+        # self.ssd = prometheus.pssd1306.SSD1306(self.i2c)
+        # self.register(prefix='ss', ssd=self.ssd)
+
+        # self.ssd.text('init', 0, 0)
 
     @prometheus.Registry.register('LocalTest', '1', 'OUT')
     def test1(self, **kwargs):

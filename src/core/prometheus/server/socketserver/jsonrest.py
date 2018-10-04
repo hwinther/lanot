@@ -121,10 +121,10 @@ class JsonRestServer(socketserver.SocketServer):
         if path in self.instance.cached_urls.keys():
             logging.notice('found matching command_key')
             value = self.instance.cached_urls[path]  # type: prometheus.RegisteredMethod
-            self.handle_data(value.command_key, source=sock, context=query)
-            if value.return_type != 'str':
-                # give default empty response
-                self.reply(return_value=None, source=sock, context=query)
+            if not self.handle_data(value.command_key, source=sock, context=query):
+                if value.return_type != 'str':
+                    # give default empty response
+                    self.reply(return_value=None, source=sock, context=query)
             return True
         elif path == b'schema':
             schema = dict()
@@ -151,9 +151,9 @@ class JsonRestServer(socketserver.SocketServer):
         elif path == b'favicon.ico':
             self.reply(return_value=prometheus.server.favicon,
                        source=sock,
+                       context=query,
                        contenttype='image/x-icon')
             return True
-
         else:
             return self.handle_data(path, source=sock, context=query)
 
@@ -173,11 +173,13 @@ class JsonRestServer(socketserver.SocketServer):
             if isinstance(return_value, (dict, list)):
                 msg = json.dumps(return_value)
             else:
+                if isinstance(return_value, bytes):
+                    return_value = return_value.decode('utf-8')
                 print('ret: %s' % repr(return_value))
                 msg = json.dumps({'value': return_value})
 
-            if context is not None and b'callback' in context.keys():
-                callback = context[b'callback'].decode('utf-8')
+            if context is not None and 'callback' in context.keys():
+                callback = context['callback']  # .decode('utf-8')
                 msg = '%s(%s)' % (callback, msg)
 
             # convert to bytes

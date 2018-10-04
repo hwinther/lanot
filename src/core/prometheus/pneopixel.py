@@ -25,7 +25,7 @@ class NeoPixel(prometheus.Prometheus):
         self.n = number
 
     @prometheus.Registry.register('NeoPixel', 'sp')
-    def set_pixel(self, pixel, r, g, b, **kwargs):
+    def set_pixel(self, pixel=0, r=0, g=0, b=0, **kwargs):
         # combination of the two methods below
         if not isinstance(pixel, int):
             pixel = int(pixel)
@@ -40,7 +40,7 @@ class NeoPixel(prometheus.Prometheus):
         self.np.write()
 
     @prometheus.Registry.register('NeoPixel', 's')
-    def set(self, pixel, r, g, b, **kwargs):
+    def set(self, pixel=0, r=0, g=0, b=0, **kwargs):
         if not isinstance(pixel, int):
             pixel = int(pixel)
         if not isinstance(r, int):
