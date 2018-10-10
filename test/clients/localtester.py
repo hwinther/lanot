@@ -7,6 +7,14 @@ from deploy.clients import nodetestclient
 # from deploy.clients import proxytest2client
 import prometheus.logging as logging
 import time
+import prometheus.nodedata
+import sys
+
+
+packets = list()
+packets.append(prometheus.nodedata.NodeData(b'testnode', b'testsensor', b'testvalue'))
+prometheus.nodedata.client('localhost', 9085, *packets)
+sys.exit(0)
 
 
 class StressTester(object):

@@ -1,0 +1,54 @@
+<html>
+<head>
+    <script type="text/javascript" src="https://www.gstatic.com/charts/loader.js"></script>
+    <script type="text/javascript" src="sensors.js"></script>
+    <script type="text/javascript">
+        google.charts.load('current', {'packages': ['corechart']});
+        google.charts.setOnLoadCallback(drawChart);
+
+        function drawChart() {
+
+            var data = new google.visualization.DataTable();
+            data.addColumn('datetime', 'Time');
+            data.addColumn('number', 'Indoor temperature');
+            data.addColumn('number', 'Indoor humidity');
+            data.addColumn('number', 'Outdoor temperature');
+            data.addColumn('number', 'Outdoor humidity');
+
+            for(var i = 0; i < window.sensor_data.length; i++) {
+                var item = window.sensor_data[i];
+                //console.log(item['timestamp']);
+                //console.log(new Date(item['timestamp']));
+
+                data.addRow([
+                    new Date(item['timestamp']), item['sensor01_dht_temp'], item['sensor01_dht_hum'], item['sensor02_dht_temp'], item['sensor02_dht_hum']
+                ]);
+            }
+
+            /*
+            var options = {
+                chart: {
+                    title: 'IOT',
+                    subtitle: 'sensor data'
+                },
+                //width: 900,
+                height: 800
+            };
+            var chart = new google.charts.Line(document.getElementById('chart_div'));
+            chart.draw(data, google.charts.Line.convertOptions(options));
+            */
+
+            var options = {
+                title: 'IOT sensor data',
+                hAxis: {title: 'Time',  titleTextStyle: {color: '#333'}},
+                vAxis: {minValue: 0}
+            };
+        var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
+        chart.draw(data, options);
+        }
+    </script>
+</head>
+<body>
+<div id="chart_div" style="width: 100%; height: 800px"></div>
+</body>
+</html>
