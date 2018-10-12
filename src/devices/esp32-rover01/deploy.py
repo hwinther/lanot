@@ -9,9 +9,7 @@ set PYTHONPATH=p:\lanot\src\core\python
 '''
 
 # prometheus.tftpd.tftp_client('rover01.iot.oh.wsh.no', 'boot.py')
-prometheus.tftpd.tftp_client('rover01.iot.oh.wsh.no', 'main.py')
-prometheus.tftpd.tftp_client('rover01.iot.oh.wsh.no', 'rover01.py')
-
-# prometheus.tftpd.tftp_client('test01', 'cacert.pem')
-# prometheus.tftpd.tftp_client('test01', 'cert.pem')
-# prometheus.tftpd.tftp_client('test01', 'key.pem')
+prometheus.tftpd.tftp_client('10.20.2.144',
+                             # 'rover01.py',
+                             'main.py'
+                             )

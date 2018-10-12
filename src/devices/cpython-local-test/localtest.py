@@ -6,6 +6,7 @@ import prometheus.server.socketserver.udp
 # import prometheus.server.socketserver.udp2
 import prometheus.server.socketserver.jsonrest
 # from prometheus.server.socketserver.sslsocket import SslSocket
+import prometheus.server.console
 import prometheus.logging as logging
 import prometheus.pssd1306
 import machine
@@ -127,6 +128,9 @@ if __name__ == '__main__':
 
     jsonrestserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node, loop_tick_delay=0.1)
     multiserver.add(jsonrestserver, bind_port=8080)
+
+    console = prometheus.server.console.Console(node)
+    multiserver.add(console)
 
     # loop_tick_delay is for cpython, limits cpu cycles
     # jsonrestsslserver = prometheus.server.socketserver.jsonrest.JsonRestServer(node,

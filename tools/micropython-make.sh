@@ -1,6 +1,6 @@
 export PATH=/home/crono/esp-open-sdk/xtensa-lx106-elf/bin:/home/crono/xtensa-esp32-elf/bin:$PATH
-export IDF_PATH=/home/crono/esp-idf
-export ESPIDF=/home/crono/esp-idf
+export IDF_PATH=/mnt/Prosjekter/lanot/tools/esp-idf
+export ESPIDF=/mnt/Prosjekter/lanot/tools/esp-idf
 # export MICROPY_PY_FUNCTION_ATTRS=1
 
 cd micropython

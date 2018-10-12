@@ -9,6 +9,8 @@ import prometheus.nodedata
 
 def log_dht(value, name):
     nodedatas = list()
+    if value is None:
+        return nodedatas
     values = value.split('c')
 
     if len(values) != 2:

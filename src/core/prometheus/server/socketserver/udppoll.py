@@ -1,94 +1,33 @@
 # coding=utf-8
 import socket
 import gc
-import select
-import sys
-import time
-import machine
 import prometheus
 import prometheus.server.socketserver as socketserver
 import prometheus.logging as logging
 import prometheus.psocket
+import prometheus.pollcompat
 
 gc.collect()
 
-
-class PollCompat(object):
-    # borrowed from stream.h
-    # // These poll ioctl values are compatible with Linux
-    POLLIN = 0x0001
-    POLLOUT = 0x0004
-    POLLERR = 0x0008
-    POLLHUP = 0x0010
-
-    def __init__(self):
-        self.is_windows = False
-        self.is_linux = False
-
-        if prometheus.is_micro:
-            self.pollable = select.poll()
-        elif sys.platform == 'win32':
-            self.is_windows = True
-            self.pollable = None
-            self.objects = dict()
-        elif sys.platform == 'linux2':
-            self.is_linux = True
-            self.pollable = select.poll()
-        else:
-            logging.error('Unsupported platform: %s' % sys.platform)
-
-    def register(self, obj, eventmask):
-        if self.pollable is not None:
-            self.pollable.register(obj, eventmask)
-        else:
-            self.objects[obj] = eventmask
-
-    def unregister(self, obj):
-        if self.pollable is not None:
-            self.pollable.unregister(obj)
-        else:
-            del self.objects[obj]
-
-    def modify(self, obj, eventmask):
-        if self.pollable is not None:
-            self.pollable.modify(obj, eventmask)
-        else:
-            self.objects[obj] = eventmask
-
-    def poll(self, timeout=-1, flags=0):
-        if prometheus.is_micro:
-            # returns iterator
-            return self.pollable.ipoll(timeout, flags)
-        elif self.is_windows:
-            rlist = list()
-            wlist = list()
-            xlist = list()
-            # ignoring xlist for now
-            for obj in self.objects:
-                eventmask = self.objects[obj]
-                if eventmask & PollCompat.POLLIN:
-                    rlist.append(obj)
-                if eventmask & PollCompat.POLLOUT:
-                    wlist.append(obj)
-            ravailable, wavailable, xavailable = select.select(rlist, wlist, xlist, timeout)
-            returnlist = list()
-            for obj in ravailable:
-                returnlist.append((obj, PollCompat.POLLIN))
-            for obj in wavailable:
-                returnlist.append((obj, PollCompat.POLLOUT))
-            return returnlist
-        elif self.is_linux:
-            return self.pollable.poll(timeout)
+"""
+Alternative implementation of socketserver.udp, through a poll compatibility layer that was intended to be optimized
+for micropython, and use either cPythons regular poll, or select depending on the platform.
+The ultimate goal was to get rid of try-catch SocketError, and perhaps at a later time aggregate the socket polling
+in the global scope (when using multiple socket servers simultaneously)
+However, the extra method invocations and string data being passed by value (assumptions) made micropython slower.
+cPython was marginally faster, but not so much that it really matters.
+(TLDR; how to get called out for micro optimizing on freenode)
+"""
 
 
-class UdpSocketServer2(socketserver.SocketServer):
+class UdpPollSocketServer(socketserver.SocketServer):
     def __init__(self, instance, socketwrapper=None):
         socketserver.SocketServer.__init__(self, instance, socketwrapper)
         self.socket = self.socketwrapper(socket.AF_INET, socket.SOCK_DGRAM)
         self.split_chars = '\n'
         self.end_chars = '\r'
         self.buffers = dict()  # :type dict(Buffer)
-        self.poll_compat = PollCompat()
+        self.poll_compat = prometheus.pollcompat.PollCompat()
 
     def start(self, bind_host='', bind_port=9195, **kwargs):
         socketserver.SocketServer.start(self, bind_host=bind_host, bind_port=bind_port, **kwargs)
@@ -103,7 +42,7 @@ class UdpSocketServer2(socketserver.SocketServer):
         self.socket.bind((bind_host, bind_port))
         self.socket.setblocking(0)
         logging.success('listening on %s:%d (udp)' % (bind_host, bind_port))
-        self.poll_compat.register(self.socket, PollCompat.POLLIN)
+        self.poll_compat.register(self.socket, prometheus.pollcompat.PollCompat.POLLIN)
 
     def loop_tick(self, **kwargs):
         socketserver.SocketServer.loop_tick(self, **kwargs)
@@ -113,7 +52,7 @@ class UdpSocketServer2(socketserver.SocketServer):
         #  500 bytes in the first place
         data, addr = None, None
         for pair in self.poll_compat.poll(0):
-            if PollCompat.POLLIN & pair[1]:
+            if prometheus.pollcompat.PollCompat.POLLIN & pair[1]:
                 # its input (what else could it be?:)
                 data, addr = self.socket.recvfrom(500)
 
@@ -145,11 +84,11 @@ class UdpSocketServer2(socketserver.SocketServer):
             if command is None:
                 # logging.notice('Breaking command loop')
                 break
-            if type(command) is bytes:
-                command = command.decode('ascii')
+            if type(command.packet) is bytes:
+                command.packet = command.packet.decode('ascii')
             if prometheus.server.debug:
                 logging.debug('Calling handle data')
-            self.handle_data(command, addr)
+            self.handle_data(command.packet, addr)
 
         gc.collect()
 
