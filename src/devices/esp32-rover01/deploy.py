@@ -10,6 +10,6 @@ set PYTHONPATH=p:\lanot\src\core\python
 
 # prometheus.tftpd.tftp_client('rover01.iot.oh.wsh.no', 'boot.py')
 prometheus.tftpd.tftp_client('10.20.2.144',
-                             # 'rover01.py',
-                             'main.py'
+                             'rover01.py',
+                             # 'main.py',
                              )

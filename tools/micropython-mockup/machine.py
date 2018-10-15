@@ -129,11 +129,12 @@ class I2C(object):
         self.freq = freq
         self.scl = scl
         self.sda = sda
-        import smbus
-        self.bus = smbus.SMBus(1)
+        # import smbus
+        # self.bus = smbus.SMBus(1)
 
     def scan(self):
         addresses = list()
+        return addresses
         for device in range(128):
             try:
                 self.bus.read_byte(device)

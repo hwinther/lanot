@@ -41,7 +41,20 @@
             var options = {
                 title: 'IOT sensor data',
                 hAxis: {title: 'Time',  titleTextStyle: {color: '#333'}},
-                vAxis: {minValue: 0}
+                vAxis: {minValue: 0},
+                gridlines: {
+                    count: -1,
+                    units: {
+                      days: {format: ['MMM dd']},
+                      hours: {format: ['HH:mm', 'ha']},
+                    }
+                },
+                minorGridlines: {
+                    units: {
+                      hours: {format: ['HH:mm:ss a', 'ha']},
+                      minutes: {format: ['HH:mm a Z', ':mm']}
+                    }
+                }
             };
         var chart = new google.visualization.AreaChart(document.getElementById('chart_div'));
         chart.draw(data, options);

@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-28 23:25:54
+# generated at 2018-10-12 21:38:47
 import prometheus
 import socket
 import time
@@ -33,6 +33,25 @@ class Rover01UdpClientIntegratedLed(prometheus.Prometheus):
         return self.recv()
 
 
+class Rover01UdpClientNeopixel(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Rover01UdpClientNeopixel', 'ps')
+    def set(self, **kwargs):
+        self.send(b'ps', **kwargs)
+
+    @prometheus.Registry.register('Rover01UdpClientNeopixel', 'psp')
+    def set_pixel(self, **kwargs):
+        self.send(b'psp', **kwargs)
+
+    @prometheus.Registry.register('Rover01UdpClientNeopixel', 'pwr')
+    def write(self, **kwargs):
+        self.send(b'pwr', **kwargs)
+
+
 class Rover01UdpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host='', bind_port=9195):
         prometheus.misc.RemoteTemplate.__init__(self)
@@ -47,6 +66,8 @@ class Rover01UdpClient(prometheus.misc.RemoteTemplate):
         
         self.integrated_led = Rover01UdpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
+        self.neopixel = Rover01UdpClientNeopixel(self.send, self.recv)
+        self.register(neopixel=self.neopixel)
 
     def send(self, data, **kwargs):
         if len(kwargs) is 0:
@@ -181,6 +202,25 @@ class Rover01TcpClientIntegratedLed(prometheus.Prometheus):
         return self.recv()
 
 
+class Rover01TcpClientNeopixel(prometheus.Prometheus):
+    def __init__(self, send, recv):
+        prometheus.Prometheus.__init__(self)
+        self.send = send
+        self.recv = recv
+
+    @prometheus.Registry.register('Rover01TcpClientNeopixel', 'ps')
+    def set(self, **kwargs):
+        self.send(b'ps', **kwargs)
+
+    @prometheus.Registry.register('Rover01TcpClientNeopixel', 'psp')
+    def set_pixel(self, **kwargs):
+        self.send(b'psp', **kwargs)
+
+    @prometheus.Registry.register('Rover01TcpClientNeopixel', 'pwr')
+    def write(self, **kwargs):
+        self.send(b'pwr', **kwargs)
+
+
 class Rover01TcpClient(prometheus.misc.RemoteTemplate):
     def __init__(self, remote_host, remote_port=9195, bind_host=None, bind_port=9195):
         prometheus.misc.RemoteTemplate.__init__(self)
@@ -194,6 +234,8 @@ class Rover01TcpClient(prometheus.misc.RemoteTemplate):
         
         self.integrated_led = Rover01TcpClientIntegratedLed(self.send, self.recv)
         self.register(integrated_led=self.integrated_led)
+        self.neopixel = Rover01TcpClientNeopixel(self.send, self.recv)
+        self.register(neopixel=self.neopixel)
 
     def create_socket(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)

@@ -12,6 +12,10 @@ print('udp: %s' % udp.version())
 # P:\lanot\test\clients>set PYTHONPATH=p:\lanot\src\core;p:\lanot;p:\lanot\tools\micropython-mockup
 # P:\lanot\test\clients>python rover01.py
 
+udp.neopixel.set(pixel=b'0', r=b'255')
+udp.neopixel.set(pixel=b'1', b=b'255')
+udp.neopixel.set(pixel=b'2', g=b'255')
+udp.neopixel.write()
 
 while True:
     input_char = msvcrt.getch()

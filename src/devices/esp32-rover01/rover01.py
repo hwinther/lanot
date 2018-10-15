@@ -3,6 +3,7 @@ import machine
 import gc
 import utime
 # import prometheus.pssd1306
+import prometheus.pneopixel
 import prometheus.logging as logging
 import ssd1306
 
@@ -26,6 +27,9 @@ class Rover01(prometheus.Prometheus):
         self.i2c = machine.I2C(scl=machine.Pin(0), sda=machine.Pin(4), freq=400000)
         logging.notice(self.i2c.scan())
         self.ssd = ssd1306.SSD1306_I2C(width=128, height=64, i2c=self.i2c)
+
+        self.neopixel = prometheus.pneopixel.NeoPixel(machine.Pin(2), 50)
+        self.register(prefix='p', neopixel=self.neopixel)
 
         self.ssd.fill(False)
         self.ssd.text('init', 0, 0)

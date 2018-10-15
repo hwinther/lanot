@@ -36,5 +36,5 @@ for key in keys:
     lst.append(d3)
 
 js_filepath = '/srv/nodedata/html/sensors.js'
-print('writing to %s' % js_filepath)
+print('writing %d records to %s' % (len(keys), js_filepath))
 open(js_filepath, 'w').write('window.sensor_data = ' + json.dumps(lst) + '\r\n')

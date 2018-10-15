@@ -4,7 +4,7 @@ import gc
 import sys
 import prometheus.logging as logging
 
-__version__ = '0.2.0'
+__version__ = '0.2.1'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -337,11 +337,15 @@ class Led(Prometheus):
             self.pin.value(False)
 
     @Registry.register('Led', 'v', bool)
-    def value(self, **kwargs):
+    def value(self, value=None, **kwargs):
         # the equal/not equal operators have to be used to get truthyness ('1 is not True' will not work)
         if self.inverted:
+            if value is not None:
+                self.pin.value(value != True)
             return self.pin.value() != True
         else:
+            if value is not None:
+                self.pin.value(value == True)
             return self.pin.value() == True
 
 

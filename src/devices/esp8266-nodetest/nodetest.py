@@ -35,16 +35,19 @@ class NodeTest(prometheus.Prometheus):
         self.adc1 = prometheus.Adc(0)
         self.register(prefix='a', adc1=self.adc1)
 
+        # endregion
+
+        # region lanot pcb-01b feaures
+
         self.i2c = machine.I2C(scl=machine.Pin(0), sda=machine.Pin(4), freq=400000)
         logging.info('i2c: %s' % self.i2c.scan())
 
         self.spi = machine.SPI(1, baudrate=10000000, polarity=0, phase=0)
 
-        # endregion
-
         self.neopixel = prometheus.pneopixel.NeoPixel(machine.Pin(2), 256)
-        # TODO: doesnt do much(?):
         self.register(prefix='p', neopixel=self.neopixel)
+
+        # region i2c devices
 
         self.ssd = prometheus.pssd1306.SSD1306(self.i2c)
         self.register(prefix='ss', ssd=self.ssd)
@@ -61,8 +64,12 @@ class NodeTest(prometheus.Prometheus):
         self.nano = prometheus.pnano.NanoI2C(self.i2c)
         self.register(prefix='na', nano=self.nano)
 
+        # endregion
+
         if prometheus.is_micro:
             self.ssd.text('init', 0, 0)
             self.max.text('init', 0, 0, 1)
             # write empty to clear potentially enabled pixels
             self.neopixel.write()
+
+        # endregion

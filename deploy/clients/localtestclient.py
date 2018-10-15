@@ -1,5 +1,5 @@
 # coding=utf-8
-# generated at 2018-09-28 23:25:52
+# generated at 2018-10-12 21:38:39
 import prometheus
 import socket
 import time
@@ -13,26 +13,6 @@ gc.collect()
 
 
 # region LocalTestUdpClient
-class LocalTestUdpClientBlueLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('LocalTestUdpClientBlueLed', 'bv', str)
-    def value(self, **kwargs):
-        self.send(b'bv', **kwargs)
-        return self.recv()
-
-    @prometheus.Registry.register('LocalTestUdpClientBlueLed', 'b0')
-    def off(self, **kwargs):
-        self.send(b'b0', **kwargs)
-
-    @prometheus.Registry.register('LocalTestUdpClientBlueLed', 'b1')
-    def on(self, **kwargs):
-        self.send(b'b1', **kwargs)
-
-
 class LocalTestUdpClientDigital0(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -65,16 +45,24 @@ class LocalTestUdpClientRedLed(prometheus.Prometheus):
         self.send(b'r1', **kwargs)
 
 
-class LocalTestUdpClientSsd(prometheus.Prometheus):
+class LocalTestUdpClientBlueLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('LocalTestUdpClientSsd', 'sst', str)
-    def text(self, **kwargs):
-        self.send(b'sst', **kwargs)
+    @prometheus.Registry.register('LocalTestUdpClientBlueLed', 'bv', str)
+    def value(self, **kwargs):
+        self.send(b'bv', **kwargs)
         return self.recv()
+
+    @prometheus.Registry.register('LocalTestUdpClientBlueLed', 'b0')
+    def off(self, **kwargs):
+        self.send(b'b0', **kwargs)
+
+    @prometheus.Registry.register('LocalTestUdpClientBlueLed', 'b1')
+    def on(self, **kwargs):
+        self.send(b'b1', **kwargs)
 
 
 class LocalTestUdpClientHygrometer(prometheus.Prometheus):
@@ -137,8 +125,6 @@ class LocalTestUdpClient(prometheus.misc.RemoteTemplate):
         self.register(hygrometer=self.hygrometer)
         self.red_led = LocalTestUdpClientRedLed(self.send, self.recv)
         self.register(red_led=self.red_led)
-        self.ssd = LocalTestUdpClientSsd(self.send, self.recv)
-        self.register(ssd=self.ssd)
 
     def send(self, data, **kwargs):
         if len(kwargs) is 0:
@@ -224,26 +210,6 @@ class LocalTestUdpClient(prometheus.misc.RemoteTemplate):
 
 
 # region LocalTestTcpClient
-class LocalTestTcpClientBlueLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('LocalTestTcpClientBlueLed', 'bv', str)
-    def value(self, **kwargs):
-        self.send(b'bv', **kwargs)
-        return self.recv()
-
-    @prometheus.Registry.register('LocalTestTcpClientBlueLed', 'b0')
-    def off(self, **kwargs):
-        self.send(b'b0', **kwargs)
-
-    @prometheus.Registry.register('LocalTestTcpClientBlueLed', 'b1')
-    def on(self, **kwargs):
-        self.send(b'b1', **kwargs)
-
-
 class LocalTestTcpClientDigital0(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -276,16 +242,24 @@ class LocalTestTcpClientRedLed(prometheus.Prometheus):
         self.send(b'r1', **kwargs)
 
 
-class LocalTestTcpClientSsd(prometheus.Prometheus):
+class LocalTestTcpClientBlueLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('LocalTestTcpClientSsd', 'sst', str)
-    def text(self, **kwargs):
-        self.send(b'sst', **kwargs)
+    @prometheus.Registry.register('LocalTestTcpClientBlueLed', 'bv', str)
+    def value(self, **kwargs):
+        self.send(b'bv', **kwargs)
         return self.recv()
+
+    @prometheus.Registry.register('LocalTestTcpClientBlueLed', 'b0')
+    def off(self, **kwargs):
+        self.send(b'b0', **kwargs)
+
+    @prometheus.Registry.register('LocalTestTcpClientBlueLed', 'b1')
+    def on(self, **kwargs):
+        self.send(b'b1', **kwargs)
 
 
 class LocalTestTcpClientHygrometer(prometheus.Prometheus):
@@ -347,8 +321,6 @@ class LocalTestTcpClient(prometheus.misc.RemoteTemplate):
         self.register(hygrometer=self.hygrometer)
         self.red_led = LocalTestTcpClientRedLed(self.send, self.recv)
         self.register(red_led=self.red_led)
-        self.ssd = LocalTestTcpClientSsd(self.send, self.recv)
-        self.register(ssd=self.ssd)
 
     def create_socket(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -437,26 +409,6 @@ class LocalTestTcpClient(prometheus.misc.RemoteTemplate):
 
 
 # region LocalTestJsonRestClient
-class LocalTestJsonRestClientBlueLed(prometheus.Prometheus):
-    def __init__(self, send, recv):
-        prometheus.Prometheus.__init__(self)
-        self.send = send
-        self.recv = recv
-
-    @prometheus.Registry.register('LocalTestJsonRestClientBlueLed', 'api/blue_led/value', str)
-    def value(self, **kwargs):
-        self.send(b'api/blue_led/value', **kwargs)
-        return self.recv()
-
-    @prometheus.Registry.register('LocalTestJsonRestClientBlueLed', 'api/blue_led/on')
-    def on(self, **kwargs):
-        self.send(b'api/blue_led/on', **kwargs)
-
-    @prometheus.Registry.register('LocalTestJsonRestClientBlueLed', 'api/blue_led/off')
-    def off(self, **kwargs):
-        self.send(b'api/blue_led/off', **kwargs)
-
-
 class LocalTestJsonRestClientDigital0(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
@@ -489,16 +441,24 @@ class LocalTestJsonRestClientRedLed(prometheus.Prometheus):
         self.send(b'api/red_led/off', **kwargs)
 
 
-class LocalTestJsonRestClientSsd(prometheus.Prometheus):
+class LocalTestJsonRestClientBlueLed(prometheus.Prometheus):
     def __init__(self, send, recv):
         prometheus.Prometheus.__init__(self)
         self.send = send
         self.recv = recv
 
-    @prometheus.Registry.register('LocalTestJsonRestClientSsd', 'api/ssd/text', str)
-    def text(self, **kwargs):
-        self.send(b'api/ssd/text', **kwargs)
+    @prometheus.Registry.register('LocalTestJsonRestClientBlueLed', 'api/blue_led/value', str)
+    def value(self, **kwargs):
+        self.send(b'api/blue_led/value', **kwargs)
         return self.recv()
+
+    @prometheus.Registry.register('LocalTestJsonRestClientBlueLed', 'api/blue_led/on')
+    def on(self, **kwargs):
+        self.send(b'api/blue_led/on', **kwargs)
+
+    @prometheus.Registry.register('LocalTestJsonRestClientBlueLed', 'api/blue_led/off')
+    def off(self, **kwargs):
+        self.send(b'api/blue_led/off', **kwargs)
 
 
 class LocalTestJsonRestClientHygrometer(prometheus.Prometheus):
@@ -557,8 +517,6 @@ class LocalTestJsonRestClient(prometheus.misc.RemoteTemplate):
         self.register(hygrometer=self.hygrometer)
         self.red_led = LocalTestJsonRestClientRedLed(self.send, self.recv)
         self.register(red_led=self.red_led)
-        self.ssd = LocalTestJsonRestClientSsd(self.send, self.recv)
-        self.register(ssd=self.ssd)
 
     def create_socket(self):
         self.socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -687,11 +645,6 @@ class LocalTestJsonRestClient(prometheus.misc.RemoteTemplate):
     @prometheus.Registry.register('LocalTestJsonRestClient', 'v', str)
     def value(self, **kwargs):
         self.send(b'api/red_led/value', **kwargs)
-        return self.resolve_response(self.recv(200))
-
-    @prometheus.Registry.register('LocalTestJsonRestClient', 't', str)
-    def text(self, **kwargs):
-        self.send(b'api/ssd/text', **kwargs)
         return self.resolve_response(self.recv(200))
 
     @prometheus.Registry.register('LocalTestJsonRestClient', '1')
