@@ -1,5 +1,6 @@
 # coding=utf-8
 import prometheus.logging as logging
+import uos
 import gc
 import utime
 
@@ -22,6 +23,27 @@ class Calibrate(object):
         self.lowest_joysticky_value = 3000
         self.calibrated = False
         self.last_change = utime.time()
+        self.load_calibration()
+
+    def save_calibration(self):
+        open('calibration.cfg', 'w').write(b'%d\t%d\t%d\t%d' % (self.lowest_joystickx_value,
+                                                                self.highest_joystickx_value,
+                                                                self.lowest_joysticky_value,
+                                                                self.highest_joysticky_value))
+        logging.notice('calibration saved')
+
+    def load_calibration(self):
+        if 'calibration.cfg' not in uos.listdir('.'):
+            return
+        data = open('calibration.cfg', 'r').read()
+        values = data.split('\t')
+        if len(values) is not 4:
+            return
+        self.lowest_joystickx_value = int(values[0])
+        self.highest_joystickx_value = int(values[1])
+        self.lowest_joysticky_value = int(values[2])
+        self.highest_joysticky_value = int(values[3])
+        logging.notice('calibration loaded')
 
     def calibrate(self, xvalue, yvalue):
         if xvalue > self.highest_joystickx_value:
@@ -38,35 +60,11 @@ class Calibrate(object):
             self.lowest_joysticky_value = yvalue
             self.last_change = utime.time()
 
-        if utime.time() - self.last_change > 30:
+        if not self.calibrated and utime.time() - self.last_change > 30:
             self.calibrated = True
+            self.save_calibration()
 
         return xvalue, yvalue
-
-    def joystickread(self):
-        x = self.node.joystickx.read()
-        y = self.node.joysticky.read()
-        # sw = node.joystickswitch.value()
-        sw = self.node.switch1.value()
-        # print('x=%d y=%d sw=%d' % (x, y, sw))
-
-        if x < x_calibration_forward:
-            xdir = 'forward'
-        elif x > x_calibration_backward:
-            xdir = 'backward'
-        else:
-            xdir = ''
-
-        if y > y_calibration_left:
-            ydir = 'left'
-        elif y < y_calibration_right:
-            ydir = 'right'
-        else:
-            ydir = ''
-
-        if xdir != '' or ydir != '':
-            print('%s %s - x=%d y=%d sw=%d' % (xdir, ydir, x, y, sw))
-        return sw
 
 
 class StateMachine(object):

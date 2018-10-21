@@ -7,14 +7,6 @@ from deploy.clients import nodetestclient
 # from deploy.clients import proxytest2client
 import prometheus.logging as logging
 import time
-import prometheus.nodedata
-import sys
-
-
-packets = list()
-packets.append(prometheus.nodedata.NodeData(b'testnode', b'testsensor', b'testvalue'))
-prometheus.nodedata.client('localhost', 9085, *packets)
-sys.exit(0)
 
 
 class StressTester(object):
@@ -93,22 +85,28 @@ class LocalTester(Tester):
         self.function_test(self.node.test8, "return b'dir()'", {'input': b'dir()'}, b'dir()')
 
 
-node = LocalTest()
+udp = localtestclient.LocalTestUdpClient('10.20.2.134')
+while True:
+    print('%d %s' % (time.time(), udp.sysinfo()))
+    time.sleep(1)
 
-lt = LocalTester(node, 'Local')
-lt.runtests()
 
-udp = localtestclient.LocalTestUdpClient('10.20.1.18', bind_port=9190)
-lt = LocalTester(udp, 'UDP')
-lt.runtests()
-
-tcp = localtestclient.LocalTestTcpClient('10.20.1.18')
-lt = LocalTester(tcp, 'TCP')
-lt.runtests()
-
-jr = localtestclient.LocalTestJsonRestClient('10.20.1.18')
-lt = LocalTester(jr, 'JsonRest')
-lt.runtests()
+# node = LocalTest()
+#
+# lt = LocalTester(node, 'Local')
+# lt.runtests()
+#
+# udp = localtestclient.LocalTestUdpClient('10.20.1.18', bind_port=9190)
+# lt = LocalTester(udp, 'UDP')
+# lt.runtests()
+#
+# tcp = localtestclient.LocalTestTcpClient('10.20.1.18')
+# lt = LocalTester(tcp, 'TCP')
+# lt.runtests()
+#
+# jr = localtestclient.LocalTestJsonRestClient('10.20.1.18')
+# lt = LocalTester(jr, 'JsonRest')
+# lt.runtests()
 
 # tcp = nodetestclient.NodeTestTcpClient('10.20.2.117')
 # lt = LocalTester(tcp, 'TCP')
@@ -123,42 +121,41 @@ lt.runtests()
 # ptu = proxytest2client.ProxyTest2UdpClient('serenity.oh.wsh.no', bind_port=9196)
 # ptul = localtestclient.LocalTestUdpClient('serenity.oh.wsh.no', bind_port=9197)
 
-"""
-print('udp: %s' % udp.version())
-print('nu: %s' % nu.version())
-# print('tcp: %s' % tcp.version())
 
-st = StressTester(udp.blue_led.value)
-su = StressTester(nu.integrated_led.value)
-s1u = StressTester(s1u.integrated_led.value)
-s2u = StressTester(s2u.integrated_led.value)
-t2u = StressTester(t2u.integrated_led.value)
-pst = StressTester(ptu.version)
-pstl = StressTester(ptul.blue_led.value)
-
-# print(st.run_once())
-# st.run_multiple(4)
-
-num = 10
-
-print('\n==LocalTest==')
-st.run_multiple(num)
-
-print('\n==NodeTest==')
-su.run_multiple(num)
-""
-print('\n==Sensor01==')
-s1u.run_multiple(num)
-
-print('\n==Sensor02==')
-s2u.run_multiple(num)
-
-print('\n==Test02==')
-t2u.run_multiple(num)
-""
-# print('\n==Proxytest==')
-# pst.run_multiple(num)
-
-print('\n==Serenity localtest==')
-pstl.run_multiple(num)
-"""
+# print('udp: %s' % udp.version())
+# print('nu: %s' % nu.version())
+# # print('tcp: %s' % tcp.version())
+#
+# st = StressTester(udp.blue_led.value)
+# su = StressTester(nu.integrated_led.value)
+# s1u = StressTester(s1u.integrated_led.value)
+# s2u = StressTester(s2u.integrated_led.value)
+# t2u = StressTester(t2u.integrated_led.value)
+# pst = StressTester(ptu.version)
+# pstl = StressTester(ptul.blue_led.value)
+#
+# # print(st.run_once())
+# # st.run_multiple(4)
+#
+# num = 10
+#
+# print('\n==LocalTest==')
+# st.run_multiple(num)
+#
+# print('\n==NodeTest==')
+# su.run_multiple(num)
+# ""
+# print('\n==Sensor01==')
+# s1u.run_multiple(num)
+#
+# print('\n==Sensor02==')
+# s2u.run_multiple(num)
+#
+# print('\n==Test02==')
+# t2u.run_multiple(num)
+# ""
+# # print('\n==Proxytest==')
+# # pst.run_multiple(num)
+#
+# print('\n==Serenity localtest==')
+# pstl.run_multiple(num)

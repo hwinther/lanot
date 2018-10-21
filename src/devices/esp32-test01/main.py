@@ -23,7 +23,9 @@ logging.boot(udpserver)
 
 
 def td():
+    gc.collect()
     prometheus.tftpd.tftpd()
+    gc.collect()
 
 
 def get_choices():
@@ -40,6 +42,7 @@ def get_choices():
 class MenuSystem(object):
     def __init__(self, instance):
         self.node = instance
+        # drive_text = 'Drive %s' % self.udp.name if self.udp is None else 'Drive'
         self.menu_tree = Menu(StateMachine.S_MENU_MAIN, 'Main menu', [
             Menu(StateMachine.S_MENU_CONFIGURATION, 'Configuration', [
                 Menu(StateMachine.S_MENU_CONFIGURATION_ROVER, 'Rover', [
@@ -57,17 +60,16 @@ class MenuSystem(object):
                 Menu(StateMachine.S_MENU_MAIN, 'Back', [])
             ]),
             Menu(StateMachine.S_MENU_CALIBRATION, 'Calibration', [
-                # Menu(StateMachine.S_MENU_CONNECT, 'Connect', []),
                 Menu(StateMachine.S_MENU_MAIN, 'Back', [])
             ]),
             Menu(StateMachine.S_MENU_CONNECT, 'Connect', [
-                # Menu(StateMachine.S_DRIVE, 'Drive', []),
                 Menu(StateMachine.S_MENU_MAIN, 'Back', [])
             ]),
             Menu(StateMachine.S_DRIVE, 'Drive', [
                 Menu(StateMachine.S_MENU_MAIN, 'Back', [])
             ])])
         self.state_machine = StateMachine()
+        self.state_machine.transition(StateMachine.S_MENU_CONFIGURATION_ROVER)
         self.current_menu = self.menu_tree
         self.selected_menu_item = 0
         self.previous_buttons_down = list()
@@ -85,6 +87,7 @@ class MenuSystem(object):
         self.driving = False
         self.touch_active = 0
         self.state_drive_timer = utime.ticks_ms()
+        self.blink_state = False
 
     def update_menu(self):
         node.ssd.fill(False)
@@ -93,9 +96,10 @@ class MenuSystem(object):
         height = 16
         index = 0
         for option in self.current_menu.options:
-            node.ssd.text(('*' if self.selected_menu_item == index else ' ') + ' ' + option.name, 0, height)
+            node.ssd.text(('*' if self.blink_state and self.selected_menu_item == index else ' ') + ' ' + option.name, 0, height)
             height += 8
             index += 1
+        self.blink_state = self.blink_state is not True
 
     def run(self):
         while True:
@@ -146,7 +150,7 @@ class MenuSystem(object):
                 self.force_refresh = True
             elif self.state_machine.state == StateMachine.S_MENU_MAIN:
                 # update when choice has been changed or a second (or more) has passed
-                if not self.force_refresh and not selected_changed or self.timer - utime.time() == 0:
+                if not self.force_refresh and not selected_changed and self.timer - utime.time() == 0:
                     continue
 
                 self.update_menu()
@@ -155,7 +159,7 @@ class MenuSystem(object):
                 self.force_refresh = False
             elif self.state_machine.state == StateMachine.S_MENU_CONFIGURATION:
                 # update when choice has been changed or a second (or more) has passed
-                if not self.force_refresh and not selected_changed or self.timer - utime.time() == 0:
+                if not self.force_refresh and not selected_changed and self.timer - utime.time() == 0:
                     continue
 
                 self.update_menu()
@@ -165,7 +169,7 @@ class MenuSystem(object):
             elif self.state_machine.state == StateMachine.S_MENU_CONFIGURATION_ROVER:
                 ip = '10.20.2.144'
                 self.udp = rover01client.Rover01UdpClient(ip, bind_port=5000 + (int(utime.time()) & 0xff))
-                self.state_machine.transition(StateMachine.S_MENU_CONFIGURATION)
+                self.state_machine.transition(StateMachine.S_MENU_MAIN)
             elif self.state_machine.state == StateMachine.S_MENU_CONFIGURATION_TANK:
                 host = 'tank.iot.oh.wsh.no'
                 ip = socket.getaddrinfo(host, 9195)
@@ -174,7 +178,7 @@ class MenuSystem(object):
                     return
                 ip = ip[-1][-1][0]
                 self.udp = tankclient.TankUdpClient(ip, bind_port=6000 + (int(utime.time()) & 0xff))
-                self.state_machine.transition(StateMachine.S_MENU_CONFIGURATION)
+                self.state_machine.transition(StateMachine.S_MENU_MAIN)
             elif self.state_machine.state == StateMachine.S_MENU_CALIBRATION:
                 joystickx_value = node.joystickx.read()
                 joysticky_value = node.joysticky.read()
@@ -206,7 +210,11 @@ class MenuSystem(object):
                 self.force_refresh = False
             elif self.state_machine.state == StateMachine.S_MENU_CONNECT:
                 # update when choice has been changed or a second (or more) has passed
-                if not self.force_refresh and not selected_changed or self.timer - utime.time() == 0:
+                if not self.force_refresh and not selected_changed and self.timer - utime.time() == 0:
+                    continue
+
+                if self.udp is None:
+                    self.state_machine.transition(StateMachine.S_MENU_MAIN)
                     continue
 
                 self.update_menu()
@@ -215,8 +223,16 @@ class MenuSystem(object):
                 node.ssd.show()
                 self.frame = 0
                 self.force_refresh = False
+                self.state_machine.transition(StateMachine.S_MENU_MAIN)
             elif self.state_machine.state == StateMachine.S_DRIVE:
+                if self.udp is None:
+                    self.state_machine.transition(StateMachine.S_MENU_MAIN)
+                    continue
+
                 self.state_drive()
+                self.update_menu()
+                self.frame = 0
+                self.force_refresh = False
 
     def state_drive(self):
         x = node.joystickx.read()

@@ -11,7 +11,7 @@ set PYTHONPATH=p:\lanot\src\core
 
 files = [
     'main.py',
-    # 'misc.py',
+    'misc.py',
     # 'test01.py',
     # 'rover01client.py',
     # 'tankclient.py',

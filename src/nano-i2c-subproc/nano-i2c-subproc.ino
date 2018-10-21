@@ -15,10 +15,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-IRsend irsend;
-// Tell IRremote which Arduino pin is connected to the IR Receiver (TSOP4838)
-int recv_pin = 11;
-IRrecv irrecv(recv_pin);
+IRsend irsend; // pin D3
+IRrecv irrecv(11); // pin D11
 state device_state;
 
 char ir_recv_type[4];
