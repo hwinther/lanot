@@ -1,5 +1,5 @@
 # coding=utf-8
-import socket
+import usocket
 import gc
 import prometheus
 import prometheus.server
@@ -14,8 +14,8 @@ class SocketServer(prometheus.server.Server):
 
         if socketwrapper is None:
             if prometheus.server.debug:
-                logging.notice('using socket.socket default')
-            socketwrapper = socket.socket
+                logging.notice('using usocket.socket default')
+            socketwrapper = usocket.socket
 
         if prometheus.server.debug:
             logging.notice('setting socketwrapper')

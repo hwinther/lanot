@@ -4,7 +4,7 @@ import gc
 import sys
 import prometheus.logging as logging
 
-__version__ = '0.2.1'
+__version__ = '0.2.2'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -316,37 +316,45 @@ class Led(Prometheus):
         self.pin = pin
         self.inverted = inverted
         # set initial state if it differs from what we have
-        if state is not None and self.pin.value() is not state:
-            if self.inverted:
-                self.pin.value(not state)
-            else:
-                self.pin.value(state)
+        if state is None:
+            return
+        # if bool(self.pin.value() ^ self.inverted) is not bool(state ^ self.inverted):
+        # logging.debug('setting initial value from %s to %s' % (bool(self.pin.value() ^ self.inverted),
+        #                                                        bool(state ^ self.inverted)))
+        self.pin.value(bool(state ^ self.inverted))
 
     @Registry.register('Led', '1')
     def on(self, **kwargs):
-        if self.inverted:
-            self.pin.value(False)
-        else:
-            self.pin.value(True)
+        # logging.debug('setting to %s' % bool(True ^ self.inverted))
+        self.pin.value(bool(True ^ self.inverted))
 
     @Registry.register('Led', '0')
     def off(self, **kwargs):
-        if self.inverted:
-            self.pin.value(True)
-        else:
-            self.pin.value(False)
+        # logging.debug('setting to %s' % bool(False ^ self.inverted))
+        self.pin.value(bool(False ^ self.inverted))
 
     @Registry.register('Led', 'v', bool)
     def value(self, value=None, **kwargs):
-        # the equal/not equal operators have to be used to get truthyness ('1 is not True' will not work)
-        if self.inverted:
-            if value is not None:
-                self.pin.value(value != True)
-            return self.pin.value() != True
-        else:
-            if value is not None:
-                self.pin.value(value == True)
-            return self.pin.value() == True
+        # this is surprisingly tricky, we technically want to handle int, bool, or str/bytes with string representation
+        #  of int or bool, in case of int convert it to bool via truthyness (only only 1 is true, all else is false)
+        #  then invert the value if configured for inversion, and return the desired (non-inverted value) afterwards
+        if value is None:
+            return bool(self.pin.value() ^ self.inverted)
+
+        if type(value) is not bool:
+            # logging.debug('converting from %s' % value)
+            if type(value) is str:
+                value = value.lower() == 'true'
+            else:
+                value = bool(value)
+            # logging.debug('converting to %s' % value)
+
+        # logging.debug('setting value from %s (%s) to %s (%s)' % (bool(self.pin.value() ^ self.inverted),
+        #                                                          self.pin.value(),
+        #                                                          bool(value ^ self.inverted),
+        #                                                          value))
+        self.pin.value(bool(value ^ self.inverted))
+        return value
 
 
 class Digital(Prometheus):

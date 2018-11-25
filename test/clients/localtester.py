@@ -85,28 +85,29 @@ class LocalTester(Tester):
         self.function_test(self.node.test8, "return b'dir()'", {'input': b'dir()'}, b'dir()')
 
 
-udp = localtestclient.LocalTestUdpClient('10.20.2.134')
-while True:
-    print('%d %s' % (time.time(), udp.sysinfo()))
-    time.sleep(1)
+# udp = localtestclient.LocalTestUdpClient('10.20.2.134')
+# while True:
+#     # memory leak testing?
+#     print('%d %s' % (time.time(), udp.sysinfo()))
+#     time.sleep(1)
 
 
-# node = LocalTest()
-#
-# lt = LocalTester(node, 'Local')
-# lt.runtests()
-#
-# udp = localtestclient.LocalTestUdpClient('10.20.1.18', bind_port=9190)
-# lt = LocalTester(udp, 'UDP')
-# lt.runtests()
-#
-# tcp = localtestclient.LocalTestTcpClient('10.20.1.18')
-# lt = LocalTester(tcp, 'TCP')
-# lt.runtests()
-#
-# jr = localtestclient.LocalTestJsonRestClient('10.20.1.18')
-# lt = LocalTester(jr, 'JsonRest')
-# lt.runtests()
+node = LocalTest()
+
+lt = LocalTester(node, 'Local')
+lt.runtests()
+
+udp = localtestclient.LocalTestUdpClient('10.20.1.18', bind_port=9190)
+lt = LocalTester(udp, 'UDP')
+lt.runtests()
+
+tcp = localtestclient.LocalTestTcpClient('10.20.1.18')
+lt = LocalTester(tcp, 'TCP')
+lt.runtests()
+
+jr = localtestclient.LocalTestJsonRestClient('10.20.1.18')
+lt = LocalTester(jr, 'JsonRest')
+lt.runtests()
 
 # tcp = nodetestclient.NodeTestTcpClient('10.20.2.117')
 # lt = LocalTester(tcp, 'TCP')
