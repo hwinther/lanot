@@ -4,12 +4,13 @@ import gc
 import sys
 import prometheus.logging as logging
 
-__version__ = '0.2.2'
+__version__ = '0.2.3'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
 
 is_micro = sys.platform in ['esp8266', 'esp32', 'WiPy']
+is_py2 = sys.version_info[0] == 2
 # turn this on to debug command byte assignments
 data_debug = False
 

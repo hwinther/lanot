@@ -8,6 +8,7 @@ import machine
 import socket
 import datetime
 import time
+import json
 import prometheus
 import prometheus.crypto
 import prometheus.misc
@@ -263,11 +264,15 @@ class JsonRestTemplate(prometheus.misc.RemoteTemplate):
 
         # print('data: %s' % (repr(data)))
         head, body = data.split(b'\r\n\r\n', 1)
-        import json
         json_body = json.loads(body)
-        # print(json_body)
+        # print('json_body = %s' % repr(json_body))
+        value = json_body['value']
+        # print('value = %s' % repr(value))
 
-        return json_body['value']
+        if type(value) is str or (prometheus.is_py2 and type(value) is unicode):
+            value = value.encode('utf-8')
+
+        return value
 
     # cut
 

@@ -95,12 +95,15 @@ class UdpSocketServer(socketserver.SocketServer):
     def reply(self, return_value, source=None, **kwargs):
         socketserver.SocketServer.reply(self, return_value, **kwargs)
 
+        # TODO: encode/decode consistency, its a mixture of ascii and utf-8 at the moment
         if type(return_value) is str:
-            return_value = return_value.encode('ascii')
+            return_value = return_value.encode('utf-8')
         elif type(return_value) is bytes:
             pass
         else:
-            return_value = b'%s' % return_value
+            # convert to string first, then bytes
+            return_value = b'%s' % str(return_value).encode('utf-8')
+
         logging.notice('Returning %s to %s' % (return_value, repr(source)))
         self.socket.sendto(b'%s%s%s' % (return_value, self.end_chars.encode('ascii'),
                                         self.split_chars.encode('ascii')), source)

@@ -156,8 +156,14 @@ class TcpSocketServer(socketserver.SocketServer):
     def reply(self, return_value, source=None, **kwargs):
         socketserver.SocketServer.reply(self, return_value, **kwargs)
 
+        # TODO: encode/decode consistency, its a mixture of ascii and utf-8 at the moment
         if type(return_value) is str:
             return_value = return_value.encode('utf-8')
+        elif type(return_value) is bytes:
+            pass
+        else:
+            # convert to string first, then bytes
+            return_value = b'%s' % str(return_value).encode('utf-8')
 
-        logging.notice('returning %s to %s' % (return_value, repr(source)))
+        logging.notice('Returning %s to %s' % (return_value, repr(source)))
         source.send(b'%s%s%s' % (return_value, self.end_chars.encode('utf-8'), self.split_chars.encode('utf-8')))

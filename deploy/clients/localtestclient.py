@@ -4,6 +4,7 @@ import prometheus
 import socket
 import time
 import gc
+import json
 import prometheus.crypto
 import prometheus.misc
 import prometheus.psocket
@@ -555,11 +556,18 @@ class LocalTestJsonRestClient(prometheus.misc.RemoteTemplate):
         if data is None:
             return None
 
+        # print('data: %s' % (repr(data)))
         head, body = data.split(b'\r\n\r\n', 1)
-        import json
         json_body = json.loads(body)
+        # print('json_body = %s' % repr(json_body))
+        value = json_body['value']
+        # print('value = %s' % repr(value))
+        # print(prometheus.is_py2)
+        if type(value) is str or (prometheus.is_py2 and type(value) is unicode):
+            value = value.encode('utf-8')
+        # print('value = %s' % repr(value))
 
-        return json_body['value']
+        return value
 
     @prometheus.Registry.register('LocalTestJsonRestClient', 'v', str)
     def value(self, **kwargs):

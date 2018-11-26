@@ -30,5 +30,5 @@ class socket(socket_original.socket):
 
     def accept(self):
         # print('wrapped accept used')
-        sock, addr = socket_original.socket.accept(self)
+        sock, addr = self._sock.accept()
         return socket(_sock=sock), addr
