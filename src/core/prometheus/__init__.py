@@ -4,7 +4,7 @@ import gc
 import sys
 import prometheus.logging as logging
 
-__version__ = '0.2.3'
+__version__ = '0.2.4'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()

@@ -4,7 +4,7 @@ import machine
 import ssd1306
 import gc
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -15,16 +15,16 @@ class SSD1306(prometheus.Prometheus):
     # TODO: add more function, such as those inherited from framebuf
     # TODO: perhaps use a common super class and share with simular devices
 
-    def __init__(self, i2c, addr=0x3c, height=128, width=64):
+    def __init__(self, i2c, addr=0x3c, width=128, height=64):
         """
         0x3c = 60
         :type i2c: machine.I2C
         :type addr: int
-        :type height: int
         :type width: int
+        :type height: int
         """
         prometheus.Prometheus.__init__(self)
-        self.ssd = ssd1306.SSD1306_I2C(height, width, i2c, addr)
+        self.ssd = ssd1306.SSD1306_I2C(width, height, i2c, addr)
 
     @prometheus.Registry.register('SSD1306', 't', str)
     def text(self, text=None, x=0, y=0, **kwargs):

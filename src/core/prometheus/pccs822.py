@@ -4,13 +4,13 @@ import machine
 import CCS811
 import gc
 
-__version__ = '0.1.0'
+__version__ = '0.1.1'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
 
 
-class CCS822(prometheus.Prometheus):
+class Ccs811(prometheus.Prometheus):
     def __init__(self, i2c, addr=0x5a):
         """
         0x5a = 90
