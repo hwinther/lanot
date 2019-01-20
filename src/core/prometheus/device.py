@@ -1,10 +1,11 @@
 # coding=utf-8
 import gc
 import machine
+import onewire
 import prometheus
 import prometheus.logging as logging
 
-__version__ = '0.1.2'
+__version__ = '0.1.3'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -16,21 +17,23 @@ gc.collect()
 
 class Esp8266(prometheus.Prometheus):
     def __init__(self):
-        print('esp8266 init')
+        # print('esp8266 init')
         prometheus.Prometheus.__init__(self)
-        self.integrated_led = prometheus.Led(machine.Pin(2, machine.Pin.OUT), inverted=True, state=False)
-        self.register(prefix='i', integrated_led=self.integrated_led)
+        # self.integrated_led = prometheus.Led(machine.Pin(2, machine.Pin.OUT), inverted=True, state=False)
+        # self.register(prefix='i', integrated_led=self.integrated_led)
 
 
 class LanotPcb(object):
-    def __init__(self, node, i2c):
+    def __init__(self, node, i2c, ow, dhtpin, spi, enable_spi_max7219=False, neopixel_pin=None, neopixel_amount=None):
         """
         :type node: prometheus.Prometheus
         :type i2c: machine.I2C
         """
-        print('lanotpcb init')
+        # print('lanotpcb init')
         self.node = node
         self.i2c = i2c
+        self.ow = ow
+        self.dhtpin = dhtpin
 
         self.ssd = None
         self.ds1307 = None
@@ -38,10 +41,38 @@ class LanotPcb(object):
         self.ccs811 = None
         self.ads1115 = None
         self.nano = None
-        self.scan_i2c()
+        if i2c is not None:
+            self.scan_i2c()
+
+        self.ds18 = None
+        if self.ow is not None:
+            self.scan_onewire()
+
+        self.dht = None
+        if self.dhtpin is not None:
+            self.scan_dht()
+
+        self.spi = spi
+
+        self.max7219 = None
+        if spi is not None and enable_spi_max7219:
+            import prometheus.pmax7219
+            self.max7219 = prometheus.pmax7219.MAX7219(self.spi, machine.Pin(15), 4)
+            self.node.register(prefix='ma', max=self.max7219)
+            gc.collect()
+
+        self.neopixel = None
+        if neopixel_pin is not None:
+            import prometheus.pneopixel
+            logging.notice('Added %d neopixels' % neopixel_amount)
+            self.neopixel = prometheus.pneopixel.NeoPixel(neopixel_pin, neopixel_amount)
+            self.node.register(prefix='p', neopixel=self.neopixel)
+            gc.collect()
 
         if self.ssd is not None:
             self.ssd.text('init', 0, 0)
+        if self.max7219 is not None:
+            self.max7219.text('init', 0, 0)
 
     def scan_i2c(self):
         """
@@ -65,6 +96,7 @@ class LanotPcb(object):
             logging.notice('Added: DS1307 RTC')
             import prometheus.pds1307
             self.ds1307 = prometheus.pds1307.DS1307(self.i2c, 0x68)
+            self.node.register(prefix='ds', ds1307=self.ds1307)
         elif 0x68 not in scan and self.ds1307 is not None:
             logging.notice('Removed: DS1307 RTC')
             self.ds1307 = None
@@ -74,6 +106,7 @@ class LanotPcb(object):
             logging.notice('Added: AT24C32 EEPROM')
             import at24c32n
             self.at24c32 = at24c32n.AT24C32N(i2c=self.i2c, i2c_addr=0x57, pages=256, bpp=32)
+            # TODO: create prometheus wrapper for this device?
         elif 0x57 not in scan and self.at24c32 is not None:
             logging.notice('Removed: AT24C32 EEPROM')
             self.at24c32 = None
@@ -85,6 +118,7 @@ class LanotPcb(object):
             # time.sleep(0.5)
             # fix with the skew setting Tor mentioned?
             self.ccs811 = prometheus.pccs822.Ccs811(i2c=self.i2c, addr=90)
+            self.node.register(prefix='cc', ads=self.ccs811)
         elif 0x5a not in scan and self.ccs811 is not None:
             logging.notice('Removed: CCS811 gas sensor')
             self.ccs811 = None
@@ -94,6 +128,7 @@ class LanotPcb(object):
             logging.notice('Added: ADS1115 ADC')
             import prometheus.pads1115
             self.ads1115 = prometheus.pads1115.ADS1115(i2c=self.i2c, addr=0x48)
+            self.node.register(prefix='ad', ads=self.ads1115)
         elif 0x48 not in scan and self.ads1115 is not None:
             logging.notice('Removed: ADS1115 ADC')
             self.ads1115 = None
@@ -103,22 +138,61 @@ class LanotPcb(object):
             logging.notice('Added: Nano')
             import prometheus.pnano
             self.nano = prometheus.pnano.NanoI2C(i2c=self.i2c)
+            self.node.register(prefix='na', nano=self.nano)
         elif 0x8 not in scan and self.nano is not None:
             logging.notice('Removed: Nano')
             self.nano = None
 
         gc.collect()
 
+    def scan_onewire(self):
+        ow_scan = self.ow.scan()
+        # TODO: also deal with the amount of/specific ds18 devices changing
+        if len(ow_scan) != 0 and self.ds18 is None:
+            logging.notice('Added: %d onewire device(s): %s' % (len(ow_scan), ow_scan))
+            import prometheus.pds18x20
+            self.ds18 = prometheus.pds18x20.Ds18x20(ow=self.ow)
+            self.node.register(prefix='s', dsb=self.ds18)
+        elif len(ow_scan) == 0 and self.ds18 is not None:
+            logging.notice('Removed: onewire device(s)')
+            self.ds18 = None
+        gc.collect()
+
+    def scan_dht(self):
+        # check if dht is connected
+        import prometheus.dht11
+        gc.collect()
+        # TODO: deal with DHT already existing (now we can create a second one on rescan)
+        dht = prometheus.dht11.Dht11(self.dhtpin)
+        try:
+            dht.dht.measure()
+            logging.notice('Added: DHT11')
+            self.dht = dht
+            self.node.register(prefix='d', dht11=self.dht)
+        except OSError:
+            if self.dht is not None:
+                logging.notice('Removed: DHT11')
+                self.dht = None
+
 
 class Esp8266Pcb(Esp8266, LanotPcb):
-    def __init__(self):
-        print('esp8266pcb init')
+    def __init__(self, enable_i2c=False, enable_onewire=False, enable_dht=False, enable_spi=False,
+                 enable_spi_max7219=False, neopixel_amount=None):
+        # print('esp8266pcb init')
         Esp8266.__init__(self)
 
         self.adc1 = prometheus.Adc(0)
         self.register(prefix='a', adc1=self.adc1)
 
-        LanotPcb.__init__(self, self, machine.I2C(scl=machine.Pin(0), sda=machine.Pin(4), freq=400000))
+        i2c = machine.I2C(scl=machine.Pin(0), sda=machine.Pin(4), freq=400000) if enable_i2c else None
+        ow = onewire.OneWire(machine.Pin(5, machine.Pin.IN)) if enable_onewire else None
+        dhtpin = machine.Pin(12, machine.Pin.OUT) if enable_dht else None
+        spi = machine.SPI(1, baudrate=10000000, polarity=0, phase=0) if enable_spi else None
+        neopixel_pin = machine.Pin(2) if neopixel_amount is not None else None
+
+        LanotPcb.__init__(self, node=self, i2c=i2c, ow=ow, dhtpin=dhtpin, spi=spi,
+                          enable_spi_max7219=enable_spi_max7219,
+                          neopixel_pin=neopixel_pin, neopixel_amount=neopixel_amount)
 
     @prometheus.Registry.register('Esp8266Pcb', 'rs')
     def rescan(self):

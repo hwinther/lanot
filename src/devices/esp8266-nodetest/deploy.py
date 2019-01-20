@@ -10,8 +10,8 @@ set PYTHONPATH=p:\lanot\src\core
 '''
 
 files = [
-    'main.py',
-    # 'nodetest.py',
+    # 'main.py',
+    'nodetest.py',
 ]
 # prometheus.tftpd.tftp_client('nodetest.iot.oh.wsh.no', *files)
-prometheus.tftpd.tftp_client('10.20.2.117', *files)
+prometheus.tftpd.tftp_client('10.20.2.146', *files)
