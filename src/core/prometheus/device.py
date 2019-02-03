@@ -5,7 +5,7 @@ import onewire
 import prometheus
 import prometheus.logging as logging
 
-__version__ = '0.1.3'
+__version__ = '0.1.4'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -41,6 +41,9 @@ class LanotPcb(object):
         self.ccs811 = None
         self.ads1115 = None
         self.nano = None
+        self.bmp280 = None
+        self.hdc1080 = None
+
         if i2c is not None:
             self.scan_i2c()
 
@@ -143,6 +146,26 @@ class LanotPcb(object):
             logging.notice('Removed: Nano')
             self.nano = None
 
+        # 118  = BMP280 temperature, altitude and pressure sensor
+        if 0x76 in scan and self.bmp280 is None:
+            logging.notice('Added: BMP280')
+            import prometheus.pbmp280
+            self.bmp280 = prometheus.pbmp280.Bmp280(i2c=self.i2c)
+            self.node.register(prefix='bm', nano=self.bmp280)
+        elif 0x76 not in scan and self.bmp280 is not None:
+            logging.notice('Removed: BMP280')
+            self.bmp280 = None
+
+        # 64 = HDC1080 humidity and temperature sensor
+        if 0x40 in scan and self.hdc1080 is None:
+            logging.notice('Added: HDC1080')
+            import prometheus.phdc1080
+            self.hdc1080 = prometheus.phdc1080.Hdc1080(i2c=self.i2c)
+            self.node.register(prefix='hd', nano=self.hdc1080)
+        elif 0x40 not in scan and self.hdc1080 is not None:
+            logging.notice('Removed: HDC1080')
+            self.hdc1080 = None
+
         gc.collect()
 
     def scan_onewire(self):
@@ -177,7 +200,7 @@ class LanotPcb(object):
 
 class Esp8266Pcb(Esp8266, LanotPcb):
     def __init__(self, enable_i2c=False, enable_onewire=False, enable_dht=False, enable_spi=False,
-                 enable_spi_max7219=False, neopixel_amount=None):
+                 enable_spi_max7219=False, neopixel_amount=None, neopixel_pin=None):
         # print('esp8266pcb init')
         Esp8266.__init__(self)
 
@@ -188,7 +211,8 @@ class Esp8266Pcb(Esp8266, LanotPcb):
         ow = onewire.OneWire(machine.Pin(5, machine.Pin.IN)) if enable_onewire else None
         dhtpin = machine.Pin(12, machine.Pin.OUT) if enable_dht else None
         spi = machine.SPI(1, baudrate=10000000, polarity=0, phase=0) if enable_spi else None
-        neopixel_pin = machine.Pin(2) if neopixel_amount is not None else None
+        np_pin = 2 if neopixel_pin is None else neopixel_pin
+        neopixel_pin = machine.Pin(np_pin) if neopixel_amount is not None else None
 
         LanotPcb.__init__(self, node=self, i2c=i2c, ow=ow, dhtpin=dhtpin, spi=spi,
                           enable_spi_max7219=enable_spi_max7219,

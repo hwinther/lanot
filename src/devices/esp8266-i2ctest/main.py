@@ -54,6 +54,9 @@ if 87 in scan and 104 in scan:
     print('Detected DS1307')
     ds = ds1307.DS1307(i2)
 
+# CCS811+HDC1080+BMP280
+# 118 (0x76) = BMP280
+# 64 (0x40) = HDC1080
 s = None
 if 90 in scan:
     print('Detected CCS811')
