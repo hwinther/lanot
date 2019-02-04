@@ -5,7 +5,7 @@ import onewire
 import prometheus
 import prometheus.logging as logging
 
-__version__ = '0.1.4'
+__version__ = '0.1.5'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -117,11 +117,11 @@ class LanotPcb(object):
         # 90 = CCS811 gas sensor
         if 0x5a in scan and self.ccs811 is None:
             logging.notice('Added: CCS811 gas sensor')
-            import prometheus.pccs822
+            import prometheus.pccs811
             # time.sleep(0.5)
             # fix with the skew setting Tor mentioned?
-            self.ccs811 = prometheus.pccs822.Ccs811(i2c=self.i2c, addr=90)
-            self.node.register(prefix='cc', ads=self.ccs811)
+            self.ccs811 = prometheus.pccs811.Ccs811(i2c=self.i2c, addr=90)
+            self.node.register(prefix='cc', ccs811=self.ccs811)
         elif 0x5a not in scan and self.ccs811 is not None:
             logging.notice('Removed: CCS811 gas sensor')
             self.ccs811 = None
@@ -151,7 +151,7 @@ class LanotPcb(object):
             logging.notice('Added: BMP280')
             import prometheus.pbmp280
             self.bmp280 = prometheus.pbmp280.Bmp280(i2c=self.i2c)
-            self.node.register(prefix='bm', nano=self.bmp280)
+            self.node.register(prefix='bm', bmp280=self.bmp280)
         elif 0x76 not in scan and self.bmp280 is not None:
             logging.notice('Removed: BMP280')
             self.bmp280 = None
@@ -161,7 +161,7 @@ class LanotPcb(object):
             logging.notice('Added: HDC1080')
             import prometheus.phdc1080
             self.hdc1080 = prometheus.phdc1080.Hdc1080(i2c=self.i2c)
-            self.node.register(prefix='hd', nano=self.hdc1080)
+            self.node.register(prefix='hd', hdc1080=self.hdc1080)
         elif 0x40 not in scan and self.hdc1080 is not None:
             logging.notice('Removed: HDC1080')
             self.hdc1080 = None

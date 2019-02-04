@@ -19,6 +19,6 @@ class Bmp280(prometheus.Prometheus):
         self.bmp280 = bmp280.BMP280(i2c=i2c)
 
     # TODO: perhaps separate or add additional methods to get each of these values by themselves
-    @prometheus.Registry.register('BMP280', 'v', str)
+    @prometheus.Registry.register('Bmp280', 'v', str)
     def value(self, **kwargs):
         return '%f %f %f' % (self.bmp280.getTemp(), self.bmp280.getPress(), self.bmp280.getAltitude())

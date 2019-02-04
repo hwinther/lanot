@@ -21,6 +21,6 @@ class Hdc1080(prometheus.Prometheus):
         self.hdc1080 = hdc1080.HDC1000(i2c=i2c, addr=addr)
 
     # TODO: perhaps separate or add additional methods to get each of these values by themselves
-    @prometheus.Registry.register('HDC1080', 'v', str)
+    @prometheus.Registry.register('Hdc1080', 'v', str)
     def value(self, **kwargs):
         return '%f %f' % (self.hdc1080.read_temperature(), self.hdc1080.read_humidity())

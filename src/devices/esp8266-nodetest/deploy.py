@@ -14,4 +14,4 @@ files = [
     'nodetest.py',
 ]
 # prometheus.tftpd.tftp_client('nodetest.iot.oh.wsh.no', *files)
-prometheus.tftpd.tftp_client('10.20.2.120', *files)
+prometheus.tftpd.tftp_client('10.20.2.117', *files)
