@@ -6,6 +6,12 @@
 
 lanot is a collection of applications and application framework/framework support.
 
+Some things have changed since this was made and it will be updated soon, just adding some pictures of the finished rev 2 PCB and prototype chassis
+
+![alt text](https://i.imgur.com/ia5N1Yy.jpg "PCB")
+
+![alt text](https://i.imgur.com/7kjZAEz.jpg "Chassis and PCB")
+
 ### prometheus
 
 [src/core/prometheus](src/core/prometheus) micropython device framework
