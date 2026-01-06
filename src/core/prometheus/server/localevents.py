@@ -55,9 +55,12 @@ class LocalEvents(prometheus.server.Server):
                 self.instance.ssd.ssd.text('%02d:%02d:%02d  ' % (da[4], da[5], da[6]), 0, 40)
 
             if self.instance.dht is not None:
-                self.instance.dht.dht.measure()
-                self.instance.ssd.ssd.text('%dC %d%%' % (self.instance.dht.dht.temperature(),
-                                                         self.instance.dht.dht.humidity()), 0, 50)
+                try:
+                    self.instance.dht.dht.measure()
+                    self.instance.ssd.ssd.text('%dC %d%%' % (self.instance.dht.dht.temperature(),
+                                                             self.instance.dht.dht.humidity()), 0, 50)
+                except OSError:
+                    pass
 
             if self.instance.ds18 is not None:
                 self.instance.ssd.ssd.text('%s' % self.instance.ds18.value(), 60, 50)

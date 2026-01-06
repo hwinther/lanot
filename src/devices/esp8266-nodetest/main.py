@@ -30,6 +30,8 @@ try:
     multiserver.start()
 except Exception as exception:
     print(exception)
+    import sys
+    sys.print_exception(exception)
     gc.collect()
 
 try:
@@ -37,4 +39,4 @@ try:
 except Exception:
     gc.collect()
 
-machine.reset()
+# machine.reset()

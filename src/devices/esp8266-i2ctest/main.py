@@ -8,7 +8,7 @@ import onewire
 import prometheus.pds18x20
 import nanoi2c
 import misc
-# import dht
+import dht
 import gc
 import prometheus.tftpd
 
@@ -72,8 +72,8 @@ if len(ow_scan) != 0:
     ds18 = prometheus.pds18x20.Ds18x20(ow=ow)
 
 # npx = neopixel.NeoPixel(machine.Pin(2), 256)  # D4
-dh = None
-# dh = dht.DHT11(machine.Pin(12, machine.Pin.OUT))  # D6
+# dh = None
+dh = dht.DHT11(machine.Pin(12, machine.Pin.OUT))  # D6
 
 gc.collect()
 print(gc.mem_free())

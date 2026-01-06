@@ -70,17 +70,18 @@ def tftpd(timeout=None):
 
 
 def tftp_client(host, *filenames):
+    import codecs
     for filename in filenames:
         sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         logging.notice('Connecting')
         sock.connect((host, 69))
-        data = open(filename, 'r').read()
+        data = codecs.open(filename, 'r', 'utf-8').read()
         logging.info('Sending %d bytes from file %s' % (len(data), filename))
-        sock.send('%s\00\01\02\03%s' % (filename, data))
+        sock.send(b'%s\00\01\02\03%s' % (filename.encode('utf-8'), data.encode('utf-8')))
         sock.close()
     sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     logging.notice('Connecting')
     sock.connect((host, 69))
     logging.info('tftpd_client quitting')
-    sock.send('quit\r\n')
+    sock.send(b'quit\r\n')
     sock.close()

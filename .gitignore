@@ -114,3 +114,17 @@ tools/micropython-lib
 tools/ptftpd
 tools/tftpy-0.6.2
 tools/webrepl
+
+# Ignore mpy build output (bytecode)
+deploy/**/*.mpy
+
+# Ignore VS C++ build output
+**/Release/*
+
+# Ignore PCB gerber files and folders
+src/pcb/*gerber
+
+# Tool generated temp/build folders
+temp/
+__vm/
+.vs/
