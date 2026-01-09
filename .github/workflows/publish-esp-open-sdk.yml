@@ -32,6 +32,6 @@ jobs:
           tag=ghcr.io/hwinther/lanot/esp-open-sdk:2.1.0
           tag_latest=ghcr.io/hwinther/lanot/esp-open-sdk:latest
           echo tag=$tag tag_latest=$tag_latest
-          docker build tools/build-ports/esp8266 -t $tag -t $tag_latest -f esp-open-sdk/Dockerfile esp-open-sdk
+          docker build esp-open-sdk -t $tag -t $tag_latest -f esp-open-sdk/Dockerfile
           docker push $tag
           docker push $tag_latest
