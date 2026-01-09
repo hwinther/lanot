@@ -28,11 +28,10 @@ jobs:
       - name: Build the docker image
         run: |
           git clone --recursive https://github.com/hwinther/esp-open-sdk.git
-          cd esp-open-sdk
 
           tag=ghcr.io/hwinther/lanot/esp-open-sdk:2.1.0
           tag_latest=ghcr.io/hwinther/lanot/esp-open-sdk:latest
           echo tag=$tag tag_latest=$tag_latest
-          docker build tools/build-ports/esp8266 -t $tag -t $tag_latest -f tools/build-ports/esp8266/Dockerfile
+          docker build esp-open-sdk -t $tag -t $tag_latest -f esp-open-sdk/Dockerfile
           docker push $tag
           docker push $tag_latest
