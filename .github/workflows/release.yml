@@ -1,0 +1,38 @@
+name: Release
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - 'v*.*.*'  # Triggers on version tags like v1.0.0, v2.1.3, etc.
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Required to create releases
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+      
+    #   - name: Set up Python
+    #     uses: actions/setup-python@v5
+    #     with:
+    #       python-version: '3.x'
+      
+      - name: Run build script
+        run: |
+          cd tools
+          ./micropython_build.sh
+      
+      - name: Create Release
+        run: |
+          gh release create ${{ github.ref_name }} \
+            dist/* \
+            --title "Release ${{ github.ref_name }}" \
+            --generate-notes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
