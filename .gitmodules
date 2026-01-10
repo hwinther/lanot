@@ -4,9 +4,15 @@
 [submodule "tools/micropython"]
 	path = tools/micropython
 	url = https://github.com/micropython/micropython.git
-[submodule "tools/micropython-esp32"]
-	path = tools/micropython-esp32
-	url = https://github.com/micropython/micropython-esp32.git
 [submodule "tools/micropython-lib"]
 	path = tools/micropython-lib
 	url = https://github.com/micropython/micropython-lib.git
+[submodule "tools/CCS811"]
+	path = tools/CCS811
+	url = https://github.com/Notthemarsian/CCS811.git
+[submodule "tools/ads1x15"]
+	path = tools/ads1x15
+	url = git@github.com:hwinther/ads1x15.git
+[submodule "tools/micropython-max7219"]
+	path = tools/micropython-max7219
+	url = git@github.com:hwinther/micropython-max7219.git
