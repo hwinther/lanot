@@ -16,3 +16,6 @@
 [submodule "tools/micropython-max7219"]
 	path = tools/micropython-max7219
 	url = git@github.com:hwinther/micropython-max7219.git
+[submodule "tools/micropython-tinyrtc-i2c"]
+	path = tools/micropython-tinyrtc-i2c
+	url = git@github.com:hwinther/micropython-tinyrtc-i2c.git
