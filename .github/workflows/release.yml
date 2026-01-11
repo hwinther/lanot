@@ -76,7 +76,7 @@ jobs:
           path: dist/*
       
       - name: Create Release
-        #if: github.event_name == 'push'
+        if: github.event_name == 'push'
         run: |
           gh release create ${{ github.ref_name }} \
             dist/* \
