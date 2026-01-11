@@ -25,7 +25,8 @@ jobs:
       
       - name: Run build script
         run: |
-          rm -f deploy/micropython/*/*
+          rm -f deploy/micropython/esp*/*
+          rm -f deploy/micropython/wipy/*/*
           cd tools
           ./micropython-make.sh
       
