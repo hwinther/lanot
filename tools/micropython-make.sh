@@ -43,7 +43,7 @@ esp32-make() {
     sudo docker run --rm -v $(pwd)/../../:/opt/lanot -w /opt/lanot -e IDF_PATH=/opt/sdk/esp-idf --entrypoint bash --privileged -u 0 ghcr.io/hwinther/lanot/esp-idf-5:5.0.2 -c "cp -rd /opt/lanot/tools/micropython /opt/micropython && cd /opt/micropython/ports/esp32 && cp /opt/lanot/tools/prometheus.micropython.manifest.py /opt/ && make -j BOARD=$BOARD && mkdir -p /opt/micropython/ports/esp32/build-$BOARD && cp /opt/micropython/ports/esp32/build-${BOARD}/firmware.bin /opt/lanot/tools/micropython/ports/esp32/build-${BOARD}/"
 }
 make -C ports/esp32 submodules
-esp32-make -C ports/esp32 NODEMCU32S
+esp32-make NODEMCU32S
 cp ports/esp32/build-NODEMCU32S/firmware.bin ../../deploy/micropython/esp32/NODEMCU32S-$mpyversion-$mpybuilddate.bin
 
 printf "${BLUE}*******************************************${NC}\n"
