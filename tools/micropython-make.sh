@@ -9,12 +9,13 @@ printf "${BLUE}*****************************${NC}\n"
 mpy-make() {
     sudo docker run --rm -v $(pwd)/../../:/opt/lanot -w /opt/lanot/tools/micropython --entrypoint make ghcr.io/hwinther/lanot/mpy-cross:13 "$@"
 }
+# Temporary hack, later all SDKs should use the same debian version
 mpy-bullseye-make() {
     sudo docker run --rm -v $(pwd)/../../:/opt/lanot -w /opt/lanot/tools/micropython --entrypoint make ghcr.io/hwinther/lanot/mpy-cross:bullseye "$@"
 }
-# Temporary hack, later all SDKs should use the same debian version
 #mpy-bullseye-make -C mpy-cross clean
 mpy-bullseye-make -C mpy-cross MICROPY_PY_FUNCTION_ATTRS=1
+# /hack - after libc issues are restored, just use mpy-make
 export mpyversion=`cat mpy-cross/build/genhdr/mpversion.h | grep MICROPY_GIT_TAG | cut -d' ' -f3 | cut -d'"' -f2`
 export mpybuilddate=`cat mpy-cross/build/genhdr/mpversion.h | grep MICROPY_BUILD_DATE | cut -d' ' -f3 | cut -d'"' -f2`
 
