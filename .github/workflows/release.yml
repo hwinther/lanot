@@ -38,7 +38,7 @@ jobs:
         #if: github.event_name == 'push'
         run: |
           gh release create ${{ github.ref_name }} \
-            deploy/* \
+            deploy/**/* \
             --title "Release ${{ github.ref_name }}" \
             --generate-notes
         env:
