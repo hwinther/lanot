@@ -2,6 +2,11 @@ name: Publish esp-open-sdk (esp8266) image
 
 on:
   workflow_dispatch:
+    inputs:
+      vendor_sdk_version:
+        description: 'Vendor SDK version'
+        required: false
+        default: '2.1.0'
   push:
     branches: ["main"]
     paths:
@@ -11,6 +16,9 @@ on:
 permissions:
   # for ghcr.io (docker registry):
   packages: write
+
+env:
+  VENDOR_SDK_VERSION: "${{ github.event.inputs.vendor_sdk_version || '2.1.0' }}"
 
 jobs:
   publish-docker-image:
@@ -25,13 +33,12 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build the docker image
+      - name: Build the docker image with vendor SDK version ${{ env.VENDOR_SDK_VERSION }}
         run: |
           git clone --recursive https://github.com/hwinther/esp-open-sdk.git
 
-          tag=ghcr.io/hwinther/lanot/esp-open-sdk:2.1.0
+          tag=ghcr.io/hwinther/lanot/esp-open-sdk:$VENDOR_SDK_VERSION
           tag_latest=ghcr.io/hwinther/lanot/esp-open-sdk:latest
-          echo tag=$tag tag_latest=$tag_latest
-          docker build esp-open-sdk -t $tag -t $tag_latest -f esp-open-sdk/Dockerfile
+          docker build esp-open-sdk --build-arg MAKE_ARGS="VENDOR_SDK=$VENDOR_SDK_VERSION" -t $tag -t $tag_latest -f esp-open-sdk/Dockerfile
           docker push $tag
           docker push $tag_latest
