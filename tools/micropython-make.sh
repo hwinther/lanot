@@ -21,6 +21,7 @@ printf "${BLUE}*******************************************${NC}\n"
 esp8266-make() {
     sudo docker run --rm -v $(pwd)/../../../../:/opt/lanot -w /opt/lanot/tools/micropython/ports/esp8266 --entrypoint make ghcr.io/hwinther/lanot/esp-open-sdk:2.1.0 "$@"
 }
+esp8266-make submodules
 esp8266-make -j BOARD=NODEMCUESP12E
 cp build-NODEMCUESP12E/firmware-combined.bin ../../../../deploy/micropython/esp8266/NODEMCUESP12E-$mpyversion-$mpybuilddate.bin
 esp8266-make -j BOARD=LOLINESP32E
@@ -34,6 +35,7 @@ esp32-make() {
     local BOARD=${1:-NODEMCU32S}
     sudo docker run --rm -v $(pwd)/../../../../:/opt/lanot -w /opt/lanot -e IDF_PATH=/opt/sdk/esp-idf --entrypoint bash --privileged -u 0 ghcr.io/hwinther/lanot/esp-idf-5:5.0.2 -c "cp -rd /opt/lanot/tools/micropython /opt/micropython && cd /opt/micropython/ports/esp32 && cp /opt/lanot/tools/prometheus.micropython.manifest.py /opt/ && make -j BOARD=$BOARD && mkdir -p /opt/micropython/ports/esp32/build-$BOARD && cp /opt/micropython/ports/esp32/build-${BOARD}/firmware.bin /opt/lanot/tools/micropython/ports/esp32/build-${BOARD}/"
 }
+esp32-make submodules
 esp32-make NODEMCU32S
 cp build-NODEMCU32S/firmware.bin ../../../../deploy/micropython/esp32/NODEMCU32S-$mpyversion-$mpybuilddate.bin
 
