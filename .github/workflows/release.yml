@@ -25,13 +25,14 @@ jobs:
       
       - name: Run build script
         run: |
+          rm -f deploy/micropython/*/*
           cd tools
-          ./micropython_build.sh
+          ./micropython-make.sh
       
       - name: Create Release
         run: |
           gh release create ${{ github.ref_name }} \
-            dist/* \
+            deploy/* \
             --title "Release ${{ github.ref_name }}" \
             --generate-notes
         env:
