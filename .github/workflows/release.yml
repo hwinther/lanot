@@ -25,7 +25,7 @@ jobs:
           cd tools
           chmod +x micropython-make.sh
           ./micropython-make.sh
-          find -type f deploy/micropython/ -exec ls -lh {} \;
+          find deploy/micropython/ -type f -exec ls -lh {} \;
       
       - name: Upload artifacts
         if: github.event_name == 'workflow_dispatch'

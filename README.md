@@ -60,7 +60,7 @@ cpython
   * onewire (dht11), ds18b20, neopixel, i2c (ssd1306, ccs822, ds1307, nano ir & gpio extender)
 * esp8266-sensor01/02
   * dht & ds18b20 temperature and humidity sensors
- 
+
 ## Current hardware support
   ##### Note: pin typically means an instance of Machine.Pin
 
@@ -100,7 +100,6 @@ cpython
     self.dsb = prometheus.pds18x20.Ds18x20(ow=self.onewire)
     self.register(prefix='s', dsb=self.dsb)
 
-
 ## Devices that will be supported soon:
 * ssd1306 oled display of various sizes (64x128 is common)
 * ccs822 air quality sensor (co2 & ppm)
@@ -109,3 +108,16 @@ cpython
 * neopixel (rgb led matrix, chain, or similar)
 * nanoi2c (subproject)
 * ads1115 (4 channel adc)
+
+### Firmware Build Information
+
+ESP8266 firmware builds use the [esp-open-sdk](https://github.com/pfalcon/esp-open-sdk) toolchain in STANDALONE mode, which includes the Espressif ESP8266 SDK merged with the toolchain.
+
+**SDK Version:** Built with ESP8266 SDK version bundled in esp-open-sdk (check specific release for exact version)
+
+**Licensing:**
+
+* This project (lanot/prometheus) is licensed under Apache License 2.0 (see LICENSE file)
+* ESP8266 SDK components are licensed under Espressif MIT License and other open source licenses
+* Binary firmware releases contain both lanot code and ESP8266 SDK binary components
+* For SDK licensing details, see: https://github.com/espressif/ESP8266_RTOS_SDK/blob/master/LICENSE
