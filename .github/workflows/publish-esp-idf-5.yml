@@ -32,7 +32,7 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build the docker image
+      - name: Build the docker image with ESP-IDF version ${{ env.ESP_IDF_VERSION }}
         run: |
           tag=ghcr.io/hwinther/lanot/esp-idf-5:${{ env.ESP_IDF_VERSION }}
           tag_latest=ghcr.io/hwinther/lanot/esp-idf-5:latest
