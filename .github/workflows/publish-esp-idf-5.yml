@@ -37,6 +37,6 @@ jobs:
           tag=ghcr.io/hwinther/lanot/esp-idf-5:${{ env.ESP_IDF_VERSION }}
           tag_latest=ghcr.io/hwinther/lanot/esp-idf-5:latest
           echo tag=$tag tag_latest=$tag_latest
-          docker build tools/build-ports/esp32 -t $tag -t $tag_latest -f tools/build-ports/esp32/Dockerfile
+          docker build tools/build-ports/esp32 --build-arg ESP_IDF_VERSION=v${{ env.ESP_IDF_VERSION }} -t $tag -t $tag_latest -f tools/build-ports/esp32/Dockerfile
           docker push $tag
           docker push $tag_latest
