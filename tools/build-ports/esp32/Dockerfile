@@ -10,8 +10,10 @@ RUN apt-get update && apt-get install -y git python3 python3-venv libusb-1.0-0 m
 FROM base AS esp-idf
 
 WORKDIR /opt/sdk
-# Micropython 1.2.0 - ESP-IDF v5.0.2
-RUN git clone -b v5.0.2 --recursive https://github.com/espressif/esp-idf.git
+# Micropython 1.20 - ESP-IDF v5.0.2
+# Micropython 1.27 - ESP-IDF v5.5.1
+ARG ESP_IDF_VERSION=v5.0.2
+RUN git clone -b ${ESP_IDF_VERSION} --recursive https://github.com/espressif/esp-idf.git
 
 WORKDIR /opt/sdk/esp-idf
 # To reduce the image size, specify required platforms e.g. esp32 esp32s2 esp32s3 riscv32

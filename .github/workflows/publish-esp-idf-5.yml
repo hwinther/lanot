@@ -2,6 +2,11 @@ name: Publish esp-idf-5 (esp32) image
 
 on:
   workflow_dispatch:
+    inputs:
+      esp_idf_version:
+        description: 'ESP-IDF version'
+        required: false
+        default: '5.0.2'
   push:
     branches: ["main"]
     paths:
@@ -9,8 +14,10 @@ on:
       - "tools/build-ports/esp32/Dockerfile"
 
 permissions:
-  # for ghcr.io (docker registry):
   packages: write
+
+env:
+  ESP_IDF_VERSION: "${{ github.event.inputs.esp_idf_version || '5.0.2' }}"
 
 jobs:
   publish-docker-image:
@@ -27,7 +34,7 @@ jobs:
 
       - name: Build the docker image
         run: |
-          tag=ghcr.io/hwinther/lanot/esp-idf-5:5.0.2
+          tag=ghcr.io/hwinther/lanot/esp-idf-5:${{ env.ESP_IDF_VERSION }}
           tag_latest=ghcr.io/hwinther/lanot/esp-idf-5:latest
           echo tag=$tag tag_latest=$tag_latest
           docker build tools/build-ports/esp32 -t $tag -t $tag_latest -f tools/build-ports/esp32/Dockerfile

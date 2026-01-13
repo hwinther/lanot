@@ -14,7 +14,6 @@ on:
       - "tools/build-ports/esp8266/Dockerfile"
 
 permissions:
-  # for ghcr.io (docker registry):
   packages: write
 
 env:

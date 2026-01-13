@@ -9,7 +9,6 @@ on:
       - "tools/build-ports/wipy/Dockerfile"
 
 permissions:
-  # for ghcr.io (docker registry):
   packages: write
 
 jobs:

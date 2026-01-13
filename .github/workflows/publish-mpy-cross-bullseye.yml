@@ -9,7 +9,6 @@ on:
       - "tools/build-ports/mpy-cross/Dockerfile.bullseye"
 
 permissions:
-  # for ghcr.io (docker registry):
   packages: write
 
 jobs:
