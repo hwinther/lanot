@@ -3,7 +3,7 @@ FROM debian:13-slim AS base
 LABEL maintainer="Hans Christian Winther-Sørensen <hwinther@gmail.com>"
 
 ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get update && apt-get install -y git python3 python3-venv libusb-1.0-0 make cmake && \
+RUN apt-get update && apt-get install -y git python3 python3-venv libbsd-dev libffi-dev libglib2.0-0 libncurses-dev libpixman-1-0 libgcrypt20 libsdl2-2.0-0 libslirp0 libusb-1.0-0-dev make cmake && \
     apt-get clean && rm -rf /var/lib/apt/lists/* && \
     update-alternatives --install /usr/bin/python python /usr/bin/python3 13
 
@@ -24,14 +24,14 @@ ARG IDF_INSTALL_TARGETS=all
 ENV IDF_PATH=/opt/sdk/esp-idf
 
 # Install all the required tools
-# RUN : \
-#   && update-ca-certificates --fresh \
-#   && $IDF_PATH/tools/idf_tools.py --non-interactive install required --targets=${IDF_INSTALL_TARGETS} \
-#   && $IDF_PATH/tools/idf_tools.py --non-interactive install qemu* --targets=${IDF_INSTALL_TARGETS} \
-#   && $IDF_PATH/tools/idf_tools.py --non-interactive install cmake \
-#   && $IDF_PATH/tools/idf_tools.py --non-interactive install-python-env \
-#   && rm -rf $IDF_TOOLS_PATH/dist \
-#   && :
+RUN : \
+  && update-ca-certificates --fresh \
+  && $IDF_PATH/tools/idf_tools.py --non-interactive install required --targets=${IDF_INSTALL_TARGETS} \
+  && $IDF_PATH/tools/idf_tools.py --non-interactive install qemu* --targets=${IDF_INSTALL_TARGETS} \
+  && $IDF_PATH/tools/idf_tools.py --non-interactive install cmake \
+  && $IDF_PATH/tools/idf_tools.py --non-interactive install-python-env \
+  && rm -rf $IDF_TOOLS_PATH/dist \
+  && :
 
 # The constraint file has been downloaded and the right Python package versions installed. No need to check and
 # download this at every invocation of the container.
