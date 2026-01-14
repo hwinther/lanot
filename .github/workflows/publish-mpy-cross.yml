@@ -9,7 +9,6 @@ on:
       - "tools/build-ports/mpy-cross/Dockerfile"
 
 permissions:
-  # for ghcr.io (docker registry):
   packages: write
 
 jobs:
