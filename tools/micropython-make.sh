@@ -20,6 +20,8 @@ mpy-bullseye-make() {
 mpy-bullseye-make -C mpy-cross MICROPY_PY_FUNCTION_ATTRS=1
 # mpy-make -C mpy-cross MICROPY_PY_FUNCTION_ATTRS=1
 # /hack - after libc issues are restored, just use mpy-make
+echo "mpy-cross version defines:"
+cat mpy-cross/build/genhdr/mpversion.h
 export mpyversion=`cat mpy-cross/build/genhdr/mpversion.h | grep MICROPY_GIT_TAG | cut -d' ' -f3 | cut -d'"' -f2`
 export mpybuilddate=`cat mpy-cross/build/genhdr/mpversion.h | grep MICROPY_BUILD_DATE | cut -d' ' -f3 | cut -d'"' -f2`
 export prometheus_version=`cat ../../src/core/prometheus/__init__.py | grep __version__ | cut -d"'" -f2`
