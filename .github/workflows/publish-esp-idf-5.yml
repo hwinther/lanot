@@ -6,7 +6,7 @@ on:
       esp_idf_version:
         description: 'ESP-IDF version'
         required: false
-        default: '5.0.2'
+        default: '5.5.1'
   push:
     branches: ["main"]
     paths:
@@ -17,7 +17,7 @@ permissions:
   packages: write
 
 env:
-  ESP_IDF_VERSION: "${{ github.event.inputs.esp_idf_version || '5.0.2' }}"
+  ESP_IDF_VERSION: "${{ github.event.inputs.esp_idf_version || '5.5.1' }}"
 
 jobs:
   publish-docker-image:
