@@ -38,7 +38,15 @@ jobs:
           if [ -n "$nodemcu32s" ]; then
             nodemcu32s_name=$(basename "$nodemcu32s")
             cat >> dist/ESP32_NODEMCU32S_write_flash.cmd << EOL
-          python -m esptool --chip esp32 --port %1 --baud 921600 --before default_reset --after hard_reset write_flash -z 0x1000 $nodemcu32s_name
+          python -m esptool --chip esp32 --port %1 --baud 921600 --before default-reset --after hard-reset write-flash -z 0x1000 $nodemcu32s_name
+          EOL
+          fi
+
+          nodemcu32sspiram=$(ls dist/NODEMCU32S-SPIRAM-*.bin 2>/dev/null | head -n1)
+          if [ -n "$nodemcu32sspiram" ]; then
+            nodemcu32sspiram_name=$(basename "$nodemcu32sspiram")
+            cat >> dist/ESP32_NODEMCU32S_SPIRAM_write_flash.cmd << EOL
+          python -m esptool --chip esp32 --port %1 --baud 921600 --before default-reset --after hard-reset write-flash -z 0x1000 $nodemcu32sspiram_name
           EOL
           fi
 
@@ -46,7 +54,7 @@ jobs:
           if [ -n "$nodemcuesp12e" ]; then
             nodemcuesp12e_name=$(basename "$nodemcuesp12e")
             cat >> dist/ESP8266_NODEMCUESP12E_write_flash.cmd << EOL
-          python -m esptool --chip esp8266 --port %1 --baud 921600 --before default_reset --after hard_reset write_flash --verify --flash_size=detect --flash_mode=qio 0 $nodemcuesp12e_name
+          python -m esptool --chip esp8266 --port %1 --baud 921600 --before default-reset --after hard-reset write_flash --verify --flash-size=detect --flash-mode=qio 0 $nodemcuesp12e_name
           EOL
           fi
 
@@ -54,7 +62,7 @@ jobs:
           if [ -n "$lolinesp32e" ]; then
             lolinesp32e_name=$(basename "$lolinesp32e")
             cat >> dist/ESP8266_LOLINESP32E_write_flash.cmd << EOL
-          python -m esptool --chip esp8266 --port %1 --baud 921600 --before default_reset --after hard_reset write_flash --verify --flash_size=detect --flash_mode=qio 0 $lolinesp32e_name
+          python -m esptool --chip esp8266 --port %1 --baud 921600 --before default-reset --after hard-reset write_flash --verify --flash-size=detect --flash-mode=qio 0 $lolinesp32e_name
           EOL
           fi
           
