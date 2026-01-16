@@ -34,7 +34,7 @@ jobs:
             cp "$file" dist/
           done
 
-          nodemcu32s=$(ls dist/NODEMCU32S-*.bin 2>/dev/null | head -n1)
+          nodemcu32s=$(ls dist/NODEMCU32S-v*.bin 2>/dev/null | head -n1)
           if [ -n "$nodemcu32s" ]; then
             nodemcu32s_name=$(basename "$nodemcu32s")
             cat >> dist/ESP32_NODEMCU32S_write_flash.cmd << EOL
@@ -42,7 +42,7 @@ jobs:
           EOL
           fi
 
-          nodemcu32sspiram=$(ls dist/NODEMCU32S-SPIRAM-*.bin 2>/dev/null | head -n1)
+          nodemcu32sspiram=$(ls dist/NODEMCU32S-SPIRAM-v*.bin 2>/dev/null | head -n1)
           if [ -n "$nodemcu32sspiram" ]; then
             nodemcu32sspiram_name=$(basename "$nodemcu32sspiram")
             cat >> dist/ESP32_NODEMCU32S_SPIRAM_write_flash.cmd << EOL
@@ -50,7 +50,7 @@ jobs:
           EOL
           fi
 
-          nodemcuesp12e=$(ls dist/NODEMCUESP12E-*.bin 2>/dev/null | head -n1)
+          nodemcuesp12e=$(ls dist/NODEMCUESP12E-v*.bin 2>/dev/null | head -n1)
           if [ -n "$nodemcuesp12e" ]; then
             nodemcuesp12e_name=$(basename "$nodemcuesp12e")
             cat >> dist/ESP8266_NODEMCUESP12E_write_flash.cmd << EOL
@@ -58,7 +58,7 @@ jobs:
           EOL
           fi
 
-          lolinesp32e=$(ls dist/LOLINESP32E-*.bin 2>/dev/null | head -n1)
+          lolinesp32e=$(ls dist/LOLINESP32E-v*.bin 2>/dev/null | head -n1)
           if [ -n "$lolinesp32e" ]; then
             lolinesp32e_name=$(basename "$lolinesp32e")
             cat >> dist/ESP8266_LOLINESP32E_write_flash.cmd << EOL
