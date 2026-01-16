@@ -2,6 +2,9 @@
 set -e
 
 cd micropython
+# For CI builds, ensure we have all tags in case we have a shallow clone
+git fetch --tags -q
+echo "Building $(git describe --tags --dirty --always)"
 
 printf "${BLUE}*****************************${NC}\n"
 printf "${BLUE}* Making mpy cross compiler *${NC}\n"
@@ -13,8 +16,9 @@ mpy-make() {
 mpy-bullseye-make() {
     sudo docker run --rm -v $(pwd)/../../:/opt/lanot -w /opt/lanot/tools/micropython --entrypoint make ghcr.io/hwinther/lanot/mpy-cross:bullseye "$@"
 }
-#mpy-bullseye-make -C mpy-cross clean
+# mpy-bullseye-make -C mpy-cross clean
 mpy-bullseye-make -C mpy-cross MICROPY_PY_FUNCTION_ATTRS=1
+# mpy-make -C mpy-cross MICROPY_PY_FUNCTION_ATTRS=1
 # /hack - after libc issues are restored, just use mpy-make
 export mpyversion=`cat mpy-cross/build/genhdr/mpversion.h | grep MICROPY_GIT_TAG | cut -d' ' -f3 | cut -d'"' -f2`
 export mpybuilddate=`cat mpy-cross/build/genhdr/mpversion.h | grep MICROPY_BUILD_DATE | cut -d' ' -f3 | cut -d'"' -f2`
