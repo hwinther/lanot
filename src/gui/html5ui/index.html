@@ -322,7 +322,7 @@
             var requestArgs = genericInput.textBoxInput.val();
             var uri = genericInput.lanotHost.baseUri + '/' + $(this).data('uri');
             if (requestArgs !== '') {
-                uri = genericInput.lanotHost.baseUri + '/' + $(this).data('uri') + '?' + requestArgs;
+                uri = genericInput.lanotHost.baseUri + '/' + $(this).data('uri') + '?text=' + requestArgs;
             }
             console.log(uri);
             $.ajax({
