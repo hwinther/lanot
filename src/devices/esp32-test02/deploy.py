@@ -6,11 +6,11 @@ nc64 -c 192.168.4.1 9195
 connect ssid:password
 
 to run:
-set PYTHONPATH=p:\lanot\src\core
+set PYTHONPATH=p:\\lanot\\src\\core
 '''
 
 files = [
     'main.py',
     'test02.py'
 ]
-prometheus.tftpd.tftp_client('10.20.2.116', *files)
+prometheus.tftpd.tftp_client('10.20.2.135', *files)
