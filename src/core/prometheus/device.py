@@ -23,6 +23,14 @@ class Esp8266(prometheus.Prometheus):
         # self.register(prefix='i', integrated_led=self.integrated_led)
 
 
+class Esp32(prometheus.Prometheus):
+    def __init__(self):
+        # print('esp32 init')
+        prometheus.Prometheus.__init__(self)
+        # self.integrated_led = prometheus.Led(machine.Pin(2, machine.Pin.OUT), inverted=True, state=False)
+        # self.register(prefix='i', integrated_led=self.integrated_led)
+
+
 class LanotPcb(object):
     def __init__(self, node, i2c, ow, dhtpin, spi, enable_spi_max7219=False, neopixel_pin=None, neopixel_amount=None):
         """
@@ -209,12 +217,12 @@ class Esp8266Pcb(Esp8266, LanotPcb):
 
         i2c = machine.I2C(scl=machine.Pin(0), sda=machine.Pin(4), freq=400000) if enable_i2c else None
         ow = onewire.OneWire(machine.Pin(5, machine.Pin.IN)) if enable_onewire else None
-        dhtpin = machine.Pin(12, machine.Pin.OUT) if enable_dht else None
+        dht_pin = machine.Pin(12, machine.Pin.OUT) if enable_dht else None
         spi = machine.SPI(1, baudrate=10000000, polarity=0, phase=0) if enable_spi else None
         np_pin = 2 if neopixel_pin is None else neopixel_pin
         neopixel_pin = machine.Pin(np_pin) if neopixel_amount is not None else None
 
-        LanotPcb.__init__(self, node=self, i2c=i2c, ow=ow, dhtpin=dhtpin, spi=spi,
+        LanotPcb.__init__(self, node=self, i2c=i2c, ow=ow, dhtpin=dht_pin, spi=spi,
                           enable_spi_max7219=enable_spi_max7219,
                           neopixel_pin=neopixel_pin, neopixel_amount=neopixel_amount)
 
@@ -226,6 +234,61 @@ class Esp8266Pcb(Esp8266, LanotPcb):
 
     def custom_command(self, command, reply, source, context, **kwargs):
         # ret = Esp8266Pcb.custom_command(self, command, reply, source, context, **kwargs)
+        # if ret is True:
+        #     return True
+
+        if command == 'rescan':
+            logging.info("Rescanning I2C")
+            self.scan_i2c()
+            return True
+
+        return False
+
+
+class Esp32Pcb(Esp32, LanotPcb):
+    #
+    # Pins 1 and 3 are REPL UART TX and RX respectively
+    # Pins 6, 7, 8, 11, 9 (16), and 10 (17) are used for connecting the embedded flash, and are not recommended for other uses
+    # Pins 34-39 are input only, and also do not have internal pull-up resistors
+    #
+    # With the above reservations, and defaults used by the PCB layout, the following are in use:
+    # RES: 1, 3, 6, 7, 8, 11, 9, 10
+    # PCB: 12, 13, 14, 15 (VSPI) 25, 26, (I2C) 18, 19, 23, 5, (HSPI)
+    # PCB: 36, 2, 0, 4
+    #
+    # Remaining IO:          16, 17, 21, 22, 27, 32, 33 - the latter 3 can be used in wake_on_
+    # Remaining output-only: 34, 35, 39 - 36 if not used by adc1
+    #
+    def __init__(self, enable_i2c=False, enable_onewire=False, enable_dht=False, enable_spi=False,
+                 enable_spi_max7219=False, neopixel_amount=None, neopixel_pin=None):
+        # print('esp32pcb init')
+        Esp32.__init__(self)
+
+        self.adc1 = prometheus.Adc(36)
+        self.register(prefix='a', adc1=self.adc1)
+
+        i2c = machine.I2C(scl=machine.Pin(25), sda=machine.Pin(26), freq=400000) if enable_i2c else None  # I2C(1)
+        ow = onewire.OneWire(machine.Pin(0, machine.Pin.IN)) if enable_onewire else None
+        dht_pin = machine.Pin(4, machine.Pin.OUT) if enable_dht else None
+        # HSPI(1) VSPI(2), VSPI typically used for SD cards and HSPI for displays
+        #  (GPIO12 is by default pulled down which makes HSPI less desirable for SD card operation)
+        # We will assume display usage here and use, supports up to 80mhz speed however MAX7219 supports max 10MHz
+        spi = machine.SPI(1, baudrate=10000000, polarity=0, phase=0) if enable_spi else None
+        np_pin = 2 if neopixel_pin is None else neopixel_pin
+        neopixel_pin = machine.Pin(np_pin) if neopixel_amount is not None else None
+
+        LanotPcb.__init__(self, node=self, i2c=i2c, ow=ow, dhtpin=dht_pin, spi=spi,
+                          enable_spi_max7219=enable_spi_max7219,
+                          neopixel_pin=neopixel_pin, neopixel_amount=neopixel_amount)
+
+    @prometheus.Registry.register('Esp32Pcb', 'rs')
+    def rescan(self):
+        # TODO: perhaps see if this could be registered via LanotPcb (does not work at present)
+        logging.info("Rescanning I2C")
+        self.scan_i2c()
+
+    def custom_command(self, command, reply, source, context, **kwargs):
+        # ret = Esp32Pcb.custom_command(self, command, reply, source, context, **kwargs)
         # if ret is True:
         #     return True
 
