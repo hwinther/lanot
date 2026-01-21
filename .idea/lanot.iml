@@ -55,10 +55,7 @@
       <excludeFolder url="file://$MODULE_DIR$/tools/python3-venv" />
       <excludeFolder url="file://$MODULE_DIR$/tools/esp-idf-5" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.9" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.14 (lanot314)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-  </component>
-  <component name="SonarLintModuleSettings">
-    <option name="uniqueId" value="de23e910-8d37-41d7-89e0-032c93857493" />
   </component>
 </module>
