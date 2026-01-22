@@ -50,11 +50,19 @@ jobs:
           EOL
           fi
 
+          esp32c6microwsh=$(ls dist/ESP32_MICROWSH_C6-v*.bin 2>/dev/null | head -n1)
+          if [ -n "$esp32c6microwsh" ]; then
+            esp32c6microwsh_name=$(basename "$esp32c6microwsh")
+            cat >> dist/ESP32_MICROWSH_C6_write_flash.cmd << EOL
+          python -m esptool --chip esp32c6 --port %1 --baud 921600 --before default-reset --after hard-reset write-flash --flash-mode dio --flash-size 4MB --flash-freq 80m 0x0 $esp32c6microwsh_name
+          EOL
+          fi
+
           nodemcuesp12e=$(ls dist/NODEMCUESP12E-v*.bin 2>/dev/null | head -n1)
           if [ -n "$nodemcuesp12e" ]; then
             nodemcuesp12e_name=$(basename "$nodemcuesp12e")
             cat >> dist/ESP8266_NODEMCUESP12E_write_flash.cmd << EOL
-          python -m esptool --chip esp8266 --port %1 --baud 921600 --before default-reset --after hard-reset write_flash --verify --flash-size=detect --flash-mode=qio 0 $nodemcuesp12e_name
+          python -m esptool --chip esp8266 --port %1 --baud 921600 --before default-reset --after hard-reset write-flash --verify --flash-size=detect --flash-mode=qio 0 $nodemcuesp12e_name
           EOL
           fi
 
@@ -62,7 +70,7 @@ jobs:
           if [ -n "$lolinesp32e" ]; then
             lolinesp32e_name=$(basename "$lolinesp32e")
             cat >> dist/ESP8266_LOLINESP32E_write_flash.cmd << EOL
-          python -m esptool --chip esp8266 --port %1 --baud 921600 --before default-reset --after hard-reset write_flash --verify --flash-size=detect --flash-mode=qio 0 $lolinesp32e_name
+          python -m esptool --chip esp8266 --port %1 --baud 921600 --before default-reset --after hard-reset write-flash --verify --flash-size=detect --flash-mode=qio 0 $lolinesp32e_name
           EOL
           fi
           

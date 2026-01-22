@@ -12,7 +12,7 @@ import prometheus.server.socketserver.udp
 import prometheus.server.socketserver.tcp
 import prometheus.logging as logging
 
-__version__ = '0.1.5b'
+__version__ = '0.2.5'
 __author__ = 'Hans Christian Winther-Sorensen'
 
 gc.collect()
@@ -23,9 +23,6 @@ ap_if = None
 sta_if = None
 if prometheus.is_micro:
     ap_if = network.WLAN(network.AP_IF)
-    if not ap_if.config('essid').startswith('Prometheus'):
-        essid = b'Prometheus-%s' % binascii.hexlify(ap_if.config('mac')[-3:])
-        ap_if.config(essid=essid, authmode=network.AUTH_WPA_WPA2_PSK, password=b'forethought')
     sta_if = network.WLAN(network.STA_IF)
 
 config_filename = 'sta_if.cfg'
@@ -143,6 +140,10 @@ def ap_mode():
         ap_if.active(True)
     if sta_if.active():
         sta_if.active(False)
+
+    if not ap_if.config('essid').startswith('Prometheus'):
+        essid = b'Prometheus-%s' % binascii.hexlify(ap_if.config('mac')[-3:])
+        ap_if.config(essid=essid, authmode=network.AUTH_WPA2_WPA3_PSK, password=b'forethought')
 
     cfg = ap_if.ifconfig()
     logging.notice('WLAN AP active - %s (IP %s)' % (ap_if.config('essid'), cfg[0]))
