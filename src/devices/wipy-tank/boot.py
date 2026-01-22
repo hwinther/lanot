@@ -13,7 +13,7 @@ import os
 wlan = WLAN()  # get current object, without changing the mode
 
 ssid = 'dgn.iot'
-password = 'umbFUTyJSvqhxNrQ'
+password = 'password'
 ip = '10.20.2.250'
 net_mask = '255.255.255.0'
 gateway = '10.20.2.1'
