@@ -1,4 +1,3 @@
-# import test02
 import machine
 import network
 import time
@@ -8,6 +7,7 @@ import prometheus.pgc as gc
 import prometheus.logging as logging
 
 gc.collect()
+DEBUG = True
 
 
 def td():
@@ -43,7 +43,8 @@ class DelayedSender:
         t = int(time.time())
         if t - self.last_send > self.delay_time:
             self.last_send = t
-            print('Passed %d time, sending %s' % (self.delay_time, data))
+            if DEBUG:
+                print('Passed %d time, sending %s' % (self.delay_time, data))
             send_esp_now(peer_addr, data)
             return True
         return False
@@ -51,17 +52,16 @@ class DelayedSender:
 
 reset_cause = machine.reset_cause()
 wake_reason = machine.wake_reason()
-print('reset cause: %s wake_reason: %s' % (reset_cause, wake_reason))
+if DEBUG:
+    print('reset cause: %s wake_reason: %s' % (reset_cause, wake_reason))
 
-# node = test02.Test02()
-door_sensor_pin = machine.Pin(32, machine.Pin.IN, machine.Pin.PULL_DOWN)
+integrated_led_pin = machine.Pin(2, machine.Pin.OUT)
 infrared_sensor_pin = machine.Pin(33, machine.Pin.IN, machine.Pin.PULL_DOWN)
-light_switch_pin = machine.Pin(27, machine.Pin.IN, machine.Pin.PULL_DOWN)
-
 gc.collect()
 logging.debug(gc.mem_free())
 
-print('disabling wifi and enabling ESPNow')
+if DEBUG:
+    print('disabling wifi and enabling ESPNow')
 sta, ap = wifi_reset()
 WIFI_CHANNEL = 6
 sta.config(channel=WIFI_CHANNEL)
@@ -74,11 +74,16 @@ e.add_peer(peer)
 def send_esp_now(peer_addr: bytes, data: bytes):
     sta.active(True)
     sta.config(channel=WIFI_CHANNEL)
-    print('Sending data to peer...')
+    integrated_led_pin.value(True)
+    if DEBUG:
+        print('Sending %s to peer %s' % (repr(data), repr(peer_addr)))
     if not e.send(peer_addr, data):
-        print('Send failed!')
+        if DEBUG:
+            print('Send failed!')
     else:
-        print('Send success!')
+        if DEBUG:
+            print('Send success!')
+    integrated_led_pin.value(False)
 
 
 class PinState:
@@ -102,9 +107,7 @@ pin_state_infrared = PinState('infrared')
 pin_state_light = PinState('light')
 
 pin_states = {
-    id(door_sensor_pin): pin_state_door,
     id(infrared_sensor_pin): pin_state_infrared,
-    id(light_switch_pin): pin_state_light,
 }
 
 
@@ -114,65 +117,36 @@ def wake_from_light_sleep(pin):
     pin_states[id(pin)].set()
 
 
-door_sensor_pin.irq(trigger=machine.Pin.IRQ_FALLING, handler=wake_from_light_sleep)
 infrared_sensor_pin.irq(trigger=machine.Pin.IRQ_RISING, handler=wake_from_light_sleep)
-light_switch_pin.irq(trigger=machine.Pin.IRQ_RISING, handler=wake_from_light_sleep)
 
-wake_on_ext0_pin = door_sensor_pin
-print('set wake_on_ext0 pin')
-esp32.wake_on_ext0(wake_on_ext0_pin, esp32.WAKEUP_ALL_LOW)
-wake_on_ext1_pins = [infrared_sensor_pin, light_switch_pin]
-print('set wake_on_ext1 pins')
+wake_on_ext1_pins = [infrared_sensor_pin]
+if DEBUG:
+    print('set wake_on_ext1 pins')
 esp32.wake_on_ext1(wake_on_ext1_pins, esp32.WAKEUP_ANY_HIGH)
 gc.collect()
 
 ping_sender = DelayedSender(delay_time=60)
-door_open_sender = DelayedSender(delay_time=10)
 infrared_activity_sender = DelayedSender(delay_time=10)
-switch_activated_sender = DelayedSender(delay_time=3)
-
-previous_door_state = door_sensor_pin.value()
+send_esp_now(peer, b'init')
 
 while True:
     if ping_sender.send(peer, b'ping'):
-        print('States: d %d ir %d sw %d' % (door_sensor_pin.value(),
-                                            infrared_sensor_pin.value(),
-                                            light_switch_pin.value()))
+        if DEBUG:
+            print('States: ir %d' % (infrared_sensor_pin.value()))
 
     sensor_activity = False
 
-    door_state = door_sensor_pin.value()
-    print('ds %d pds %d' % (door_state, previous_door_state))
-    if door_state != previous_door_state:
-        sensor_activity = True
-        previous_door_state = door_state
-        if door_state:
-            door_open_sender.send(peer, b'door_closed')
-        else:
-            door_open_sender.send(peer, b'door_open')
-        # holdover for now:
-        if not pin_state_door.state:
-            print('reset 1')
-            pin_state_door.reset()
-        else:
-            print('reset 2')
-
     if pin_state_infrared.state:
         sensor_activity = True
-        infrared_activity_sender.send(peer, b'infra')
+        infrared_activity_sender.send(peer, b'storage_on_infra')
         pin_state_infrared.reset()
-
-    if pin_state_light.state:
-        sensor_activity = True
-        switch_activated_sender.send(peer, b'switch')
-        pin_state_light.reset()
 
     if not sensor_activity:
         # If we get here the sensor is LOW – nothing else to do.
-        print('Sleep - States: d %d ir %d sw %d' % (door_sensor_pin.value(),
-                                                    infrared_sensor_pin.value(),
-                                                    light_switch_pin.value()))
-        time.sleep_ms(100)
+        if DEBUG:
+            print('Sleep - States: ir %d' % (infrared_sensor_pin.value()))
 
-        machine.lightsleep(60 * 1000)
-        # time.sleep_ms(10000)  # Temporary to separate lightsleep issues from state logic
+        # time.sleep_ms(1000)
+        # machine.lightsleep(60 * 1000)
+
+        time.sleep_ms(10000)  # Temporary to separate lightsleep issues from state logic

@@ -31,6 +31,7 @@
       <sourceFolder url="file://$MODULE_DIR$/tools/mpy-lib/sensor/bmp280" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tools/hdc1080" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-espnow-bridge" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-storage" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/deploy/clients/archive" />
       <excludeFolder url="file://$MODULE_DIR$/src/pcb/adapter-gerber" />
       <excludeFolder url="file://$MODULE_DIR$/src/pcb/esp8266-new" />
