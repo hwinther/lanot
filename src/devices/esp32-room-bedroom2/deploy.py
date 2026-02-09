@@ -10,7 +10,6 @@ set PYTHONPATH=p:\\lanot\\src\\core
 '''
 
 files = [
-    'main.py',
-    # 'test02.py'
+    'main.py'
 ]
-prometheus.tftpd.tftp_client('10.20.2.135', *files)
+prometheus.tftpd.tftp_client('10.20.2.197', *files)

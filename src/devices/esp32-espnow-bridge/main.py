@@ -74,7 +74,7 @@ while True:
             room = parts[0].decode('ascii')
             state = parts[1].decode('ascii')
             source = parts[2].decode('ascii')
-            http_put_request('storage', 'on', source)
+            http_put_request(room, state, source)
         else:
             print("Unknown message format")
         integrated_led_pin.value(False)

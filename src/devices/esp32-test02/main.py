@@ -114,24 +114,84 @@ def wake_from_light_sleep(pin):
     pin_states[id(pin)].set()
 
 
-door_sensor_pin.irq(trigger=machine.Pin.IRQ_FALLING, handler=wake_from_light_sleep)
 infrared_sensor_pin.irq(trigger=machine.Pin.IRQ_RISING, handler=wake_from_light_sleep)
 light_switch_pin.irq(trigger=machine.Pin.IRQ_RISING, handler=wake_from_light_sleep)
 
-wake_on_ext0_pin = door_sensor_pin
-print('set wake_on_ext0 pin')
-esp32.wake_on_ext0(wake_on_ext0_pin, esp32.WAKEUP_ALL_LOW)
 wake_on_ext1_pins = [infrared_sensor_pin, light_switch_pin]
 print('set wake_on_ext1 pins')
 esp32.wake_on_ext1(wake_on_ext1_pins, esp32.WAKEUP_ANY_HIGH)
 gc.collect()
 
 ping_sender = DelayedSender(delay_time=60)
-door_open_sender = DelayedSender(delay_time=10)
 infrared_activity_sender = DelayedSender(delay_time=10)
 switch_activated_sender = DelayedSender(delay_time=3)
 
-previous_door_state = door_sensor_pin.value()
+
+class DoorSensor:
+    pin: machine.Pin = None
+    light_sleep_ext0_enabled: bool = None
+    state: bool = None
+    previous_state: bool = None
+    changed: bool = None
+    door_open_sender: DelayedSender = None
+
+    def __init__(self, pin, light_sleep_ext0_enabled=False):
+        self.pin = pin
+        self.light_sleep_ext0_enabled = light_sleep_ext0_enabled
+
+        # TODO: when light_sleep_ext0_enabled is not enabled, use timer instead?
+        self.state = pin.value()
+        self.door_open_sender = DelayedSender(delay_time=10)
+
+        if light_sleep_ext0_enabled:
+            self.update_ext0()
+
+    def callback(self, pin):
+        self.previous_state = self.state
+        self.state = pin.value()
+        if self.previous_state != self.state:
+            print('set changed in cb')
+            self.changed = True
+        else:
+            print('cb with no change')
+
+    def update_ext0(self):
+        print('set wake_on_ext0 pin for door pin state %s to %s' % (self.state,
+                                                                    'WAKEUP_ALL_LOW' if self.state
+                                                                    else 'WAKEUP_ANY_HIGH'))
+
+        if self.state:
+            esp32.wake_on_ext0(self.pin, esp32.WAKEUP_ALL_LOW)
+        else:
+            esp32.wake_on_ext0(self.pin, esp32.WAKEUP_ANY_HIGH)
+
+        print('set irq for door pin to trigger on %s' % ('IRQ_FALLING' if self.state else 'IRQ_RISING'))
+        self.pin.irq(trigger=machine.Pin.IRQ_FALLING | machine.Pin.IRQ_RISING,
+                     handler=self.callback)
+
+    def handle(self):
+        if not self.changed:
+            return False
+
+        self.changed = False
+        print('ds %d pds %d' % (self.state, self.previous_state))
+
+        if self.state:
+            # door closed (switch closed)
+            self.door_open_sender.send(peer, b'office_closed_door')
+        else:
+            # door open (switch open)
+            self.door_open_sender.send(peer, b'office_open_door')
+
+        if self.light_sleep_ext0_enabled:
+            self.update_ext0()
+
+        return True
+
+
+esp32.wake_on_ext0(door_sensor_pin, esp32.WAKEUP_ALL_LOW)
+door_sensor = DoorSensor(door_sensor_pin, True)
+send_esp_now(peer, b'init')
 
 while True:
     if ping_sender.send(peer, b'ping'):
@@ -141,21 +201,8 @@ while True:
 
     sensor_activity = False
 
-    door_state = door_sensor_pin.value()
-    print('ds %d pds %d' % (door_state, previous_door_state))
-    if door_state != previous_door_state:
+    if door_sensor.handle():
         sensor_activity = True
-        previous_door_state = door_state
-        if door_state:
-            door_open_sender.send(peer, b'door_closed')
-        else:
-            door_open_sender.send(peer, b'door_open')
-        # holdover for now:
-        if not pin_state_door.state:
-            print('reset 1')
-            pin_state_door.reset()
-        else:
-            print('reset 2')
 
     if pin_state_infrared.state:
         sensor_activity = True
@@ -173,6 +220,6 @@ while True:
                                                     infrared_sensor_pin.value(),
                                                     light_switch_pin.value()))
         time.sleep_ms(100)
-
         machine.lightsleep(60 * 1000)
+
         # time.sleep_ms(10000)  # Temporary to separate lightsleep issues from state logic
