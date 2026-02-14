@@ -4,10 +4,18 @@ import espnow
 import time
 import urequests
 import machine
+import network
+import ubinascii
+from umqtt.simple import MQTTClient
 
 
-# NODE_RED_BASE_URL = 'http://10.20.1.58:1880'
-NODE_RED_BASE_URL = 'http://10.20.2.185:80'
+NODE_RED_BASE_URL = 'http://10.20.1.58:1880'
+# NODE_RED_BASE_URL = 'http://10.20.2.185:80'
+MQTT_BROKER = '10.20.1.8'
+MQTT_PORT = 1883
+MQTT_USERNAME = ''
+MQTT_PASSWORD = ''
+CLIENT_ID = ubinascii.hexlify(machine.unique_id())
 
 
 def td():
@@ -15,6 +23,25 @@ def td():
     import prometheus.pnetwork
     prometheus.pnetwork.init_network()
     prometheus.tftpd.tftpd()
+
+
+def mqtt_connect():
+    print('Connecting to MQTT Broker %s' % MQTT_BROKER)
+    client = MQTTClient(CLIENT_ID, MQTT_BROKER, MQTT_PORT, MQTT_USERNAME, MQTT_PASSWORD)
+    client.connect()
+    return client
+
+
+def mqtt_send(client: MQTTClient, topic: bytes, message: bytes):
+    try:
+        client.publish(topic, message, qos=1)
+    except OSError as error:
+        print('Error sending message, retrying', error)
+        try:
+            client.reconnect()
+            client.publish(topic, message, qos=1)
+        except OSError as error2:
+            print('Error sending message (no more retries)', error2)
 
 
 def http_put_request(room: str, state: str, source: str):
@@ -31,7 +58,7 @@ def http_put_request(room: str, state: str, source: str):
 
     url = '%s/%s/trigger' % (NODE_RED_BASE_URL, room)
 
-    print(f"Sending PUT request to {url}...")
+    print(f"Sending PUT request to {url} with payload {payload}")
     try:
         response = urequests.put(url, json=payload, headers=headers)
 
@@ -46,15 +73,19 @@ def http_put_request(room: str, state: str, source: str):
 
 
 # A WLAN interface must be active to send()/recv()
-# sta = network.WLAN(network.WLAN.IF_STA)
+sta = network.WLAN(network.WLAN.IF_STA)
 # sta.active(True)
+# WIFI_CHANNEL = 6
+# sta.config(channel=WIFI_CHANNEL)
 # sta.config(name='dgn.iot', password='password')
 # sta.disconnect()   # Because ESP8266 auto-connects to last Access Point
 prometheus.pnetwork.init_network()
+print('STA channel:', sta.config('channel'))
 integrated_led_pin = machine.Pin(2, machine.Pin.OUT)
 
 e = espnow.ESPNow()
 e.active(True)
+mqtt_client = mqtt_connect()
 
 print('Entering ESPNow recv loop')
 while True:
@@ -75,6 +106,7 @@ while True:
             state = parts[1].decode('ascii')
             source = parts[2].decode('ascii')
             http_put_request(room, state, source)
+            mqtt_send(mqtt_client, b'homeassistant/espnow-bridge/%s/%s' % (room, source), b'{"state": "%s"}' % state)
         else:
             print("Unknown message format")
         integrated_led_pin.value(False)
