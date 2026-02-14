@@ -9,54 +9,81 @@ import ubinascii
 from umqtt.simple import MQTTClient
 
 
-NODE_RED_BASE_URL = 'http://10.20.1.58:1880'
+NODE_RED_BASE_URL = "http://10.20.1.58:1880"
 # NODE_RED_BASE_URL = 'http://10.20.2.185:80'
-MQTT_BROKER = '10.20.1.8'
+MQTT_BROKER = "10.20.1.8"
 MQTT_PORT = 1883
-MQTT_USERNAME = ''
-MQTT_PASSWORD = ''
+MQTT_USERNAME = ""
+MQTT_PASSWORD = ""
 CLIENT_ID = ubinascii.hexlify(machine.unique_id())
 
 
 def td():
     import prometheus.tftpd
     import prometheus.pnetwork
+
     prometheus.pnetwork.init_network()
     prometheus.tftpd.tftpd()
 
 
 def mqtt_connect():
-    print('Connecting to MQTT Broker %s' % MQTT_BROKER)
+    print("Connecting to MQTT Broker %s" % MQTT_BROKER)
     client = MQTTClient(CLIENT_ID, MQTT_BROKER, MQTT_PORT, MQTT_USERNAME, MQTT_PASSWORD)
     client.connect()
     return client
 
 
-def mqtt_send(client: MQTTClient, topic: bytes, message: bytes):
+def mqtt_send(
+    client: MQTTClient, topic: bytes, message: bytes, qos: int = 0, retain: bool = False
+):
     try:
-        client.publish(topic, message, qos=1)
+        client.publish(topic, message, qos=qos, retain=retain)
     except OSError as error:
-        print('Error sending message, retrying', error)
+        print("Error sending message, retrying", error)
         try:
             client.reconnect()
-            client.publish(topic, message, qos=1)
+            client.publish(topic, message, qos=qos, retain=retain)
         except OSError as error2:
-            print('Error sending message (no more retries)', error2)
+            print("Error sending message (no more retries)", error2)
+            return False
+
+    print("Message sent successfully to topic %s", topic)
+    return True
+
+
+# Home Assistant: state goes to a dedicated state topic; discovery uses homeassistant/.../config
+# State topic (HA subscribes here): espnow-bridge/<room>/<source>/state
+# Discovery topic (one-time config): homeassistant/sensor/espnow_bridge_<room>_<source>/config
+def mqtt_publish_ha_sensor(client: MQTTClient, room: str, source: str, state: str):
+    state_topic = "espnow-bridge/%s/%s/state" % (room, source)
+    payload = b'{"state": "%s"}' % state.encode()
+    mqtt_send(client, state_topic.encode(), payload, qos=0, retain=True)
+
+    # Optional: publish MQTT discovery so the entity appears in HA without manual config
+    object_id = "espnow_bridge_%s_%s" % (room, source)
+    config_topic = ("homeassistant/sensor/%s/config" % object_id).encode()
+    config = (
+        b'{"name":"%s %s","state_topic":"%s",'
+        b'"value_template":"{{ value_json.state }}","unique_id":"%s"}'
+    ) % (
+        room.encode(),
+        source.encode(),
+        state_topic.encode(),
+        object_id.encode(),
+    )
+    mqtt_send(client, config_topic, config, qos=0, retain=True)
 
 
 def http_put_request(room: str, state: str, source: str):
     """Performs an HTTP PUT request with JSON data."""
-    payload = {
-        "state": state,
-        "source": source
-    }
+    payload = {"state": state, "source": source}
 
     headers = {
-        'Content-Type': 'application/json',
-        'User-Agent': 'ESP32-MicroPython-Client'
+        "Content-Type": "application/json",
+        "User-Agent": "ESP32-MicroPython-Client",
     }
 
-    url = '%s/%s/trigger' % (NODE_RED_BASE_URL, room)
+    url = "%s/%s/trigger" % (NODE_RED_BASE_URL, room)
 
     print(f"Sending PUT request to {url} with payload {payload}")
     try:
@@ -80,33 +107,33 @@ sta = network.WLAN(network.WLAN.IF_STA)
 # sta.config(name='dgn.iot', password='password')
 # sta.disconnect()   # Because ESP8266 auto-connects to last Access Point
 prometheus.pnetwork.init_network()
-print('STA channel:', sta.config('channel'))
+print("STA channel:", sta.config("channel"))
 integrated_led_pin = machine.Pin(2, machine.Pin.OUT)
 
 e = espnow.ESPNow()
 e.active(True)
 mqtt_client = mqtt_connect()
 
-print('Entering ESPNow recv loop')
+print("Entering ESPNow recv loop")
 while True:
     host, msg = e.recv()
-    if msg:             # msg == None if timeout in recv()
+    if msg:  # msg == None if timeout in recv()
         integrated_led_pin.value(True)
         print(time.time(), host, msg)
-        if msg == b'end':
+        if msg == b"end":
             break
-        elif msg == b'ping':
-            print('Pong')
-        elif msg == b'init':
-            print('Device booted up')
-        elif msg.count(b'_') >= 2:
+        elif msg == b"ping":
+            print("Pong")
+        elif msg == b"init":
+            print("Device booted up")
+        elif msg.count(b"_") >= 2:
             # e.g. storage_on_infra
-            parts = msg.split(b'_', 2)
-            room = parts[0].decode('ascii')
-            state = parts[1].decode('ascii')
-            source = parts[2].decode('ascii')
+            parts = msg.split(b"_", 2)
+            room = parts[0].decode("ascii")
+            state = parts[1].decode("ascii")
+            source = parts[2].decode("ascii")
             http_put_request(room, state, source)
-            mqtt_send(mqtt_client, b'homeassistant/espnow-bridge/%s/%s' % (room, source), b'{"state": "%s"}' % state)
+            mqtt_publish_ha_sensor(mqtt_client, room, source, state)
         else:
             print("Unknown message format")
         integrated_led_pin.value(False)
