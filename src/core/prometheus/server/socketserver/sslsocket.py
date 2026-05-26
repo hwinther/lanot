@@ -9,7 +9,10 @@ if prometheus.is_micro:
     from ussl import wrap_socket as ssl_wrap_socket
     ssl_SSLEOFError = OSError
 else:
-    from ssl import wrap_socket as ssl_wrap_socket
+    # ssl.wrap_socket was removed in python 3.12
+    from ssl import create_default_context
+    context = create_default_context()
+    wrap_socket = context.wrap_socket
     from ssl import SSLEOFError as ssl_SSLEOFError
 
 __version__ = '0.1.2a'

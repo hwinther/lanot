@@ -30,6 +30,8 @@
       <sourceFolder url="file://$MODULE_DIR$/src/devices" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tools/mpy-lib/sensor/bmp280" isTestSource="false" />
       <sourceFolder url="file://$MODULE_DIR$/tools/hdc1080" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-espnow-bridge" isTestSource="false" />
+      <sourceFolder url="file://$MODULE_DIR$/src/devices/esp32-storage" isTestSource="false" />
       <excludeFolder url="file://$MODULE_DIR$/deploy/clients/archive" />
       <excludeFolder url="file://$MODULE_DIR$/src/pcb/adapter-gerber" />
       <excludeFolder url="file://$MODULE_DIR$/src/pcb/esp8266-new" />
@@ -55,10 +57,7 @@
       <excludeFolder url="file://$MODULE_DIR$/tools/python3-venv" />
       <excludeFolder url="file://$MODULE_DIR$/tools/esp-idf-5" />
     </content>
-    <orderEntry type="jdk" jdkName="Python 3.9" jdkType="Python SDK" />
+    <orderEntry type="jdk" jdkName="Python 3.14 (lanot314)" jdkType="Python SDK" />
     <orderEntry type="sourceFolder" forTests="false" />
-  </component>
-  <component name="SonarLintModuleSettings">
-    <option name="uniqueId" value="de23e910-8d37-41d7-89e0-032c93857493" />
   </component>
 </module>
