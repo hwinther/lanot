@@ -8,7 +8,7 @@ import machine
 gc.collect()
 wlan = network.WLAN(network.STA_IF)
 wlan.active(True)
-wlan.connect('dgn.iot', 'umbFUTyJSvqhxNrQ')
+wlan.connect('dgn.iot', 'password')
 import prometheus.tftpd
 prometheus.tftpd.tftpd()
 '''
